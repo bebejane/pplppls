@@ -5,8 +5,8 @@
 	"private": true,
 	"scripts": {
 		"dev": "react-app-rewired --openssl-legacy-provider start",
-		"start": "react-app-rewired start",
-		"build": "react-app-rewired build",
+		"start": "react-app-rewired --openssl-legacy-provider start",
+		"build": "react-app-rewired --openssl-legacy-provider build",
 		"test": "react-app-rewired test",
 		"serve": "npm run build && concurrently \"serve -s build\"  \"sleep 2 && open http://localhost:5000\"",
 		"eject": "react-scripts eject",
