@@ -1,0 +1,2072 @@
+[
+	{
+		"name": "world winter II",
+		"files": [
+			{
+				"filename": "Purple #1 Dec 23 21:07:55.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 1,
+					"rate": 1,
+					"pan": -8,
+					"panZ": 0.9902680687415704,
+					"panX": -0.13917310096006544,
+					"panWidth": 45,
+					"loop": true,
+					"loopStart": 0.11467814371257484,
+					"loopEnd": 3.691999126746507,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.5,
+								"time": 0.1,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #2 Dec 23 21:08:04.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.8,
+					"rate": 1,
+					"pan": -11,
+					"panZ": 0.981627183447664,
+					"panX": -0.1908089953765448,
+					"panWidth": 43,
+					"loop": true,
+					"loopStart": 0.3296780487804878,
+					"loopEnd": 0.6510198675496689,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": true,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": false,
+							"params": {
+								"feedback": 0.1,
+								"time": 0.22,
+								"mix": 0.2
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #11 Dec 23 21:22:57.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.8,
+					"rate": 1,
+					"pan": -10,
+					"panZ": 0.984807753012208,
+					"panX": -0.17364817766693033,
+					"panWidth": 44,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.5,
+								"time": 0.1,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #12 Dec 23 21:23:04.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.9,
+					"rate": 1,
+					"pan": -10,
+					"panZ": 0.984807753012208,
+					"panX": -0.17364817766693033,
+					"panWidth": 44,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.5,
+								"time": 0.1,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #3 Dec 23 21:08:08.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.25,
+					"rate": 0.4,
+					"pan": -68,
+					"panZ": 0.374606593415912,
+					"panX": -0.9271838545667874,
+					"panWidth": 12,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": false,
+					"muted": true,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.4,
+								"time": 0.79,
+								"mix": 0.8
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #9 Dec 23 21:21:59.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 1,
+					"rate": 1,
+					"pan": -6,
+					"panZ": 0.9945218953682733,
+					"panX": -0.10452846326765347,
+					"panWidth": 46,
+					"loop": true,
+					"loopStart": 0.2496492728828058,
+					"loopEnd": 6.446499001996007,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.5,
+								"time": 0.1,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #7 Dec 23 21:08:47.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.8,
+					"rate": 1,
+					"pan": -10,
+					"panZ": 0.984807753012208,
+					"panX": -0.17364817766693033,
+					"panWidth": 44,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.5,
+								"time": 0.1,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #6 Dec 23 21:08:41.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.6,
+					"rate": 0.8,
+					"pan": -26,
+					"panZ": 0.898794046299167,
+					"panX": -0.4383711467890774,
+					"panWidth": 35,
+					"loop": false,
+					"loopStart": 0.35272084402623327,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": false,
+							"params": {
+								"feedback": 0.2,
+								"time": 0.43,
+								"mix": 0.4
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #4 Dec 23 21:08:14.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.7,
+					"rate": 1,
+					"pan": -6,
+					"panZ": 0.9945218953682733,
+					"panX": -0.10452846326765347,
+					"panWidth": 46,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.5,
+								"time": 0.1,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #8 Dec 23 21:08:52.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.7,
+					"rate": 1.1,
+					"pan": -1,
+					"panZ": 0.9998476951563913,
+					"panX": -0.01745240643728351,
+					"panWidth": 49,
+					"loop": true,
+					"loopStart": 0.3153464499572284,
+					"loopEnd": 3.072,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": false,
+							"params": {
+								"feedback": 0.1,
+								"time": 0.29,
+								"mix": 0.3
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #5 Dec 23 21:08:33.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 1,
+					"rate": 1,
+					"pan": 0,
+					"panZ": 1,
+					"panX": 0,
+					"panWidth": 50,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": false,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.5,
+								"time": 0.1,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #10 Dec 23 21:22:13.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.5,
+					"rate": 1.7,
+					"pan": 58,
+					"panZ": 0.5299192642332049,
+					"panX": 0.8480480961564261,
+					"panWidth": 82,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.3,
+								"time": 0.51,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"cols": 3,
+		"rows": 4,
+		"contentLength": 8055528
+	},
+	{
+		"name": "annea5.ppl",
+		"files": [
+			{
+				"filename": "Purple #2 Apr 17 23:51:47.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.4,
+					"rate": 1.6,
+					"pan": 46,
+					"panZ": 0.6946583704589973,
+					"panX": 0.7193398003386512,
+					"panWidth": 75,
+					"loop": true,
+					"loopStart": 0.1424157218442933,
+					"loopEnd": 0.9494381456286217,
+					"solo": false,
+					"locked": false,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": true,
+					"effectsEnabled": false,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.4,
+								"time": 0.86,
+								"mix": 0.9
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #7 Apr 18 00:01:54.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.8,
+					"rate": 0.9,
+					"pan": -16,
+					"panZ": 0.9612616959383189,
+					"panX": -0.27563735581699916,
+					"panWidth": 41,
+					"loop": true,
+					"loopStart": 11.465497606449988,
+					"loopEnd": 11.465497606449988,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": false,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.1,
+								"time": 0.18,
+								"mix": 0.2
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #8 Apr 18 00:03:51.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.5,
+					"rate": 1,
+					"pan": -37,
+					"panZ": 0.7986355100472928,
+					"panX": -0.6018150231520483,
+					"panWidth": 29,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": false,
+							"params": {
+								"feedback": 0.1,
+								"time": 0.3,
+								"mix": 0.3
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #5 Apr 17 23:55:39.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.5,
+					"rate": 1,
+					"pan": 0,
+					"panZ": 1,
+					"panX": 0,
+					"panWidth": 50,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": false,
+							"params": {
+								"feedback": 0.5,
+								"time": 0.1,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #4 Apr 17 23:53:59.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.4,
+					"rate": 1,
+					"pan": -71,
+					"panZ": 0.3255681544571567,
+					"panX": -0.9455185755993167,
+					"panWidth": 10,
+					"loop": true,
+					"loopStart": 1.661704390847248,
+					"loopEnd": 2.5567280972995263,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": false,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.5,
+								"time": 0.1,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"cols": 5,
+		"rows": 1,
+		"contentLength": 5767388
+	},
+	{
+		"name": "didlee",
+		"files": [
+			{
+				"filename": "Purple #3 Apr 20 23:42:01.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.5,
+					"rate": 0.6,
+					"pan": -49,
+					"panZ": 0.6560590289905073,
+					"panX": -0.7547095802227719,
+					"panWidth": 22,
+					"loop": true,
+					"loopStart": 0.8869730520227415,
+					"loopEnd": 2.026978293732952,
+					"solo": false,
+					"locked": false,
+					"muted": true,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.2,
+								"time": 0.43,
+								"mix": 0.4
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #4 Apr 20 23:42:05.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.3,
+					"rate": 0.5,
+					"pan": -53,
+					"panZ": 0.6018150231520483,
+					"panX": -0.7986355100472928,
+					"panWidth": 20,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": false,
+					"muted": true,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": false,
+							"params": {
+								"feedback": 0.3,
+								"time": 0.7,
+								"mix": 0.7
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #5 Apr 20 23:42:08.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.5,
+					"rate": 0.9,
+					"pan": -16,
+					"panZ": 0.9612616959383189,
+					"panX": -0.27563735581699916,
+					"panWidth": 41,
+					"loop": false,
+					"loopStart": 0.4828401675485009,
+					"loopEnd": 0.4828401675485009,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.5,
+								"time": 0.1,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #6 Apr 20 23:42:10.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.2,
+					"rate": 0.4,
+					"pan": -37,
+					"panZ": 0.7986355100472928,
+					"panX": -0.6018150231520483,
+					"panWidth": 29,
+					"loop": true,
+					"loopStart": 0,
+					"loopEnd": 0.6826757369614512,
+					"solo": false,
+					"locked": false,
+					"muted": true,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": false,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.3,
+								"time": 0.57,
+								"mix": 0.6
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #8 Apr 20 23:42:15.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.05,
+					"rate": 0.3,
+					"pan": -28,
+					"panZ": 0.8829475928589269,
+					"panX": -0.4694715627858908,
+					"panWidth": 34,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": false,
+					"muted": true,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": true,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": false,
+							"params": {
+								"feedback": 0.3,
+								"time": 0.54,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #10 Apr 20 23:42:19.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.5,
+					"rate": 0.4,
+					"pan": -69,
+					"panZ": 0.35836794954530027,
+					"panX": -0.9335804264972017,
+					"panWidth": 11,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.3,
+								"time": 0.52,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #11 Apr 20 23:42:22.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0,
+					"rate": 0.3,
+					"pan": -28,
+					"panZ": 0.8829475928589269,
+					"panX": -0.4694715627858908,
+					"panWidth": 34,
+					"loop": true,
+					"loopStart": 0,
+					"loopEnd": 1.024013605442177,
+					"solo": false,
+					"locked": false,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.2,
+								"time": 0.4,
+								"mix": 0.4
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #12 Apr 20 23:42:25.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.3,
+					"rate": 0.5,
+					"pan": -58,
+					"panZ": 0.5299192642332049,
+					"panX": -0.848048096156426,
+					"panWidth": 17,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": false,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.4,
+								"time": 0.74,
+								"mix": 0.7
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"cols": 1,
+		"rows": 8,
+		"contentLength": 1769824
+	},
+	{
+		"name": "blaster",
+		"cols": 3,
+		"rows": 3,
+		"files": [
+			{
+				"filename": "1.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "2.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "3.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "4.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "5.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "6.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "7.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "8.mp3",
+				"mimeType": "audio/mpeg"
+			}
+		],
+		"contentLength": 838680
+	},
+	{
+		"name": "fool4u",
+		"cols": 3,
+		"rows": 3,
+		"files": [
+			{
+				"filename": "1.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "2.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "3.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "4.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "5.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "6.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "7.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "8.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "9.mp3",
+				"mimeType": "audio/mpeg"
+			}
+		],
+		"contentLength": 3256802
+	},
+	{
+		"name": "groupies",
+		"cols": 3,
+		"rows": 3,
+		"files": [
+			{
+				"filename": "1.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "2.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "3.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "4.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "5.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "6.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "7.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "8.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "9.mp3",
+				"mimeType": "audio/mpeg"
+			}
+		],
+		"contentLength": 5805430
+	},
+	{
+		"name": "sade",
+		"cols": 2,
+		"rows": 2,
+		"files": [
+			{
+				"filename": "you're not the man.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "cherish the day.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "love is stronger than pride.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "pearls.mp3",
+				"mimeType": "audio/mpeg"
+			}
+		],
+		"contentLength": 11041059
+	},
+	{
+		"name": "test",
+		"cols": 1,
+		"rows": 1,
+		"files": [
+			{
+				"filename": "1.mp3",
+				"mimeType": "audio/mpeg"
+			}
+		],
+		"contentLength": 104835
+	},
+	{
+		"name": "tomtom",
+		"cols": 3,
+		"rows": 4,
+		"files": [
+			{
+				"filename": "1.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "10.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "11.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "12.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "2.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "3.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "4.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "5.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "6.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "7.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "8.mp3",
+				"mimeType": "audio/mpeg"
+			},
+			{
+				"filename": "9.mp3",
+				"mimeType": "audio/mpeg"
+			}
+		],
+		"contentLength": 109531
+	},
+	{
+		"name": "clarenceX",
+		"files": [
+			{
+				"filename": "1.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 1,
+					"rate": 1,
+					"pan": 0,
+					"panZ": 1,
+					"panX": 0,
+					"panWidth": 50,
+					"loop": true,
+					"loopStart": 6.696965560765838,
+					"loopEnd": 10.869042849070588,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"type": "delay",
+							"bypassed": false,
+							"params": {
+								"feedback": 0.5,
+								"time": 1,
+								"mix": 0.9
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0
+								},
+								"time": {
+									"value": 1,
+									"max": 1,
+									"min": 0
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"cols": 1,
+		"rows": 1,
+		"contentLength": 1966124
+	},
+	{
+		"name": "ling sling",
+		"files": [
+			{
+				"filename": "Purple #13 Dec 23 22:01:52.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.6,
+					"rate": 1,
+					"pan": -10,
+					"panZ": 0.984807753012208,
+					"panX": -0.17364817766693033,
+					"panWidth": 44,
+					"loop": true,
+					"loopStart": 0.2569489592244083,
+					"loopEnd": 3.7546666666666666,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.2,
+								"time": 0.41,
+								"mix": 0.4
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #19 Dec 23 22:06:19.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.6,
+					"rate": 0.9,
+					"pan": -19,
+					"panZ": 0.9455185755993167,
+					"panX": -0.3255681544571567,
+					"panWidth": 39,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": false,
+							"params": {
+								"feedback": 0.2,
+								"time": 0.44,
+								"mix": 0.4
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #14 Dec 23 22:02:08.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.7,
+					"rate": 1,
+					"pan": -11,
+					"panZ": 0.981627183447664,
+					"panX": -0.1908089953765448,
+					"panWidth": 43,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.5,
+								"time": 0.1,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #15 Dec 23 22:02:12.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0,
+					"rate": 1,
+					"pan": -13,
+					"panZ": 0.9743700647852352,
+					"panX": -0.224951054343865,
+					"panWidth": 42,
+					"loop": true,
+					"loopStart": 0,
+					"loopEnd": 2.048,
+					"solo": false,
+					"locked": false,
+					"muted": true,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": false,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.3,
+								"time": 0.52,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #16 Dec 23 22:02:15.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0,
+					"rate": 1,
+					"pan": -12,
+					"panZ": 0.9781476007338056,
+					"panX": -0.20791169081775934,
+					"panWidth": 43,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": false,
+					"muted": true,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.3,
+								"time": 0.51,
+								"mix": 0.5
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #17 Dec 23 22:06:11.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.5,
+					"rate": 0.6,
+					"pan": -52,
+					"panZ": 0.6156614753256583,
+					"panX": -0.788010753606722,
+					"panWidth": 21,
+					"loop": true,
+					"loopStart": 0,
+					"loopEnd": 5.802666666666667,
+					"solo": false,
+					"locked": true,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.3,
+								"time": 0.55,
+								"mix": 0.6
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"filename": "Purple #18 Dec 23 22:06:16.wav",
+				"mimeType": "audio/wav",
+				"params": {
+					"volume": 0.4,
+					"rate": 0.7,
+					"pan": -38,
+					"panZ": 0.788010753606722,
+					"panX": -0.6156614753256583,
+					"panWidth": 28,
+					"loop": false,
+					"loopStart": 0,
+					"loopEnd": 0,
+					"solo": false,
+					"locked": false,
+					"muted": false,
+					"pause": false,
+					"pausedAt": 0,
+					"reversed": false,
+					"effectsEnabled": true,
+					"effects": [
+						{
+							"idx": 0,
+							"id": "delay",
+							"type": "delay",
+							"bypassed": true,
+							"params": {
+								"feedback": 0.3,
+								"time": 0.64,
+								"mix": 0.6
+							},
+							"defaults": {
+								"feedback": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"time": {
+									"value": 0.1,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								},
+								"mix": {
+									"value": 0.5,
+									"max": 1,
+									"min": 0,
+									"type": "float"
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"cols": 1,
+		"rows": 7,
+		"contentLength": 3342640
+	}
+]
