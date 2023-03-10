@@ -1,0 +1,13 @@
+<root>
+    <SliceAnalysis name="Master" version="3000">
+        <Slices name="Slices">
+            <SlicePoint name="SlicePoint0" version="3" DynSense="0" Mean="0.07055479288101196" Pos="0" Start="0" Strength="1" />
+        </Slices>
+        <AudioFileMetaData name="Meta" version="2100" BPM="120" Bars="1" Beats="0" Pitch="440">
+            <VFixedString_64 name="Name" string="" />
+            <VFixedString_64 name="Author" string="" />
+            <VFixedString_64 name="Desc" string="" />
+        </AudioFileMetaData>
+    </SliceAnalysis>
+    <AudioFileMarkers name="StartEndPoints" version="2" EndSample="5198" SampleLength="5198" StartSample="0" />
+</root>

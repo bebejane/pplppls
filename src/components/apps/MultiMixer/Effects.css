@@ -1,0 +1,129 @@
+.mixer-channel-effects{
+	position: absolute;
+	left:0px;
+	top:0px;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	width: 100%;
+	height:100%;
+	background-color: rgba(0,0,0,0.3) !important;
+	font-size: 14px;
+	text-transform: uppercase;
+	overflow: hidden;
+	overflow-y:scroll !important;	
+	scrollbar-width: none;
+
+}
+
+.mixer-channel-effects-right{
+	display: flex;
+	flex-direction: column;
+	flex:1 1 auto;
+	align-items: flex-end;
+}
+.mixer-channel-effect{
+	display: flex;
+	flex-direction: column;
+	flex:1 1 auto;
+	padding:5px;
+	justify-content: center;
+	margin-top: 10px;
+}
+.mixer-channel-effect-add{
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	max-width: 30px;
+}
+.mixer-channel-effect-add-icon{
+	border:0px solid;
+	color:#fff;
+	flex:1 1 100%;
+	max-width: 100%;
+	font-size: 11px;
+	padding: 3px;
+	margin:0px;
+	text-align: center;
+	cursor: pointer;
+	box-sizing: border-box;
+	color:rgba(255,255,255,0.5);
+	font-variant-numeric: tabular-nums;
+}
+.mixer-channel-effect-remove{
+	color: #fff;
+	font-size: 18px;
+	margin-top: 3px;
+	cursor: pointer;
+	color:rgba(255,255,255,0.4);
+}
+.mixer-channel-effect-remove:hover{
+	color:rgba(255,255,255,0.9);	
+}
+.mixer-channel-effect-add-icon:hover{
+	background-color: rgba(255,255,255,0.2);
+	color:rgba(255,255,255,0.9);
+}
+.mixer-channel-effect-name{
+	color: #fff;
+	max-width:40px;
+	text-overflow: ellipsis;
+}
+.mixer-channel-effect-params{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	margin-top:5px;	
+
+}
+.mixer-channel-effect-param-top{
+	display: flex;
+	flex-direction: row;
+	margin-bottom:3px;
+}
+.mixer-channel-effect-param-name{
+	font-size: 11px;
+	text-transform: capitalize;
+	color:rgba(255,255,255,0.8);
+	flex: 1 1 auto;
+}
+.mixer-channel-effect-param-value{
+	font-size: 11px;
+	text-transform: capitalize;
+	color:rgba(255,255,255,0.8);
+	align-self: flex-end;
+}
+.mixer-channel-effect-param-slider{
+
+}
+.mixer-channel-effect-bottom{
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: row;
+	
+}
+.mixer-channel-effect-bypass{
+	flex: 1 1 auto;
+	align-items: center;
+	justify-content: center;
+	margin-top: 5px;
+}
+.mixer-channel-effects-close{
+	position: absolute;
+	top:0px;
+	left: 0px;
+	padding: 2px;
+	font-size: 10px;
+	color:rgba(255,255,255,0.8);
+	max-height: 12px;
+	min-height: 12px;
+	max-width: 12px;
+	min-width: 12px;
+	line-height: 12px;
+	text-align: center;
+	cursor: pointer;
+}
+.mixer-channel-effects-close:hover{
+	background-color: rgba(0,0,0,0.05);	
+	color:rgba(255,255,255,1);
+}

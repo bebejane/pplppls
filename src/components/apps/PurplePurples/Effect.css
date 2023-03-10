@@ -1,0 +1,113 @@
+.sound-canvas-point-effects{
+    position: absolute;
+    display: flex;
+    align-items: flex-end;
+    left:0;
+    bottom:0;
+    color:#fff;
+    font-size: 14px;
+    margin:5px;
+    z-index: 900;
+}
+.sound-canvas-point-effects  > svg{
+    opacity: 0.8;
+    font-size: 16px;
+    border-radius: 10px;
+    background-color: transparent;
+    padding:2px;
+
+}
+.sound-canvas-point-effects  > svg:hover{
+    opacity: 1;
+    background-color: rgba(0255,255,255,0.3);
+}
+.sound-canvas-point-effect-toggle{
+    opacity: 0.3 !important;
+}
+.sound-canvas-point-effect-toggle:hover{
+    opacity: 0.3;
+}
+.sound-canvas-point-sampling{
+    animation: blinker 0.5s cubic-bezier(.5, 0, 1, 1) infinite alternate;
+    color:red;
+}
+.sound-canvas-point-counter{
+    font-size: 10px;
+    padding:0px;
+    width:20px;
+    height:20px;
+    border-radius: 10px;
+    margin:0px;
+    border-radius: 0px;
+}
+.sound-canvas-point-sampling-icon{
+    display:flex;
+}
+.sound-canvas-point-effect{
+  display: flex;
+  align-items: flex-end;
+}
+
+.sound-canvas-point-effect-params{
+    display: flex;
+    flex-direction: column;
+    margin-left:10px;
+    font-size: 10px;
+    background-color: rgba(0,0,0,0.5);
+    padding:5px;
+}
+.bypass{
+    display: none;
+}
+input[type=range] {
+  appearance:none;
+  -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
+  width: 100%; /* Specific width is required for Firefox. */
+  background: rgba(255,255,255,0.1); /* Otherwise white in Chrome */
+  border-radius: 2px;
+  max-width: 100px;
+  max-height:4px;
+
+}
+
+input[type=range]::-webkit-slider-thumb{
+  appearance:none;
+  -webkit-appearance: none;
+  border: 0px solid #000000;
+  min-height: 4px;
+  min-width: 4px;
+  max-height: 4px;
+  max-width: 4px;
+  border-radius: 0px;
+  background: #fff;
+  cursor: pointer;
+  opacity: 0.7;
+}
+input[type=range]::-moz-range-thumb {
+ appearance:none;
+  -webkit-appearance: none;
+  border: 0px solid #000000;
+  min-height: 4px;
+  min-width: 4px;
+  max-height: 4px;
+  max-width: 4px;
+  border-radius: 0px;
+  background: #fff;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+input[type=range]:focus {
+  outline: none; /* Removes the blue border. You should probably do some kind of focus styling for accessibility reasons though. */
+  border: 0px solid #000000;
+}
+
+input[type=range]::-ms-track {
+  width: 100%;
+  cursor: pointer;
+
+  /* Hides the slider so custom styles can be added */
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}

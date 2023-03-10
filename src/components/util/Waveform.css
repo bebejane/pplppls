@@ -1,0 +1,94 @@
+.waveform-container{
+  position: relative;
+  display: flex;
+  height: 100%;
+  width:100%;
+  flex: 1 1 auto;
+}
+.waveform-canvas{
+  position: absolute;
+  top:0px;
+  left:0px;
+  
+  width:100%;
+  height:100%;
+}
+.waveform-selection-container{
+  position: absolute;
+  display: block;
+  height: 100%;
+  width:100%;
+  flex: 1 1 auto;
+  user-select: none;
+}
+.waveform-selection{
+  position: absolute;
+  background-color: rgba(0,0,0,0.1);
+  top:0;
+  left:0;
+  height:100%;
+  width:100;
+  user-select: none;
+}
+.waveform-position{
+  position: absolute;
+  background-color: rgba(255,0,0,1);
+  top:0px;
+  left:0px;
+  height:100%;
+  width:1px;
+  z-index: 100;
+}
+.waveform-elapsed{
+  position: absolute;
+  top:0;
+  right:0;
+  font-size: 10px;
+  margin:3px;
+}
+.waveform-handle-left, .waveform-handle-right, .waveform-handle-top-left, .waveform-handle-top-right, .waveform-handle-bottom-left, .waveform-handle-bottom-right{
+  position: absolute;
+  background-color: rgba(255,255,255,0.3);
+  left:0;
+  height:5px;
+  width:5px;
+  cursor:ew-resize;
+  user-select: none;
+}
+.waveform-handle-left, .waveform-handle-right{
+  height:100%;
+  background-color: transparent;
+}
+.waveform-handle-top-left{
+  margin-left:0px;
+  top:0;
+}
+.waveform-handle-top-right, .waveform-handle-right{
+  margin-left:-5px;
+  top:0;
+}
+.waveform-handle-bottom-left{
+  margin-left:0px;
+  bottom:0;
+}
+.waveform-handle-bottom-right{
+  margin-left:-5px;
+  bottom:0;
+}
+.waveform-loading{
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 auto;
+    color:#fff;
+    flex-direction: column;
+    width:100%;
+    height: 100%;
+    z-index: 998;
+    pointer-events: none;
+}
+.waveform-loading > svg{
+    color:#fff;
+    animation: spin 1.1s linear infinite;
+}

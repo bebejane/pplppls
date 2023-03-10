@@ -1,0 +1,268 @@
+#spyder-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(0, 0, 0);
+}
+
+.spyder-volume-container {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.spyder-volume {
+  display: flex;
+  flex: 1 1;
+  width: 150px;
+  max-width: 150px;
+  height: 100%;
+  max-height: 100%;
+}
+
+.spyder-input-volume {
+  display: flex;
+  flex-direction: row;
+  flex: 0 0 20%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 60px;
+  margin-bottom: 0px;
+  background-color: #955700;
+
+}
+
+.spyder-input-db {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: #fff;
+  align-items: center;
+  justify-content: space-evenly;
+  width: 10px;
+  font-size: 9px;
+}
+
+.spyder-input-volume-meter {}
+
+.spyder-input-db-labels {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: #fff;
+  width: 5px;
+  font-size: 9px;
+}
+
+.spyder-input-db-labels>div {
+  position: absolute;
+  left: 5px;
+  top: 0%;
+}
+
+.spyder-input-db>div {
+  flex: 0 0 1px;
+  min-height: 1px;
+  width: 100%;
+  background-color: #fff;
+}
+
+
+.spyder-input-top {
+  flex: 1 1 90%;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: 0px;
+}
+
+.spyder-input-config {
+  color: #fff;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: column;
+  width: 100%;
+  padding-top: 0px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 11px;
+}
+
+.spyder-slider-config {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-width: 300px;
+}
+
+.spyder-slider-config>div:first-child {
+  min-width: 100px;
+  text-align: right;
+  padding-right: 10px;
+}
+
+.spyder-slider-config>div:last-child {
+  padding-left: 10px;
+  text-align: left;
+  min-width: 100px;
+}
+
+.spyder-input-middle {
+  color: #fff;
+  flex: 1 1 50%;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.spyder-input-bottom {
+  display: flex;
+
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  width: 100%;
+  margin-bottom: 20px;
+  font-size: 11px;
+}
+
+#spyder-buttons {
+  display: flex;
+  flex-direction: row;
+}
+
+.spyder-button {
+  margin: 10px;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  min-width: 60px;
+  text-align: center;
+  user-select: none;
+}
+
+.spyder-button:active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.spyder-playing {
+  background-color: rgb(200, 155, 34) !important
+}
+
+.spyder-waiting {
+  background-color: rgb(0, 0, 0) !important;
+}
+
+.spyder-recording {
+  background-color: rgb(66, 23, 9) !important;
+}
+
+.spyder-level {
+  z-index: 100;
+}
+
+.range-reverse {
+  transform: rotateY(180deg);
+}
+
+.spyder-freq {
+  display: flex;
+  flex: 1 1 auto;
+  width: 400px;
+  max-height: 200px;
+  margin-bottom: 0px;
+}
+
+.spyder-waveform {
+
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  width: 400px;
+  max-height: 200px;
+}
+
+#spyder-emptywave {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 0, 0, 0.1);
+}
+
+#spyder-pads {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  margin: 10px;
+  max-width: 400px;
+  flex-wrap: wrap;
+  min-height: 56px;
+}
+
+.spyder-pad,
+.spyder-pad-loop {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  height: 50px;
+  width: 50px;
+  max-height: 50px;
+  min-height: 50px;
+  max-width: 50px;
+  min-width: 50px;
+  margin: 2px;
+}
+
+.spyder-pad-loop,
+.spyder-pad:active {
+  background-color: rgba(125, 234, 16, 0.64);
+}
+
+.range-reverse {
+  transform: rotateY(180deg);
+}
+
+.spyder-button,
+.spyder-start,
+.spyder-stop {
+  margin: 10px;
+  padding: 20px;
+  background-color: transparent;
+  cursor: pointer;
+  min-width: 40px;
+  text-align: center;
+  user-select: none;
+}
+
+.spyder-button:active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.spyder-start {
+  background-color: #51040f;
+}
+
+.spyder-stop {
+  background-color: #3d3d48;
+}

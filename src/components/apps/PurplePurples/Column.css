@@ -1,0 +1,114 @@
+.sound-canvas-point-wrap {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    left:0px;
+    top:0px;
+    user-select: none;
+    width:100%;
+    height:100%;
+    background-color: rgb(68,0,63);
+    will-change:background-color;
+}
+.sound-canvas-point {
+    position: relative;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    font-size: 14px;
+    width: 100%;
+    height: 100%;
+    color:#fff;
+    flex-direction: column;
+}
+.sound-canvas-point-loading, .sound-canvas-point-count {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 auto;
+    color:#fff;
+    flex-direction: column;
+    width:100%;
+    height: 100%;
+    z-index: 998;
+    pointer-events: none;
+}
+.sound-canvas-point-loading > svg{
+    color:#fff;
+    animation: spin 1.1s linear infinite;
+}
+.sound-canvas-point-loading-error{
+    font-size: 11px;
+}
+.sound-canvas-point-highlight {
+}
+.sound-canvas-point-wrap-active {
+    opacity: 0.4;
+}
+.sound-canvas-point-gain, .sound-canvas-point-pitch, .sound-canvas-point-loopstart, .sound-canvas-point-loopend{
+    position: absolute;
+    background-color: #b382b7;
+}
+.sound-canvas-point-gain{
+    bottom:0;
+    right:0;
+    width:4px;
+    background-color: #fff;
+    height:0%;
+}
+.sound-canvas-point-pitch{
+    left:0;
+    top:0;
+    height:4px;
+    width:0%;
+}
+.sound-canvas-point-loopstart{
+    left:0;
+    bottom:0;
+    height:4px;
+    width:0%;   
+}
+.sound-canvas-point-loopend{
+    left:0;
+    bottom:0;
+    width:4px;
+    height:0%;
+}
+.sound-canvas-point-info{
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    top:0px;
+    left:0px;
+    color:rgba(255,255,255,0.6);
+    font-size: 14px;
+    margin:10px;
+}
+.sound-canvas-point-elapsed{
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    top:0px;
+    right:0px;
+    color:rgba(255,255,255,0.6);
+    font-size: 11px;
+    margin:10px;
+    width:120px;
+}
+.background1{
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0, #36B1BF 0, #36B1BF 0.33em, rgba(255, 255, 255, 0) 0.33em) 0 0, linear-gradient(to top, rgba(255, 255, 255, 0) 0, #36B1BF 0, #36B1BF 0.33em, rgba(255, 255, 255, 0) 0.33em) 0 0, linear-gradient(to left, rgba(255, 255, 255, 0) 0, #4AD9D9 0, #4AD9D9 0.33em, rgba(255, 255, 255, 0) 0.33em) 0 0, linear-gradient(to right, rgba(255, 255, 255, 0) 0, #4AD9D9 0, #4AD9D9 0.66em, rgba(255, 255, 255, 0) 0.66em) 0 0, linear-gradient(to bottom, rgba(255, 255, 255, 0) 0, #4AD9D9 0, #4AD9D9 0.33em, rgba(255, 255, 255, 0) 0.33em) 0 0, linear-gradient(to top, rgba(255, 255, 255, 0) 0, #4AD9D9 0, #4AD9D9 0.66em, rgba(255, 255, 255, 0) 0.66em) 0 0, linear-gradient(to left, rgba(255, 255, 255, 0) 0, #E9F1DF 0, #E9F1DF 0.66em, rgba(255, 255, 255, 0) 0.66em) 0 0, linear-gradient(to right, rgba(255, 255, 255, 0) 0, #E9F1DF 0, #E9F1DF 0.99em, rgba(255, 255, 255, 0) 0.99em) 0 0, linear-gradient(to bottom, rgba(255, 255, 255, 0) 0, #E9F1DF 0, #E9F1DF 0.66em, rgba(255, 255, 255, 0) 0.66em) 0 0, linear-gradient(to top, rgba(255, 255, 255, 0) 0, #E9F1DF 0, #E9F1DF 0.99em, rgba(255, 255, 255, 0) 0.99em) 0 0, linear-gradient(to left, rgba(255, 255, 255, 0) 0, #F5A503 0, #F5A503 0.99em, rgba(255, 255, 255, 0) 0.99em) 0 0, linear-gradient(to right, rgba(255, 255, 255, 0) 0, #F5A503 0, #F5A503 1.32em, rgba(255, 255, 255, 0) 1.32em) 0 0, linear-gradient(to bottom, rgba(255, 255, 255, 0) 0, #F5A503 0, #F5A503 0.99em, rgba(255, 255, 255, 0) 0.99em) 0 0, linear-gradient(to top, rgba(255, 255, 255, 0) 0, #F5A503 0, #F5A503 1.32em, rgba(255, 255, 255, 0) 1.32em) 0 0, linear-gradient(to left, rgba(255, 255, 255, 0) 0, #F2385A 0, #F2385A 1.32em, rgba(255, 255, 255, 0) 1.32em) 0 0, linear-gradient(to right, rgba(255, 255, 255, 0) 0, #F2385A 0, #F2385A 1.65em, rgba(255, 255, 255, 0) 1.65em) 0 0, linear-gradient(to bottom, rgba(255, 255, 255, 0) 0, #F2385A 0, #F2385A 1.32em, rgba(255, 255, 255, 0) 1.32em) 0 0, linear-gradient(to top, rgba(255, 255, 255, 0) 0, #F2385A 0, #F2385A 1.65em, rgba(255, 255, 255, 0) 1.65em) 0 0, linear-gradient(to left, rgba(255, 255, 255, 0) 0, #36B1BF 0, #36B1BF 1.65em, rgba(255, 255, 255, 0) 1.65em) 0 0, linear-gradient(to right, rgba(255, 255, 255, 0) 0, #36B1BF 0, #36B1BF 1.98em, rgba(255, 255, 255, 0) 1.98em) 0 0, linear-gradient(to bottom, rgba(255, 255, 255, 0) 0, #36B1BF 0, #36B1BF 1.65em, rgba(255, 255, 255, 0) 1.65em) 0 0, linear-gradient(to top, rgba(255, 255, 255, 0) 0, #36B1BF 0, #36B1BF 1.98em, rgba(255, 255, 255, 0) 1.98em) 0 0, linear-gradient(to left, rgba(255, 255, 255, 0) 0, #4AD9D9 0, #4AD9D9 1.98em, rgba(255, 255, 255, 0) 1.98em) 0 0, linear-gradient(to right, rgba(255, 255, 255, 0) 0, #4AD9D9 0, #4AD9D9 2.31em, rgba(255, 255, 255, 0) 2.31em) 0 0, linear-gradient(to bottom, rgba(255, 255, 255, 0) 0, #4AD9D9 0, #4AD9D9 1.98em, rgba(255, 255, 255, 0) 1.98em) 0 0, linear-gradient(to top, rgba(255, 255, 255, 0) 0, #4AD9D9 0, #4AD9D9 2.31em, rgba(255, 255, 255, 0) 2.31em) 0 0, linear-gradient(to left, rgba(255, 255, 255, 0) 0, #E9F1DF 0, #E9F1DF 2.31em, rgba(255, 255, 255, 0) 2.31em) 0 0, linear-gradient(to right, rgba(255, 255, 255, 0) 0, #E9F1DF 0, #E9F1DF 2.64em, rgba(255, 255, 255, 0) 2.64em) 0 0, linear-gradient(to bottom, rgba(255, 255, 255, 0) 0, #E9F1DF 0, #E9F1DF 2.31em, rgba(255, 255, 255, 0) 2.31em) 0 0, linear-gradient(to top, rgba(255, 255, 255, 0) 0, #E9F1DF 0, #E9F1DF 2.64em, rgba(255, 255, 255, 0) 2.64em) 0 0, linear-gradient(to left, rgba(255, 255, 255, 0) 0, #F5A503 0, #F5A503 2.64em, rgba(255, 255, 255, 0) 2.64em) 0 0, linear-gradient(to right, rgba(255, 255, 255, 0) 0, #F5A503 0, #F5A503 2.97em, rgba(255, 255, 255, 0) 2.97em) 0 0, linear-gradient(to bottom, rgba(255, 255, 255, 0) 0, #F5A503 0, #F5A503 2.64em, rgba(255, 255, 255, 0) 2.64em) 0 0, linear-gradient(to top, rgba(255, 255, 255, 0) 0, #F5A503 0, #F5A503 2.97em, rgba(255, 255, 255, 0) 2.97em) 0 0, linear-gradient(to left, rgba(255, 255, 255, 0) 0, #F2385A 0, #F2385A 2.97em, rgba(255, 255, 255, 0) 2.97em) 0 0, linear-gradient(to right, rgba(255, 255, 255, 0) 0, #F2385A 0, #F2385A 3.3em, rgba(255, 255, 255, 0) 3.3em) 0 0, linear-gradient(to bottom, rgba(255, 255, 255, 0) 0, #F2385A 0, #F2385A 2.97em, rgba(255, 255, 255, 0) 2.97em) 0 0, linear-gradient(to top, rgba(255, 255, 255, 0) 0, #F2385A 0, #F2385A 3.3em, rgba(255, 255, 255, 0) 3.3em) 0 0;
+    background-size: 3em 3em;
+    background-color: #E9F1DF;
+    background-repeat: repeat;
+}
+.sound-canvas-point-balloon{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+}

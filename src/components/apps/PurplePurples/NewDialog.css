@@ -1,0 +1,54 @@
+#new-dialog{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width:100%;
+	height: 100%;
+	position: absolute;
+	top:0px;
+	left:0px;
+	color:#fff;
+	z-index: 1000;
+}
+#new-dialog-form{
+	display: flex;
+}
+#new-dialog-box{
+	position: relative;
+	padding:40px;	
+	max-height: 100px;
+	background-color: #7b2482;
+	border: 20px solid rgba(255,255,255, 0.2);
+}
+#new-dialog-form > input{
+	padding:10px;
+	padding:10px;
+	font-size: 20px;
+	margin-top: 10px;
+	background-color: rgba(255,255,255,0.1);
+	box-shadow: none;
+	border: 0px;
+	outline: none;
+	margin:1px;
+	color: rgba(255,255,255,0.5);
+	margin-top: 5px;
+}
+#new-dialog-form > input[type=number]{
+	text-align: center;
+	max-width: 40px;
+}
+#new-dialog-model{
+	
+}
+#new-dialog-close{
+	position: absolute;
+	top:0px;
+	right:0px;
+	margin:20px;
+	font-size: 20px;
+	color: rgba(255,255,255,0.4);
+	cursor: pointer;
+}
+#new-dialog-close:hover{
+	color: rgba(255,255,255,0.5);
+}

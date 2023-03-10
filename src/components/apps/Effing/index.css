@@ -1,0 +1,187 @@
+#effing-loading{
+   position: relative;
+  display: flex;
+  flex-direction: column;
+  width:100%;
+  height: 100%;
+  color:rgba(255,255,255,0.5);
+  align-items: center;
+  justify-content: center;
+  
+}
+#effing-container-wrap{
+	display: flex;
+  	flex-direction: column;
+  	width:100%;
+  	height: 100%;
+  	align-items: center;
+  	justify-content: center;
+  	background-color: rgb(23,60,60);
+}
+#effing-container{
+	
+  	display: flex;
+  	flex-direction: column;
+  	width:600px;
+  	height: 100%;
+  	align-items: center;
+  	justify-content: center;
+  	
+}
+#effing-top{
+	display: flex;
+  	flex-direction: column;
+  	flex: 0 1;
+  	width:100%;
+  	margin-top:5px;
+  	align-items: center;
+  	justify-content: center;
+}
+#effing-controls{
+	display: flex;
+  	flex-direction: row;
+  	flex: 1 1 auto;
+  	width:100%;
+  	margin-top:5px;
+  	align-items: center;
+  	justify-content: center;	
+}
+#effing-tempo{
+	display: flex;
+  	flex-direction: row;
+  	flex: 1 1 auto;
+  	width:100%;
+  	margin-top:5px;
+  	align-items: center;
+  	justify-content: center;	
+}
+#effing-tempo > input{
+	max-width: 100px;
+}
+#effing-sequencer{
+	display: flex;
+  	flex-direction: row;
+  	flex: 1 1 auto;
+  	width:100%;
+  	margin-top:5px;
+  	flex-wrap: wrap;
+  	border:1px solid rgba(255,255,255,0.1);
+  	min-height: 74px;
+}
+.effing-sequencer-pad-wrap{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	
+	border:1px solid rgba(255,255,255,0.1);
+
+}
+.effing-sequencer-pad, .effing-sequencer-pad-playing{
+	min-height: 50px;
+	max-height: 50px;
+	min-width: 50px;
+	max-width: 50px;
+	margin:2px;
+	background-color: rgba(0,0,0,0.1)
+}
+.effing-sequencer-pad-playing{
+	background-color: rgba(255,255,255,0.1)	
+}
+.effing-sequencer-pad-switch-on, .effing-sequencer-pad-switch-off{
+	min-height: 10px;
+	max-height: 10px;
+	min-width: 10px;
+	max-width: 10px;
+	border-radius: 10px;
+	margin:5px;
+	cursor:pointer;
+	background-color: rgba(159, 158, 89, 1);
+}
+.effing-sequencer-pad-switch-off{
+	background-color: rgba(159, 158, 89, 0.5);
+}
+#effing-waveform{
+	position: relative;
+	width:100%;
+	flx:1 1 auto;
+	height:140px;
+	border:1px solid rgba(255,255,255,0.05);
+	margin-bottom: 5px;
+}
+#effing-effects{
+	display: flex;
+	flex-direction: row;
+	width:100%;
+	height:400px;
+	flex-wrap: wrap;
+	color:#fff;
+	margin-bottom: 20px;
+}
+#effing-bottom{
+	position: relative;
+	display: flex;
+  	flex-direction: row;
+  	width:100%;
+  	align-items: flex-start;
+  	justify-content: center;
+  	margin-bottom: 5px;
+}
+#effing-drop{
+	position: relative;
+	color:#fff;
+	border: 1px solid rgba(255,255,255,0.1);
+	padding:10px;
+	min-width: 140px;
+	margin-left:20px;
+	font-size: 13px;
+	text-align: center;
+	user-select: none;
+}
+.effing-button, .effing-button-rec, .effing-button-play, .effing-button-stop{
+	position: relative;
+	color:#fff;
+	border: 1px solid rgba(255,255,255,0.1);
+	padding:10px;
+	min-width: 80px;
+	margin-left:20px;
+	font-size: 13px;
+	text-align: center;
+	user-select: none;
+	cursor: pointer;
+}
+.effing-button-rec{
+	background-color: rgb(140,0,0);
+}
+.effing-button-play{
+	background-color: rgb(0,140,0);	
+}
+.effing-button-stop{
+	background-color: gray;		
+}
+#effing-effects-nav{
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+}
+.effing-effect-nav-item, .effing-effect-nav-item-selected{
+	
+	flex:1 1;
+	font-size: 11px;
+	margin-right:5px;
+	margin-bottom: 1px;
+	padding:4px;
+	background-color: rgba(0,0,0,0.2);
+	cursor: pointer;
+}
+.effing-effect-nav-item:hover, .effing-effect-nav-item-selected{
+	background-color: transparent;
+}
+
+.effing-rec{
+	background-color: red;
+}
+#effing-click{
+	min-height:10px;
+	min-width: 10px;
+	margin-left:5px;
+}

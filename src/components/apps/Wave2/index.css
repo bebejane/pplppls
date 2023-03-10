@@ -1,0 +1,353 @@
+#wave-loading{
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width:100%;
+  height: 100%;
+  color:transparent;
+  align-items: center;
+  justify-content: center;
+}
+#wave-loading-message{
+	display:flex;
+	min-width: 30%;
+	min-height: 20%;
+	max-width: 30%;
+	max-height: 20%;
+	background-color:#792a79;
+	color:#fff;
+	align-items: center;
+  	justify-content: center;
+}
+#wave-container{
+  	display: flex;
+  	flex-direction: column;
+  	width:80%;
+  	max-width:80%;
+  	height: 80%;
+  	align-items: center;
+  	justify-content: center;
+  	
+}
+#wave-processing{
+	display: flex;
+	flex: 1 1 auto;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	width: 100%;
+	color:#fff;
+	background-color: rgba(0,0,0,0.1);
+}
+#wave-waveform{
+	position: relative;
+	width:100%;
+	flex:1 1 auto;
+	min-height:140px;
+	border:1px solid rgba(255,255,255,0.05);
+	margin-bottom: 0px;
+}
+#wave-sequencer{
+	position: relative;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	width:100%;
+	flex:1 0 auto;
+	background-color:rgb(108, 9, 118);
+	margin-bottom: 5px;
+	margin-top: 5px;
+}
+.wave-sequencer-pad-wrap{
+	display: flex;
+	flex: 1 1 6.25%;
+	flex-direction: column;
+	align-items: center;
+	min-height: 94px;
+	
+	max-width: 6.25%;
+	border:1px solid rgba(255,255,255,0.2);
+	box-sizing: border-box;
+}
+.wave-sequencer-pad, .wave-sequencer-pad-playing, .wave-sequencer-pad-sample-playing,.wave-sequencer-pad-sample{
+	height:100%;
+	width:100%;
+	min-height: 40px;
+	margin:0px;
+	padding:0px;
+	background-color: rgba(0,0,0,0.1);
+}
+.wave-sequencer-pad-playing, .wave-sequencer-pad-sample-playing{
+	background-color: rgba(255, 180, 255, 0.41);
+}
+.wave-sequencer-pad:hover{
+	background-color: rgba(81, 61, 81, 0.2);
+}
+.wave-sequencer-pad-playing:hover{
+	
+}
+.wave-sequencer-pad:active, .wave-sequencer-pad-playing:active{
+	background-color: rgba(255,255,255,0.05);
+}
+.wave-sequencer-pad-sample{
+	background-color: rgba(202, 34, 202, 0.21);
+}
+.wave-sequencer-pad-switch{
+	display: flex;
+	flex: 1 1 auto;
+	width:100%;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	cursor:pointer;
+	border-top:1px solid rgba(255,255,255,0.2);
+}
+.wave-sequencer-pad-switch-on, 
+.wave-sequencer-pad-switch-on-active, 
+.wave-sequencer-pad-switch-off, 
+.wave-sequencer-pad-switch-disabled{
+	flex: 1 1 auto;
+	min-height: 10px;
+	max-height: 10px;
+	min-width: 10px;
+	max-width: 10px;
+	border-radius: 10px;
+	margin:5px;
+	cursor:pointer;
+
+	background-color: rgba(170, 0, 100, 1);
+}
+.wave-sequencer-pad-switch-on, .wave-sequencer-pad-switch-on-active{
+	animation: fadeIn ease .5s;	
+}
+.wave-sequencer-pad-switch-off{
+	background-color: rgba(159, 158, 89, 0.5);
+}
+.wave-sequencer-pad-switch-on-active{
+	background-color: rgba(255, 0, 100, 1);
+}
+.wave-sequencer-pad-switch-disabled{
+	background-color: rgba(0,0,0,0.1);	
+}
+.wave-sequencer-pad-delete{
+	flex: 1 1 auto;
+	min-height: 10px;
+	max-height: 10px;
+	min-width: 10px;
+	max-width: 10px;
+	color:#fff;
+}
+.wave-sequencer-drum-switches{
+	display: flex;
+	flex: 1 1 auto;
+	min-width: 100%;
+	max-width: 100%;
+	align-items: flex-start;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+.wave-sequencer-drum-switch-on, .wave-sequencer-drum-switch-off{
+	flex: 0 1 33.333%;
+	min-height: 22px;
+	max-height: 22px;
+	max-width: 33.3333%;
+	border:2px solid rgb(108, 9, 118);
+	border-bottom:3px solid rgb(108, 9, 118);
+	box-sizing: border-box;
+	background-color: #b748b0;
+}
+.wave-sequencer-drum-switch-on:first-child, .wave-sequencer-drum-switch-off:first-child{
+	
+}
+.wave-sequencer-drum-switch-on:last-child, .wave-sequencer-drum-switch-off:last-child{
+		
+}
+.wave-sequencer-drum-switch-on{
+	animation: fadeIn ease .35s;	
+}
+.wave-sequencer-drum-switch-off{
+	background-color: #881481;
+}
+#wave-top{
+	position: relative;
+	display: flex;
+  	flex-direction: row;
+  	width:100%;
+  	align-items: flex-start;
+  	justify-content: center;
+  	margin-bottom: 10px;
+}
+#wave-controls{
+	position: relative;
+	display: flex;
+  	flex-direction: row;
+  	width:100%;
+  	align-items: flex-start;
+  	justify-content: center;
+  	margin-bottom: 5px;
+}
+#wave-controls > input{
+	max-width: 80px;
+	margin-right:10px;
+}
+#wave-bottom{
+	position: relative;
+	display: flex;
+  	flex-direction: column;
+  	width:100%;
+  	align-items: center;
+  	justify-content: center;
+  	margin-top: 20px;
+  	margin-bottom: 5px;
+}
+#wave-bottom > div{
+	width:100%;
+}
+#wave-drop{
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color:#fff;
+	border: 1px solid rgba(255,255,255,0.1);
+	padding:0px;
+	min-width: 140px;
+	min-height:40px;
+	font-size: 13px;
+	margin-bottom: 5px;
+	text-align: center;
+	user-select: none;
+	cursor: pointer;
+}
+#wave-settings{
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: row;
+	margin-top:0px;
+	width:100%;
+}
+.wave-sliders{
+	display: flex;
+	flex: 0 0 50%;
+	max-width:50%;
+	flex-direction: column;
+	align-items: center;
+	font-size:12px;
+	color:#fff;
+	background-color: rgba(0,0,0,0.1);
+}
+.wave-sliders > div{
+	flex:1 1 auto;
+	width:100%;
+}
+.wave-slider{
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: row;
+	align-items: center;
+	
+	margin-left:0px;
+	width:100%;
+}
+.wave-slider > div{
+	margin-right:10px;
+	align-items: center;
+}
+.wave-slider > div:first-child{
+	min-width: 50px;
+	text-align:right;
+}
+.wave-slider > div:nth-child(even){
+	width:100%;
+	text-align:right;
+}
+.wave-slider > div:last-child{
+	min-width: 50px;
+	text-align:left;
+}
+.wave-button, 
+.wave-button-pressed, 
+.wave-button-browse, 
+.wave-count{
+	position: relative;
+	color:#fff;
+	border: 1px solid rgba(255,255,255,0.1);
+	padding:10px;
+	min-width: 80px;
+	margin-left:5px;
+	margin-right:5px;
+	font-size: 13px;
+	text-align: center;
+	user-select: none;
+	cursor: pointer;
+	font-family: "Lekton-Bold";
+}
+.wave-button:active, .wave-button-browse:active{
+	background-color: rgba(255,255,255,0.1)
+}
+.wave-button:hover, .wave-button-browse:hover{
+	background-color: rgba(255,255,255,0.03)
+}
+.wave-button-pressed{
+	background-color: rgba(255,255,255,0.2)	
+}
+.wave-button-browse, .wave-count{
+	display: flex;
+	min-width: 30px;
+	font-size: 16px;
+	align-items: center;
+	justify-content: center;
+	margin:5px;
+}
+.wave-count{
+	border:1px solid rgba(255,255,255,0.0);
+
+}
+.wave-button-browse-count{
+	min-width: 40px;
+}
+.wave-button-rec{
+	background-color: rgb(140,0,0);
+}
+.wave-button-play{
+	background-color: rgb(0,140,0);	
+}
+.wave-button-stop{
+	background-color: gray;		
+}
+@keyframes updating { to { opacity: 0.1; } }
+@keyframes fadeIn {
+  0% {
+    opacity:0;
+  }
+  100% {
+    opacity:1;
+  }
+}
+
+@-moz-keyframes fadeIn {
+  0% {
+    opacity:0;
+  }
+  100% {
+    opacity:1;
+  }
+}
+
+@-webkit-keyframes fadeIn {
+  0% {
+    opacity:0;
+  }
+  100% {
+    opacity:1;
+  }
+}
+
+@-o-keyframes fadeIn {
+  0% {
+    opacity:0;
+  }
+  100% {
+    opacity:1;
+  }
+}

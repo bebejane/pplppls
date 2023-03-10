@@ -1,0 +1,78 @@
+.sound-canvas-point-tools{
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    right:0px;
+    bottom:0px;
+    color:#fff;
+    font-size: 14px;
+    margin:5px;
+    flex-wrap: wrap;
+}
+.sound-canvas-point-tools  > *{
+    font-size: 16px;
+    border-radius: 0px;
+    background-color: transparent;
+    padding:4px;
+    margin:2px;
+    color:rgba(255,255,255,0.7);
+}
+.sound-canvas-point-tools > *:hover{
+    background-color: rgba(0255,255,255,0.2);  
+}
+.sound-canvas-point-tool-toggle{
+    color: #fff;
+    background-color: rgba(0,0,0,0.4) !important;   
+}
+.sound-canvas-point-tool-toggle:hover{   
+}
+.sound-canvas-point-sampling{
+    animation: blinker 0.5s cubic-bezier(.5, 0, 1, 1) infinite alternate;
+    color:red;
+}
+.sound-canvas-point-tool-mapped{
+    animation: blinker 0.5s cubic-bezier(.5, 0, 1, 1);
+    background-color:#711d94 !important;
+}
+.sound-canvas-point-tool-mapping{
+    animation: blinker 0.3s cubic-bezier(.3, 0, 1, 1) infinite alternate;
+    background-color:#711d94 !important;
+}
+.sound-canvas-point-tool-sampling-processing{
+    animation: blinker 0.5s cubic-bezier(.5, 0, 1, 1) infinite alternate;
+    color:gray;
+}
+.sound-canvas-point-reversed{
+    display: inline-block;
+    transform: scale(-1, 1);
+    max-height: 24px;
+    max-width: 24px;
+    min-width: 24px;
+    text-align: center;
+    padding:0px;
+
+
+    
+}
+.sound-canvas-point-counter{
+    font-size: 10px;
+    padding:0px;
+    width:20px;
+    height:20px;
+    border-radius: 10px;
+    margin:0px;
+    border-radius: 0px;
+}
+.sound-canvas-point-sampling-icon{
+    display:flex;
+}
+.sound-canvas-point-tools-effects{
+    position: absolute;
+    left:0px;
+    bottom:0px;
+    color:#fff;
+    font-size: 14px;
+    margin:5px;
+}

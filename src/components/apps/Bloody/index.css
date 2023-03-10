@@ -1,0 +1,21 @@
+#bloody-container{
+  display: flex;
+  flex-direction: column;
+  width:100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(62, 8, 56);
+}
+#bloody-devices{
+  position: absolute;
+  bottom:0;
+  right:0;
+  margin:10px;
+}
+#bloody-visualizer{
+  display: flex;
+  flex:1 1 auto;
+  width:100%;
+  height:100%;
+}

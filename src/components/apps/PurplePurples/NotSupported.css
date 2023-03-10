@@ -1,0 +1,26 @@
+#notsupported{
+    display:flex;
+    position: absolute;
+    z-index: 100;
+    width:100%;
+    height:100%;
+    top:0;
+    left:0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(68,0,63);
+    color:pink;
+    
+}
+#notsupported-container{
+    display:flex;
+    flex:1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content:center;
+    height: 100%;
+    width: 100%;
+    z-index:10;
+    font-size: 20px;
+    text-align: center;
+}
