@@ -88,8 +88,7 @@
 		"extends": "react-app"
 	},
 	"engines": {
-		"node": "16 - 18",
-		"npm": "6.9.0"
+		"node": "24.x"
 	},
 	"browserslist": {
 		"production": [
