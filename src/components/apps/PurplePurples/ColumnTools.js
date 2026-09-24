@@ -35,6 +35,7 @@ class ColumnTools extends Component {
 			solo: props.solo,
 			samplingProgress: {},
 			hovering: props.hovering,
+			hooveringButtons: false,
 		};
 	}
 
@@ -78,6 +79,12 @@ class ColumnTools extends Component {
 		console.log(on);
 		this.props.onFullscreen(on);
 	}
+	onMouseEnter(e) {
+		this.setState({ hoveringButtons: true });
+	}
+	onMouseLeave(e) {
+		this.setState({ hoveringButtons: false });
+	}
 	onMidiMapMode(on) {
 		const note = this.state.midiNote;
 		const unmap = note && on === true;
@@ -101,13 +108,14 @@ class ColumnTools extends Component {
 			samplingProgress,
 			effectsEnabled,
 			hovering,
+			hoveringButtons,
 		} = this.state;
 
 		if (!hovering) return null;
 
 		return (
 			<div
-				className={'sound-canvas-point-tools'}
+				className={'sound-canvas-point-tools' + (hoveringButtons ? ' hovering' : '')}
 				onClick={(e) => {
 					e.stopPropagation();
 				}}
@@ -117,6 +125,8 @@ class ColumnTools extends Component {
 				onMouseMove={(e) => {
 					e.stopPropagation();
 				}}
+				onMouseEnter={(e) => this.onMouseEnter(e)}
+				onMouseLeave={(e) => this.onMouseLeave(e)}
 			>
 				{playing ? (
 					<MdStop

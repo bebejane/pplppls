@@ -1,22 +1,22 @@
-import Global from "../../../Global";
-import React, { Component } from "react";
-import "./index.css";
-import { AiOutlineLoading } from "react-icons/ai";
-import AudioEngine from "../../../services/AudioEngine";
-import isElectron from "is-electron";
-import Controls from "./Controls";
-import Home from "./Home";
-import TitleBar from "../../util/TitleBar";
-import Column from "./Column";
-import SaveDialog from "./SaveDialog";
-import RecordingsDialog from "./RecordingsDialog";
-import HelpDialog from "./HelpDialog";
-import NewDialog from "./NewDialog";
-import NotSupported from "./NotSupported";
-import axios from "axios";
-import JSZip from "jszip";
-import screenfull from "screenfull";
-const MobileDetect = require("mobile-detect");
+import Global from '../../../Global';
+import React, { Component } from 'react';
+import './index.css';
+import { AiOutlineLoading } from 'react-icons/ai';
+import AudioEngine from '../../../services/AudioEngine';
+import isElectron from 'is-electron';
+import Controls from './Controls';
+import Home from './Home';
+import TitleBar from '../../util/TitleBar';
+import Column from './Column';
+import SaveDialog from './SaveDialog';
+import RecordingsDialog from './RecordingsDialog';
+import HelpDialog from './HelpDialog';
+import NewDialog from './NewDialog';
+import NotSupported from './NotSupported';
+import axios from 'axios';
+import JSZip from 'jszip';
+import screenfull from 'screenfull';
+const MobileDetect = require('mobile-detect');
 const Mobile = new MobileDetect(window.navigator.userAgent);
 
 class PurplePurples extends Component {
@@ -24,8 +24,8 @@ class PurplePurples extends Component {
 		super(props);
 		this.state = {
 			init: false,
-			model: "world winter II",
-			status: "",
+			model: 'world winter II',
+			status: '',
 			x: 0,
 			y: 0,
 			cols: {},
@@ -45,7 +45,7 @@ class PurplePurples extends Component {
 			recording: false,
 			sampling: false,
 			hud: true,
-			controls: false,
+			controls: true,
 			locked: true,
 			loop: true,
 			mute: false,
@@ -76,20 +76,20 @@ class PurplePurples extends Component {
 				sampleRate: 44100,
 				channels: 2,
 				volume: 0.5,
-				mode: "single",
+				mode: 'single',
 				electron: isElectron(),
 				enableAnalysers: true,
 				enableElapsed: true,
-				//enableLoops:true,
+				enableLoops: true,
 				processSample: {
 					trim: true,
 					normalize: true,
 				},
 			});
-			Global.engine.on("inputdevices", (devices) => {
+			Global.engine.on('inputdevices', (devices) => {
 				this.setState({ inputDevices: devices });
 			});
-			Global.engine.on("mididevices", (devices) => {
+			Global.engine.on('mididevices', (devices) => {
 				this.setState({ midiDevices: devices });
 			});
 		} catch (err) {
@@ -98,7 +98,7 @@ class PurplePurples extends Component {
 	}
 	async componentDidMount() {
 		try {
-			this.models = await this.loadFile("/models/index.json");
+			this.models = await this.loadFile('/models/index.json');
 			console.log(this.models);
 			this.init();
 		} catch (err) {
@@ -107,54 +107,54 @@ class PurplePurples extends Component {
 		this.initKeyboard();
 
 		document.addEventListener(
-			"touchmove",
+			'touchmove',
 			(e) => {
 				e.preventDefault();
 			},
-			true
+			true,
 		);
 	}
 	componentWillUnmount() {
 		this.props.onQuit();
 	}
 	initKeyboard() {
-		document.body.addEventListener("keydown", (e) => {
+		document.body.addEventListener('keydown', (e) => {
 			const key = e.key;
-			if (e.target.tagName === "INPUT") return;
+			if (e.target.tagName === 'INPUT') return;
 
 			switch (key) {
-				case " ":
+				case ' ':
 					this.onRecord(!this.state.recording);
 					break;
-				case "Space":
+				case 'Space':
 					this.onRecord(!this.state.recording);
 					break;
-				case "Enter":
+				case 'Enter':
 					if (!this.state.masterstate.playing) Global.engine.master.play();
 					else Global.engine.master.stop();
 					break;
-				case "esc":
+				case 'esc':
 					this.setState({ newDialog: false, saveDialog: false });
 					break;
-				case "v":
+				case 'v':
 					this.setState({ hud: !this.state.hud });
 					break;
-				case "m":
+				case 'm':
 					Global.engine.master.mute(!Global.engine.master.muted());
 					break;
-				case "p":
+				case 'p':
 					Global.engine.pause();
 					break;
-				case "s":
+				case 's':
 					this.onToggleSave();
 					break;
-				case "c":
+				case 'c':
 					this.onControls(!this.state.controls);
 					break;
-				case "f":
+				case 'f':
 					this.onFullscreen(!this.state.fullscreen);
 					break;
-				case "b":
+				case 'b':
 					this.randomValues();
 					break;
 				default:
@@ -175,15 +175,15 @@ class PurplePurples extends Component {
 	init(start) {
 		if (!Global.engine)
 			return this.handleError(
-				"This browser is not really supported. Use Firefox or Chrome to try this out!"
+				'This browser is not really supported. Use Firefox or Chrome to try this out!',
 			);
 
-		console.log("----------- INIT --------------");
+		console.log('----------- INIT --------------');
 
 		this.setState({ init: false });
 
-		const lastInputDevice = localStorage.getItem("lastInputDevice");
-		const lastMidiDevice = localStorage.getItem("lastMidiDevice");
+		const lastInputDevice = localStorage.getItem('lastInputDevice');
+		const lastMidiDevice = localStorage.getItem('lastMidiDevice');
 
 		Global.engine
 			.init(lastInputDevice, lastMidiDevice)
@@ -193,7 +193,7 @@ class PurplePurples extends Component {
 				if (start) this.initDone();
 			})
 			.catch((err) => {
-				if (err === "NOTALLOWED") {
+				if (err === 'NOTALLOWED') {
 					this.setState({ inputNotAllowed: true });
 					if (start) this.initDone();
 					return;
@@ -204,28 +204,28 @@ class PurplePurples extends Component {
 		Global.engine
 			.initMidi()
 			.then((devices) => {
-				console.log("MIDI SUPPORTED", devices);
+				console.log('MIDI SUPPORTED', devices);
 				this.setState({ midiDevices: devices, midiSupported: true });
 				if (!devices.length) return;
 				const device = devices.filter((d) => d.deviceId === lastMidiDevice)[0] || devices[0];
 				this.onMidiDeviceChange(device.deviceId);
 			})
 			.catch((err) => {
-				console.log("MIDI NOT AVAILABLE");
+				console.log('MIDI NOT AVAILABLE');
 			});
 
-		this.fileUploaderRef.current.addEventListener("change", (event) => {
+		this.fileUploaderRef.current.addEventListener('change', (event) => {
 			if (!event.target.files.length) return;
 			const file = event.target.files[0];
 
-			if (!file.name.toLowerCase().endsWith(".zip"))
-				return this.handleError("Format not supported");
+			if (!file.name.toLowerCase().endsWith('.zip'))
+				return this.handleError('Format not supported');
 
-			this.setState({ notification: { message: "Loading", description: "0%" } });
+			this.setState({ notification: { message: 'Loading', description: '0%' } });
 
 			const reader = new FileReader();
-			reader.addEventListener("load", (e) => {
-				const name = file.name.replace(/(\.zip)/gi, "");
+			reader.addEventListener('load', (e) => {
+				const name = file.name.replace(/(\.zip)/gi, '');
 				this.loadModel(name, e.srcElement.result)
 					.then((model) => {
 						this.initModel(model);
@@ -235,19 +235,19 @@ class PurplePurples extends Component {
 						this.setState({ notification: null });
 					});
 			});
-			reader.addEventListener("progress", (e) => {
+			reader.addEventListener('progress', (e) => {
 				this.setState({
 					notification: {
-						message: "Loading",
-						description: parseInt((e.loaded / e.total) * 100) + "%",
+						message: 'Loading',
+						description: parseInt((e.loaded / e.total) * 100) + '%',
 					},
 				});
 			});
-			reader.addEventListener("error", (err) => {
+			reader.addEventListener('error', (err) => {
 				console.error(err);
 				this.setState({ error: err, notification: null });
 			});
-			reader.addEventListener("abort", () => {
+			reader.addEventListener('abort', () => {
 				this.setState({ notification: null });
 			});
 			reader.readAsArrayBuffer(file);
@@ -264,42 +264,42 @@ class PurplePurples extends Component {
 			})
 			.catch((err) => {
 				console.log(err);
-				if (err == "NOTALLOWED") {
+				if (err == 'NOTALLOWED') {
 					this.setState({ inputNotAllowed: true });
-					this.handleError("You have to reload page to select input");
+					this.handleError('You have to reload page to select input');
 				}
 			});
 	}
 	async initDone() {
 		const model = await this.loadModel(this.state.model);
 
-		Global.engine.on("loaderror", (id, err) => {
+		Global.engine.on('loaderror', (id, err) => {
 			const cols = this.state.cols;
 			cols[id].error = err;
 			this.setState({ cols: cols });
 		});
 
-		Global.engine.on("recordingprogress", (prog) => {
+		Global.engine.on('recordingprogress', (prog) => {
 			this.setState({ recordingProgress: prog });
 		});
 
-		Global.engine.on("masterstate", (state, updated) => {
+		Global.engine.on('masterstate', (state, updated) => {
 			this.setState({ masterstate: state });
 		});
 
-		Global.engine.on("error", (err, id) => {
-			console.log("ENGINE ERROR", err);
+		Global.engine.on('error', (err, id) => {
+			console.log('ENGINE ERROR', err);
 		});
-		Global.engine.on("loaderror", (err, id) => {
+		Global.engine.on('loaderror', (err, id) => {
 			const cols = this.state.cols;
 			cols[id].error = err;
 			this.setState({ cols });
 		});
-		Global.engine.on("ready", (id, status) => {
+		Global.engine.on('ready', (id, status) => {
 			const cols = this.state.cols;
 			const notification = {
-				message: "Loading",
-				description: status.ready + "/" + status.total,
+				message: 'Loading',
+				description: status.ready + '/' + status.total,
 			};
 			const progress = {
 				loaded: status.ready,
@@ -318,22 +318,25 @@ class PurplePurples extends Component {
 				this.ready();
 			} else this.setState({ cols: cols, notification, progress });
 		});
-		Global.engine.on("loadingprogress", (progress) => {
+		Global.engine.on('loadingprogress', (progress) => {
 			console.log(progress);
 			this.setState({ progress });
 		});
 
+		Global.engine.on('state', (id, status) => {
+			console.log(id);
+		});
 		this.initModel(model);
 	}
 	async loadFile(file, contentLength) {
 		let content = null;
-		const binary = !file.toLowerCase().endsWith(".json");
-		const type = binary ? "arraybuffer" : "json";
+		const binary = !file.toLowerCase().endsWith('.json');
+		const type = binary ? 'arraybuffer' : 'json';
 
-		console.log("donwloading file", file, contentLength);
+		console.log('donwloading file', file, contentLength);
 
 		if (!isElectron()) {
-			console.time("download file");
+			console.time('download file');
 			content = await axios
 				.get(file, {
 					responseType: type,
@@ -343,39 +346,39 @@ class PurplePurples extends Component {
 						const total = prog.total || contentLength;
 						const perc = ((prog.loaded / total) * 100).toFixed(0);
 						this.setState({
-							notification: { message: "", description: perc + "%", loading: false },
+							notification: { message: '', description: perc + '%', loading: false },
 						});
 					},
 				})
 				.then((res) => {
-					console.timeEnd("download file");
+					console.timeEnd('download file');
 					this.setState({ notification: null });
 					return res.data;
 				});
 		} else {
-			const fs = window.require("fs");
-			const root = window.require("electron").remote.app.getAppPath();
-			const filePath = root + "/build" + file;
-			content = fs.readFileSync(filePath, type === "arraybuffer" ? "binary" : "utf-8");
-			if (type === "json") content = JSON.parse(content);
+			const fs = window.require('fs');
+			const root = window.require('electron').remote.app.getAppPath();
+			const filePath = root + '/build' + file;
+			content = fs.readFileSync(filePath, type === 'arraybuffer' ? 'binary' : 'utf-8');
+			if (type === 'json') content = JSON.parse(content);
 		}
 
 		return content;
 	}
 	async loadModel(name, zipContent) {
-		console.log("---------- LOAD MODEL ------");
+		console.log('---------- LOAD MODEL ------');
 
 		const model = this.models.filter((model) => model.name === name)[0];
 
 		if (model && model.files.length && model.files[0].buffer) {
-			console.log("CACHED model");
+			console.log('CACHED model');
 			return Promise.resolve(model);
 		}
 
 		if (model && model.new) return Promise.resolve(model);
 
 		if (!zipContent) {
-			const zipFile = "/models/" + name + ".zip";
+			const zipFile = '/models/' + name + '.zip';
 			try {
 				zipContent = await this.loadFile(zipFile, model.contentLength);
 			} catch (err) {
@@ -383,22 +386,22 @@ class PurplePurples extends Component {
 			}
 		}
 
-		this.setState({ notification: { message: "Extracting", description: name } });
+		this.setState({ notification: { message: 'Extracting', description: name } });
 
 		return new Promise((resolve, reject) => {
 			const zip = new JSZip();
 			zip
 				.loadAsync(zipContent)
 				.then(async (z) => {
-					const m = JSON.parse(await z.files["index.json"].async("text"));
+					const m = JSON.parse(await z.files['index.json'].async('text'));
 					for (var i = 0; i < m.files.length; i++) {
-						if (typeof m.files[i] === "string") m.files[i] = { filename: m.files[i] };
+						if (typeof m.files[i] === 'string') m.files[i] = { filename: m.files[i] };
 
 						if (z.files[m.files[i].filename])
-							m.files[i].buffer = await z.files[m.files[i].filename].async("arraybuffer");
+							m.files[i].buffer = await z.files[m.files[i].filename].async('arraybuffer');
 					}
 					this.setState({ notification: null, model: m.name });
-					console.log("LOADED MODEL", m);
+					console.log('LOADED MODEL', m);
 					resolve(m);
 				})
 				.catch((err) => {
@@ -414,10 +417,10 @@ class PurplePurples extends Component {
 	async saveModel(modelName) {
 		if (!modelName) return;
 
-		console.log("---------- SAVE ---------------");
+		console.log('---------- SAVE ---------------');
 		this.setState({
 			saveDialog: false,
-			notification: { message: "Saving: " + modelName, description: "" },
+			notification: { message: 'Saving: ' + modelName, description: '' },
 		});
 
 		const model = {
@@ -442,13 +445,13 @@ class PurplePurples extends Component {
 				params: sound.getSaveState(),
 			});
 		}
-		zip.file("index.json", JSON.stringify(model, null, 4));
+		zip.file('index.json', JSON.stringify(model, null, 4));
 		Object.keys(zip.files).forEach((name) => (model.contentLength += zip.files[name]._data.length));
 
 		zip
-			.generateAsync({ type: "blob", compression: "STORE" })
+			.generateAsync({ type: 'blob', compression: 'STORE' })
 			.then((content) => {
-				this.forceDownload(content, modelName + ".purple.zip");
+				this.forceDownload(content, modelName + '.purple.zip');
 			})
 			.catch((err) => {
 				this.handleError(err);
@@ -460,11 +463,11 @@ class PurplePurples extends Component {
 	async onUploadModel(name, file) {
 		this.setState({
 			notification: {
-				message: "Loading",
+				message: 'Loading',
 				description: name,
 			},
 		});
-		console.log("upload model", name);
+		console.log('upload model', name);
 		this.loadModel(name, file.contents)
 			.then((model) => {
 				this.initModel(model);
@@ -495,14 +498,14 @@ class PurplePurples extends Component {
 			loaded: 0,
 			numCols: model.cols,
 			numRows: model.rows,
-			notification: { message: "Loading", description: "0/" + model.files.length },
+			notification: { message: 'Loading', description: '0/' + model.files.length },
 		};
 
-		console.log("init", model, opt);
+		console.log('init', model, opt);
 		let fileIdx = 0;
 		state.rows = new Array(model.rows).fill(undefined).map((o, row) => {
 			return new Array(model.cols).fill(undefined).map((o, col) => {
-				const id = row + "-" + col;
+				const id = row + '-' + col;
 				const file = model.files[fileIdx++];
 				const filename = file ? file.filename : null;
 				const params = file && file.params ? file.params : {};
@@ -518,18 +521,16 @@ class PurplePurples extends Component {
 					file && file.buffer
 						? URL.createObjectURL(new Blob([file.buffer], { type: file.mimeType }))
 						: filename
-						? "/audio/" + model.name + "/" + filename
-						: null;
+							? '/audio/' + model.name + '/' + filename
+							: null;
 
 				Global.engine.add(id, url, filename, { ...params, enableAnalyser: false });
 				Global.engine.addEffect(
 					id,
-					"delay",
+					'delay',
 					effectBypass != undefined ? effectBypass : false,
-					effectParams
+					effectParams,
 				);
-
-				console.log(id, params, effectBypass);
 
 				state.cols[id] = {
 					model: model.name,
@@ -541,14 +542,14 @@ class PurplePurples extends Component {
 					fullscreen: false,
 					...params,
 					related: {
-						l: row + "-" + (col - 1),
-						r: row + "-" + (col + 1),
-						t: row - 1 + "-" + col,
-						b: row + 1 + "-" + col,
-						tl: row - 1 + "-" + (col - 1),
-						tr: row - 1 + "-" + (col + 1),
-						bl: row + 1 + "-" + (col - 1),
-						br: row + 1 + "-" + (col + 1),
+						l: row + '-' + (col - 1),
+						r: row + '-' + (col + 1),
+						t: row - 1 + '-' + col,
+						b: row + 1 + '-' + col,
+						tl: row - 1 + '-' + (col - 1),
+						tr: row - 1 + '-' + (col + 1),
+						bl: row + 1 + '-' + (col - 1),
+						br: row + 1 + '-' + (col + 1),
 					},
 					data: {
 						x: 0,
@@ -572,7 +573,7 @@ class PurplePurples extends Component {
 		});
 
 		this.setState(state, () => {
-			const elements = document.querySelectorAll(".sound-canvas-point-wrap");
+			const elements = document.querySelectorAll('.sound-canvas-point-wrap');
 			this.elementMap = {};
 			elements.forEach((el) => (this.elementMap[el.id] = el));
 			Global.engine.load();
@@ -581,7 +582,7 @@ class PurplePurples extends Component {
 	}
 	createModel(name, cols, row) {
 		if (this.models.filter((m) => m.name.toLowerCase() === name.toLowerCase()).length)
-			return this.handleError("Name is already taken!");
+			return this.handleError('Name is already taken!');
 
 		const model = {
 			name: name,
@@ -598,7 +599,7 @@ class PurplePurples extends Component {
 		if (Math.abs(e.movementX) > 50 || Math.abs(e.movementY) > 50) return; //console.log('skip')
 
 		let el = this.elementByPos(e.pageX, e.pageY);
-		if (!el) return console.log("notfind");
+		if (!el) return console.log('notfind');
 		const col = this.state.cols[el.id];
 		if (!col || col.fullscreen || this.state.loading) return;
 
@@ -696,7 +697,7 @@ class PurplePurples extends Component {
 		return el;
 	}
 	ready() {
-		console.log("READY TO ROOOLLLL");
+		console.log('READY TO ROOOLLLL');
 		return;
 	}
 	reinitModel(opt) {
@@ -730,11 +731,11 @@ class PurplePurples extends Component {
 			Global.engine
 				.record(true)
 				.then((recording) => {
-					console.log("Finished recording", recording);
+					console.log('Finished recording', recording);
 					this.recordings.unshift(recording);
 				})
 				.catch((err) => {
-					if (err === "CANCELLED") return;
+					if (err === 'CANCELLED') return;
 					console.error(err);
 					this.handleError(err);
 				})
@@ -753,12 +754,12 @@ class PurplePurples extends Component {
 			Global.engine
 				.sample(id, true)
 				.then((recording) => {
-					console.log("Finished sampling");
+					console.log('Finished sampling');
 					Global.engine.lock(id, true);
 				})
 				.catch((err) => {
 					this.setState({ sampling: false });
-					if (err === "CANCELLED") return;
+					if (err === 'CANCELLED') return;
 					this.handleError(err);
 				});
 		} else {
@@ -771,53 +772,53 @@ class PurplePurples extends Component {
 		Global.engine.cancelSample(id);
 	}
 	onDeleteRecording(id) {
-		console.log("delete recording", id);
+		console.log('delete recording', id);
 		this.recordings = this.recordings.filter((r) => r.id !== id);
 		this.setState({ recordings: this.recordings });
 	}
 
 	onOutputDeviceChange(outputDeviceId) {
-		console.log("change output device", outputDeviceId);
+		console.log('change output device', outputDeviceId);
 		this.setState({ outputDeviceId });
-		localStorage.setItem("lastOutputDevice", outputDeviceId);
+		localStorage.setItem('lastOutputDevice', outputDeviceId);
 	}
 
 	onMidiDeviceChange(midiDeviceId) {
 		if (!midiDeviceId) return;
-		console.log("change midi device", midiDeviceId);
+		console.log('change midi device', midiDeviceId);
 		Global.engine
 			.initMidiSource(midiDeviceId)
 			.then((midiSource) => {
-				localStorage.setItem("lastMidiDevice", midiDeviceId);
+				localStorage.setItem('lastMidiDevice', midiDeviceId);
 				this.setState({ midiDeviceId });
 			})
 			.catch((err) => this.handleError(err));
 	}
 	onDeviceChange(inputDeviceId) {
-		console.log("change device", inputDeviceId);
+		console.log('change device', inputDeviceId);
 		Global.engine
 			.initInputSource(inputDeviceId)
 			.then((inputSource) => {
-				localStorage.setItem("lastInputDevice", inputDeviceId);
+				localStorage.setItem('lastInputDevice', inputDeviceId);
 				this.setState({ inputDeviceId });
 			})
 			.catch((err) => this.handleError(err));
 	}
 	async onDownload(id, type) {
 		const recording = this.recordings.filter((r) => r.id === id)[0];
-		console.log("DOWNLOAD", recording);
-		if (type === "wav") return this.forceDownload(recording.blob, recording.name + ".wav");
+		console.log('DOWNLOAD', recording);
+		if (type === 'wav') return this.forceDownload(recording.blob, recording.name + '.wav');
 
-		this.setState({ notification: { message: "Converting to mp3", close: true } });
-		console.time("encode");
+		this.setState({ notification: { message: 'Converting to mp3', close: true } });
+		console.time('encode');
 		Global.engine
-			.encodeAudio(recording.buffer, "mp3")
+			.encodeAudio(recording.buffer, 'mp3')
 			.then((blob) => {
-				this.forceDownload(blob, recording.name + ".mp3");
-				console.timeEnd("encode");
+				this.forceDownload(blob, recording.name + '.mp3');
+				console.timeEnd('encode');
 			})
 			.catch((err) => {
-				if (err === "CANCELLED") return console.log("encoding cancelled");
+				if (err === 'CANCELLED') return console.log('encoding cancelled');
 				this.handleError(err);
 			})
 			.then(() => this.setState({ notification: null }));
@@ -828,8 +829,8 @@ class PurplePurples extends Component {
 		this.forceDownload(blob, s.sound.filename);
 	}
 	forceDownload(blob, filename) {
-		const a = document.createElement("a");
-		a.style = "display: none";
+		const a = document.createElement('a');
+		a.style = 'display: none';
 		document.body.appendChild(a);
 		var url = window.URL.createObjectURL(blob);
 		a.href = url;
@@ -841,11 +842,11 @@ class PurplePurples extends Component {
 		}, 100);
 	}
 	onUpload(id, buffer, filename) {
-		console.log("UPLOAD - - - - -  -", id, buffer);
+		console.log('UPLOAD - - - - -  -', id, buffer);
 		const name = filename.toLowerCase();
-		if (name && name.endsWith(".zip")) {
-			console.log("upload model", name);
-			this.loadModel(name.replace(".zip", ""), buffer)
+		if (name && name.endsWith('.zip')) {
+			console.log('upload model', name);
+			this.loadModel(name.replace('.zip', ''), buffer)
 				.then((model) => {
 					this.initModel(model);
 				})
@@ -854,12 +855,12 @@ class PurplePurples extends Component {
 		}
 
 		const objURL = URL.createObjectURL(
-			new Blob([buffer], { type: Global.fileToMimeType(filename) })
+			new Blob([buffer], { type: Global.fileToMimeType(filename) }),
 		);
 		Global.engine.replace(id, objURL, filename);
 	}
 	onMultiUpload(id, files) {
-		console.log("multiupload", id, files);
+		console.log('multiupload', id, files);
 		let offset = 0;
 		Global.engine.sounds.forEach((s, idx) => {
 			if (id === s.id) offset = idx;
@@ -886,13 +887,13 @@ class PurplePurples extends Component {
 		cols[id]._volume = cols[id].volume;
 		this.setState({ cols }, () => {
 			if (on) {
-				console.log("vol 1.0", id);
+				console.log('vol 1.0', id);
 				Global.engine.mute(id, false);
 				Global.engine.volume(id, 1.0);
 				Global.engine.rate(id, 1.0);
 			} else Global.engine.volume(id, cols[id]._volume);
 		});
-		console.log("fullscreen", id, on);
+		console.log('fullscreen', id, on);
 	}
 
 	onPause(on) {
@@ -922,7 +923,7 @@ class PurplePurples extends Component {
 		else Global.engine.disableEffects(id);
 	}
 	onMidiMapMode(id, on, unmap) {
-		console.log("midi map mode", id, on);
+		console.log('midi map mode', id, on);
 		if (unmap) return Global.engine.unmapMidiNote(id);
 		Global.engine.midiMapMode(id, on);
 	}
@@ -954,7 +955,7 @@ class PurplePurples extends Component {
 		this.setState({ controls: !this.state.controls });
 	}
 	handleError(err) {
-		const error = typeof err === "string" ? err : err.message || err.toString();
+		const error = typeof err === 'string' ? err : err.message || err.toString();
 		this.setState({ error: error });
 		console.error(err);
 	}
@@ -1006,6 +1007,7 @@ class PurplePurples extends Component {
 					controls={controls}
 					midiSupported={midiSupported}
 					fullscreen={cols[c.id].fullscreen}
+					locked={cols[c.id].locked}
 					sampling={sampling === c.id}
 					isSampling={sampling}
 					heat={cols[c.id].data && cols[c.id].data.heat}
@@ -1035,14 +1037,14 @@ class PurplePurples extends Component {
 				/>
 			));
 			return (
-				<div key={"r" + rowidx} className={"sound-canvas-row"}>
+				<div key={'r' + rowidx} className={'sound-canvas-row'}>
 					{columns}
 				</div>
 			);
 		});
 
 		return (
-			<div id="container">
+			<div id='container'>
 				<Home
 					init={init}
 					inputDevices={inputDevices}
@@ -1056,44 +1058,44 @@ class PurplePurples extends Component {
 					onDeviceChange={(deviceId) => this.onDeviceChange(deviceId)}
 					onMidiDeviceChange={(deviceId) => this.onMidiDeviceChange(deviceId)}
 				/>
-				{isElectron() && !fullscreen && <TitleBar title={"purplepurples"} />}
+				{isElectron() && !fullscreen && <TitleBar title={'purplepurples'} />}
 				<form
 					ref={this.fileUploaderFormRef}
-					style={{ display: "none" }}
+					style={{ display: 'none' }}
 					onSubmit={(e) => this.onUploadModelFromFile(e)}
 				>
 					 
 					<input
-						type="file"
-						id="upload"
-						accept={"application/zip"}
+						type='file'
+						id='upload'
+						accept={'application/zip'}
 						ref={this.fileUploaderRef}
-						style={{ display: "none" }}
+						style={{ display: 'none' }}
 					/>
 				</form>
 				{error && (
-					<div id={"error"}>
-						<div id={"error-box"}>
-							<div id={"error-header"}>Error</div>
-							<div id={"error-message"}>{error.toString()}</div>
-							<div id={"error-buttons"}>
+					<div id={'error'}>
+						<div id={'error-box'}>
+							<div id={'error-header'}>Error</div>
+							<div id={'error-message'}>{error.toString()}</div>
+							<div id={'error-buttons'}>
 								<button onClick={() => this.onErrorClose()}>Close</button>
 							</div>
 						</div>
 					</div>
 				)}
 				{notification && (
-					<div id={"notification"} onMouseMove={(e) => e.stopPropagation()}>
-						<div id={"notification-box"}>
+					<div id={'notification'} onMouseMove={(e) => e.stopPropagation()}>
+						<div id={'notification-box'}>
 							<div>{notification.message}</div>
 							{notification.description && <div>{notification.description}</div>}
 							{notification.loading && (
-								<div id="notification-loading">
+								<div id='notification-loading'>
 									<AiOutlineLoading />
 								</div>
 							)}
 							{notification.close && (
-								<div id="notification-close">
+								<div id='notification-close'>
 									<button onClick={() => this.onCancelEncodeAudio()}>Cancel</button>
 								</div>
 							)}
@@ -1103,14 +1105,14 @@ class PurplePurples extends Component {
 
 				<div
 					ref={this.canvasRef}
-					id={"sound-canvas"}
+					id={'sound-canvas'}
 					onTouchMove={(e) => this.onSwipe(e)}
 					onMouseMove={(e) => {
 						if (!ios) this.onMouseMove(e);
 					}}
 				>
 					{points}
-					{recording && <div id={"sound-canvas-rec"}>{recording ? "[REC]" : ""}</div>}
+					{recording && <div id={'sound-canvas-rec'}>{recording ? '[REC]' : ''}</div>}
 					{saveDialog && (
 						<SaveDialog
 							model={model}

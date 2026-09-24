@@ -23,12 +23,15 @@ import { TiWaves } from 'react-icons/ti';
 class Column extends Component {
 	constructor(props) {
 		super(props);
+
 		this.state = {
 			id: props.id,
 			controls: props.controls,
 			sampling: props.sampling,
 			isSampling: props.isSampling,
 			fullscreen: props.fullscreen,
+			//locked: props.locked,
+			locked: false,
 			pitch: 1.0,
 			pitchPercentage: 0,
 			height: 0,
@@ -45,11 +48,12 @@ class Column extends Component {
 			hovering: false,
 			recordingProgress: {},
 			randDeg: 0,
-
 			samplingProgress: {},
+			point: null,
 		};
 		this.ref = React.createRef();
 		this.canvasRef = React.createRef();
+		this.pointRef = React.createRef();
 	}
 	componentDidMount() {
 		const point = this.ref.current;
@@ -57,21 +61,26 @@ class Column extends Component {
 			height: point.clientHeight,
 			width: point.clientWidth,
 		});
-		Global.engine.on(this.state.id + 'loopend', () => {
+		Global.engine.on('loopend' + this.state.id, () => {
+			//console.log('loopend');
 			this.setState({ loopEndTrigger: true });
-			setTimeout(() => this.setState({ loopEndTrigger: false }), 100);
+			setTimeout(() => this.setState({ loopEndTrigger: false }), 50);
 		});
 		//console.log('state'+this.state.id)
 		Global.engine.on('state' + this.state.id, (state, updated) => {
+			updated.locked !== undefined && console.log(updated, state.locked);
 			this.setState({ ...this.state, ...state });
-			if (updated.locked) this.lockO();
+
 			if (updated.playing) this.triggerClick();
+			if (updated.locked) this.lock();
 			//console.log(updated)
 		});
 	}
-	lockO() {
+	lock() {
+		console.log('lock client side');
 		clearInterval(this.it);
 		clearInterval(this.to);
+		this.pointRef.current = null;
 		this.it = setInterval(() => {
 			this.setState({ randDeg: Math.floor(Math.random() * 360) + 0 });
 		}, 10);
@@ -96,17 +105,24 @@ class Column extends Component {
 			return this.onDoubleClick(e);
 		}
 
-		this.setState({ click: true });
-		setTimeout(() => this.setState({ click: false }), 100);
-
 		const id = this.state.id;
 		const l = this.ref.current.offsetLeft;
+		const t = this.ref.current.offsetTop;
+		const height = this.ref.current.clientHeight;
 		const width = this.ref.current.clientWidth;
 		const percX = Math.abs((e.pageX - l) / width);
+		const percY = Math.abs((e.pageY - t) / height);
+		this.pointRef.current = { x: percX, y: percY };
+		this.setState({ point: this.pointRef.current });
+
+		this.setState({ click: true });
+		setTimeout(() => this.setState({ click: false }), 100);
 
 		if (!e.altKey && !e.metaKey && !e.ctrlKey) {
 			this.props.onPlay({ rate: Math.ceil(percX * 12) / 10 });
 		} else if (e.altKey) {
+			//this.setState({ point: null });
+			this.pointRef.current = null;
 			return this.props.onStop(id);
 		} else if (e.ctrlKey) {
 			return this.props.onLocked(!this.state.locked);
@@ -262,7 +278,9 @@ class Column extends Component {
 			error,
 			fullscreen,
 			randDeg,
+			hovering,
 		} = this.state;
+
 		const controls = this.state.controls;
 		const rgba =
 			'rgb(' + (playing ? '88' : '68') + ', 0, ' + (playing ? 150 : volume * 80 + 30) + ')';
@@ -276,7 +294,7 @@ class Column extends Component {
 		const loopEndStyle = { height: (loopEnd / duration) * 100 + '%' };
 
 		const style = {
-			backgroundColor: loopEndTrigger || click ? rgba3 : rgba,
+			backgroundColor: click ? rgba3 : rgba,
 			backgroundImage: locked
 				? 'linear-gradient(' +
 					deg +
@@ -316,7 +334,6 @@ class Column extends Component {
 				className={'sound-canvas-point-wrap'}
 				style={style}
 				onMouseMove={(e) => this.onModify(e)}
-				onClick={(e) => {}}
 				onMouseEnter={(e) => this.onMouseEnter(e)}
 				onMouseLeave={(e) => this.onMouseLeave(e)}
 				onMouseDown={(e) => !e.ctrlKey && this.onClick(e)}
@@ -326,6 +343,24 @@ class Column extends Component {
 					this.onClick(e, true);
 				}}
 			>
+				{this.pointRef?.current && (
+					<div
+						key={JSON.stringify(this.pointRef.current)}
+						className={
+							'sound-canvas-click-point' +
+							(playing && !loopEndTrigger ? ' sound-canvas-click-point-playing' : '')
+						}
+						style={{
+							left: this.pointRef.current.x * 100 + '%',
+							top: this.pointRef.current.y * 100 + '%',
+						}}
+						onMouseDown={(e) => {
+							console.log('mousedown point', !locked);
+							e.stopPropagation();
+							this.props.onLocked(!locked);
+						}}
+					></div>
+				)}
 				<div id={'p-' + id} className={'sound-canvas-point'}>
 					{/* controls && !sampling &&
                         <React.Fragment>
