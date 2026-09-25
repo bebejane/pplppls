@@ -1,71 +1,44 @@
-import {baseEffect, Utils, createEffectBase} from './core'
+// @ts-nocheck
+import { baseEffect, Utils, createEffectBase } from './core'
+import { createWorkletEffectNode } from './worklet'
 
-const Tremolo = function(context, options) {
-
-	// adapted from
-	// https://github.com/mmckegg/web-audio-school/blob/master/lessons/3.%20Effects/13.%20Tremolo/answer.js
-
+/**
+ * Tremolo (sine LFO amplitude modulation). DSP in the pp-tremolo worklet;
+ * the depth curve and dry/wet mirror the original shaper + gain graph.
+ */
+const Tremolo = function (context, options = {}) {
 	this.context = context;
-	this.options = {};
-	options = options || this.options;
-
+	this.options = { ...options };
 	this.defaults = {
-		speed: {value:4, max:20, min:0, type:'integer'},
-		depth: {value:0.5, max:1, min:0, type:'float'},
-		mix: {value:0.5, max:1, min:0, type:'float'}
+		speed: { value: 4, max: 20, min: 0, type: 'integer' },
+		depth: { value: 0.5, max: 1, min: 0, type: 'float' },
+		mix: { value: 0.5, max: 1, min: 0, type: 'float' },
 	};
-
-	// create nodes
-	this.inputNode = this.context.createGain();
-	this.outputNode = this.context.createGain();
-	this.dryGainNode = this.context.createGain();
-	this.wetGainNode = this.context.createGain();
-
-	this.tremoloGainNode = this.context.createGain();
-	this.tremoloGainNode.gain.value = 0;
-	this.lfoNode = this.context.createOscillator();
-
-	this.shaperNode = this.context.createWaveShaper();
-	this.shaperNode.curve = new Float32Array([0, 1]);
-	this.shaperNode.connect(this.tremoloGainNode.gain);
-
-	// dry mix
-	this.inputNode.connect(this.dryGainNode);
-	this.dryGainNode.connect(this.outputNode);
-	
-	// wet mix
-	this.lfoNode.connect(this.shaperNode);
-	this.lfoNode.type = 'sine';
-	this.lfoNode.start(0);
-
-	this.inputNode.connect(this.tremoloGainNode);
-	this.tremoloGainNode.connect(this.wetGainNode);
-	this.wetGainNode.connect(this.outputNode);
-
+	const init = {};
+	Object.keys(this.defaults).forEach((k) => {
+		init[k] = options[k] !== undefined && options[k] !== null ? options[k] : this.defaults[k].value;
+	});
+	this.inputNode = this.outputNode = this.node = createWorkletEffectNode(context, 'pp-tremolo', init);
 	createEffectBase.call(this, context, options, this.defaults);
 };
 
 Tremolo.prototype = Object.create(baseEffect, {
-
 	/**
 	 * Gets and sets the dry/wet mix.
 	 */
 	mix: {
 		enumerable: true,
 
-		get: function() {
-			return this.options.mix	;	
+		get: function () {
+			return this.options.mix;
 		},
 
-		set: function(mix) {
-			if (!Utils.isInRange(mix, 0, 1)) 
-				return;
-
+		set: function (mix) {
+			if (!Utils.isInRange(mix, 0, 1)) return;
 			this.options.mix = mix;
-			const mixTime = this.context.currentTime;
-			this.dryGainNode.gain.setTargetAtTime(Utils.getDryLevel(this.mix), mixTime, 0.02);
-			this.wetGainNode.gain.setTargetAtTime(Utils.getWetLevel(this.mix), mixTime, 0.02);
-		}
+			const p = this.node.parameters.get('mix');
+			p.setTargetAtTime(mix, this.context.currentTime, 0.02);
+		},
 	},
 
 	/**
@@ -74,17 +47,14 @@ Tremolo.prototype = Object.create(baseEffect, {
 	speed: {
 		enumerable: true,
 
-		get: function() {
-			return this.options.speed;	
+		get: function () {
+			return this.options.speed;
 		},
-
-		set: function(speed) {
-			if (!Utils.isInRange(speed, 0, 20)) 
-				return;
-			
+		set: function (speed) {
+			if (!Utils.isInRange(speed, 0, 20)) return;
 			this.options.speed = speed;
-			this.lfoNode.frequency.value = speed;
-		}
+			this.node.parameters.get('speed').value = speed;
+		},
 	},
 
 	/**
@@ -93,18 +63,14 @@ Tremolo.prototype = Object.create(baseEffect, {
 	depth: {
 		enumerable: true,
 
-		get: function() {
-			return this.options.depth;	
+		get: function () {
+			return this.options.depth;
 		},
-
-		set: function(depth) {
-			if (!Utils.isInRange(depth, 0, 1)) 
-				return;
-			
+		set: function (depth) {
+			if (!Utils.isInRange(depth, 0, 1)) return;
 			this.options.depth = depth;
-			this.shaperNode.curve = new Float32Array([1-depth, 1]);
-		}
-	}
-
+			this.node.parameters.get('depth').value = depth;
+		},
+	},
 });
 export default Tremolo

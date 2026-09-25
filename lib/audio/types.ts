@@ -86,7 +86,7 @@ export interface AudioEngine
 	listDevices(): Promise<MediaDeviceInfoLike[]>;
 	createInputSource(stream: MediaStream, deviceId: string): void;
 	add(id: string, url: string | null, filename?: string | null, opt?: Record<string, unknown>): SoundLike;
-	addEffect(id: string, type: string, bypass?: boolean, opt?: Record<string, unknown>): Any;
+	addEffect(id: string, type: string, bypass?: boolean, opt?: Record<string, unknown>): Promise<Any>;
 	remove(id: string): void;
 	replace(id: string, url: string, filename: string): void;
 	load(id?: string): void;

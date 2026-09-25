@@ -111,6 +111,12 @@ const EFFECTS = [
 			depth: {value:0.5, max:1, min:0, type:'float'},
 			mix: {value:0.5, max:1, min:0, type:'float'}
 		},
+	},{
+		id: 'pitchshift',
+		name: 'Pitch Shift',
+		defaults:{
+			pitchShift: {value:1.0, max:2, min:0.5, type:'float'}
+		},
 	},
 ]
 
@@ -129,6 +135,7 @@ import StereoPanner from './StereoPanner'
 import Tremolo from './Tremolo'
 import PitchShift from './PitchShift'
 import { Utils, baseEffect, createEffectBase } from './core'
+import { ensureEffectsWorklet } from './worklet'
 
 const EFFECT_CLASSES: Record<string, any> = {
 	delay: Delay,
@@ -148,11 +155,14 @@ const EFFECT_CLASSES: Record<string, any> = {
 	pitchshift: PitchShift,
 }
 
-const createEffect = (id: string, context: AudioContext, opt: Record<string, any> = {}): any => {
-	const defaults = EFFECTS.filter((eff) => eff.id === id)[0].defaults;
-	if (!defaults || !EFFECT_CLASSES[id]) throw new Error('Effect doesnt exist: ' + id);
-	Object.keys(defaults).forEach((param) => (opt[param] = defaults[param].value));
-	return new EFFECT_CLASSES[id](context, opt);
+const createEffect = async (id: string, context: AudioContext, opt: Record<string, any> = {}): Promise<any> => {
+	const defs = EFFECTS.filter((eff) => eff.id === id)[0];
+	if (!defs || !EFFECT_CLASSES[id]) throw new Error('Effect doesnt exist: ' + id);
+	const options = { ...opt };
+	Object.keys(defs.defaults).forEach((param) => (options[param] = defs.defaults[param].value));
+	// AudioWorkletNode construction requires the processor to be registered
+	await ensureEffectsWorklet(context);
+	return new EFFECT_CLASSES[id](context, options);
 }
 
 export { createEffect, createEffectBase, baseEffect, Utils, EFFECTS, EFFECT_CLASSES }

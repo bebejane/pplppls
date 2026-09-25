@@ -1,92 +1,60 @@
 // @ts-nocheck
-import {baseEffect, Utils, createEffectBase} from './core'
+import { baseEffect, Utils, createEffectBase } from './core'
+import { createWorkletEffectNode } from './worklet'
 
-const Convolver =function(context, options = {}) {
-
+/**
+ * Convolver: loads the impulse file on the main thread (fetch + decode),
+ * posts the channel data to the pp-convolver worklet, which runs a uniform
+ * partitioned overlap-save convolution. Dry path stays live until the
+ * impulse arrives, matching the old ConvolverNode behavior.
+ */
+const Convolver = function (context, options = {}) {
 	this.context = context;
-	this.options = {};
-	options = options || this.options;
-	
-
-	var self = this;
-	var request = new XMLHttpRequest();
+	this.options = { ...options };
 	this.defaults = {
-		mix: {value:0.5, max:1, min:0, type:'float'}
+		mix: { value: 0.5, max: 1, min: 0, type: 'float' },
 	};
-
-	//this.callback = callback;
-
-	this.inputNode = this.context.createGain();
-	this.convolverNode = this.context.createConvolver();
-	this.outputNode = this.context.createGain();
-
-	this.wetGainNode = this.context.createGain();
-	this.dryGainNode = this.context.createGain();
-
-	this.inputNode.connect(this.convolverNode);
-
-	this.convolverNode.connect(this.wetGainNode);
-	this.inputNode.connect(this.dryGainNode);
-
-	this.dryGainNode.connect(this.outputNode);
-	this.wetGainNode.connect(this.outputNode);
-
-
+	const init = {};
+	Object.keys(this.defaults).forEach((k) => {
+		init[k] = options[k] !== undefined && options[k] !== null ? options[k] : this.defaults[k].value;
+	});
+	this.inputNode = this.outputNode = this.node = createWorkletEffectNode(context, 'pp-convolver', init);
 	createEffectBase.call(this, context, options, this.defaults);
 
 	if (!options.impulse) {
 		console.error('No impulse file specified.');
 		return;
 	}
-
-	request.open('GET', options.impulse, true);
-	request.responseType = 'arraybuffer';
-	request.onload = function (e) {
-		var audioData = e.target.response;
-
-		this.context.decodeAudioData(audioData, function(buffer) {
-
-			self.convolverNode.buffer = buffer;
-
-			if (self.callback && Utils.isFunction(self.callback))
-				self.callback();
-
-		}, function(error) {
-
+	fetch(options.impulse)
+		.then((res) => res.arrayBuffer())
+		.then((data) => context.decodeAudioData(data))
+		.then((buffer) => {
+			const channels = [];
+			const n = Math.min(2, buffer.numberOfChannels);
+			for (let i = 0; i < n; i++) channels.push(buffer.getChannelData(i));
+			this.node.port.postMessage({ type: 'ir', channels });
+			if (this.callback && Utils.isFunction(this.callback)) this.callback();
+		})
+		.catch((error) => {
 			error = error || new Error('Error decoding impulse file');
-
-			if (self.callback && Utils.isFunction(self.callback))
-				self.callback(error);
+			console.error('Error while fetching impulse file', error);
+			if (this.callback && Utils.isFunction(this.callback)) this.callback(error);
 		});
-	};
-
-	request.onreadystatechange = function(event) {
-		if (request.readyState === 4 && request.status !== 200) {
-			console.error('Error while fetching ' + options.impulse + '. ' + request.statusText);
-		}
-	};
-
-	request.send();
 };
 
 Convolver.prototype = Object.create(baseEffect, {
-
 	mix: {
 		enumerable: true,
 
-		get: function() {
+		get: function () {
 			return this.options.mix;
 		},
-
-		set: function(mix) {
-			if (!Utils.isInRange(mix, 0, 1))
-				return;
-
+		set: function (mix) {
+			if (!Utils.isInRange(mix, 0, 1)) return;
 			this.options.mix = mix;
-			const mixTime = this.context.currentTime;
-			this.dryGainNode.gain.setTargetAtTime(Utils.getDryLevel(this.mix), mixTime, 0.02);
-			this.wetGainNode.gain.setTargetAtTime(Utils.getWetLevel(this.mix), mixTime, 0.02);
-		}
-	}
+			const p = this.node.parameters.get('mix');
+			p.setTargetAtTime(mix, this.context.currentTime, 0.02);
+		},
+	},
 });
 export default Convolver

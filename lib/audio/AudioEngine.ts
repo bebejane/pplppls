@@ -11,6 +11,7 @@ import Analyser from './Analyser';
 import extractPeaks from 'webaudio-peaks';
 import moment from 'moment';
 import { EFFECTS, createEffect } from './effects';
+import { ensureEffectsWorklet } from './effects/worklet';
 import BPM from 'bpm';
 import { EventEmitter } from 'events';
 
@@ -98,6 +99,11 @@ class AudioEngine extends EventEmitter {
 			});
 
 		this.master = new Master(this, this._volume);
+
+		// Effects run on an AudioWorklet: register their processors early so
+		// the first addEffect() (even during model load) can create a node
+		// without waiting for a lazy module load.
+		ensureEffectsWorklet(this.context);
 
 		navigator.mediaDevices.addEventListener('devicechange', (event) => {
 			console.log('DEVICECHNAGE', event);
@@ -612,8 +618,8 @@ class AudioEngine extends EventEmitter {
 		}
 	}
 
-	addEffect(id, type, bypass, opt) {
-		const effect = createEffect(type, this.context, opt);
+	async addEffect(id, type, bypass, opt) {
+		const effect = await createEffect(type, this.context, opt);
 		return this.get(id).sound.addEffect(type, effect, bypass);
 	}
 	removeEffect(id, idx) {

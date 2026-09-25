@@ -1,74 +1,44 @@
 // @ts-nocheck
-import {baseEffect, Utils, createEffectBase} from './core'
+import { baseEffect, Utils, createEffectBase } from './core'
+import { createWorkletEffectNode } from './worklet'
 
 /**
- * Adapted from https://github.com/mmckegg/web-audio-school/blob/master/lessons/3.%20Effects/18.%20Ping%20Pong%20Delay/answer.js
+ * Ping-pong delay (delay L -> delay R, feedback back to L). DSP in the
+ * pp-pingpongdelay worklet; wet output is stereo (L tap / R tap).
  */
-
-const PingPongDelay = function(context, options) {
-
+const PingPongDelay = function (context, options = {}) {
 	this.context = context;
-	this.options = {};
-	options = options || this.options;
-	
+	this.options = { ...options };
 	this.defaults = {
-		feedback: {value:0.5, max:1, min:0, type:'float'},
-		time: {value:0.3, max:1, min:0, type:'float'},
-		mix: {value:0.5, max:1, min:0, type:'float'}
+		feedback: { value: 0.5, max: 1, min: 0, type: 'float' },
+		time: { value: 0.3, max: 1, min: 0, type: 'float' },
+		mix: { value: 0.5, max: 1, min: 0, type: 'float' },
 	};
-
-	this.inputNode = this.context.createGain();
-	this.outputNode = this.context.createGain();
-	this.delayNodeLeft = this.context.createDelay();
-	this.delayNodeRight = this.context.createDelay();
-	this.dryGainNode = this.context.createGain();
-	this.wetGainNode = this.context.createGain();
-	this.feedbackGainNode = this.context.createGain();
-	this.channelMerger = this.context.createChannelMerger(2);
-
-	// dry mix
-	this.inputNode.connect(this.dryGainNode);
-	// dry mix out
-	this.dryGainNode.connect(this.outputNode);
-
-	// the feedback loop
-	this.delayNodeLeft.connect(this.channelMerger, 0, 0);
-	this.delayNodeRight.connect(this.channelMerger, 0, 1);
-	this.delayNodeLeft.connect(this.delayNodeRight);
-	this.feedbackGainNode.connect(this.delayNodeLeft);
-	this.delayNodeRight.connect(this.feedbackGainNode);
-
-	// wet mix
-	this.inputNode.connect(this.feedbackGainNode);
-
-	// wet out
-	this.channelMerger.connect(this.wetGainNode);
-	this.wetGainNode.connect(this.outputNode);
-
+	const init = {};
+	Object.keys(this.defaults).forEach((k) => {
+		init[k] = options[k] !== undefined && options[k] !== null ? options[k] : this.defaults[k].value;
+	});
+	this.inputNode = this.outputNode = this.node = createWorkletEffectNode(context, 'pp-pingpongdelay', init);
 	createEffectBase.call(this, context, options, this.defaults);
 };
 
 PingPongDelay.prototype = Object.create(baseEffect, {
-
 	/**
 	 * Gets and sets the dry/wet mix.
 	 */
 	mix: {
 		enumerable: true,
 
-		get: function() {
-			return this.options.mix	;	
+		get: function () {
+			return this.options.mix;
 		},
 
-		set: function(mix) {
-			if (!Utils.isInRange(mix, 0, 1))
-				return;
-
+		set: function (mix) {
+			if (!Utils.isInRange(mix, 0, 1)) return;
 			this.options.mix = mix;
-			const mixTime = this.context.currentTime;
-			this.dryGainNode.gain.setTargetAtTime(Utils.getDryLevel(this.mix), mixTime, 0.02);
-			this.wetGainNode.gain.setTargetAtTime(Utils.getWetLevel(this.mix), mixTime, 0.02);
-		}
+			const p = this.node.parameters.get('mix');
+			p.setTargetAtTime(mix, this.context.currentTime, 0.02);
+		},
 	},
 
 	/**
@@ -77,18 +47,14 @@ PingPongDelay.prototype = Object.create(baseEffect, {
 	time: {
 		enumerable: true,
 
-		get: function() {
-			return this.options.time;	
+		get: function () {
+			return this.options.time;
 		},
-
-		set: function(time) {
-			if (!Utils.isInRange(time, 0, 180))
-				return;
-
+		set: function (time) {
+			if (!Utils.isInRange(time, 0, 180)) return;
 			this.options.time = time;
-			this.delayNodeLeft.delayTime.value = time;
-			this.delayNodeRight.delayTime.value = time;
-		}
+			this.node.parameters.get('time').value = time;
+		},
 	},
 
 	/**
@@ -97,18 +63,14 @@ PingPongDelay.prototype = Object.create(baseEffect, {
 	feedback: {
 		enumerable: true,
 
-		get: function() {
-			return this.options.feedback;	
+		get: function () {
+			return this.options.feedback;
 		},
-
-		set: function(feedback) {
-			if (!Utils.isInRange(feedback, 0, 1))
-				return;
-
+		set: function (feedback) {
+			if (!Utils.isInRange(feedback, 0, 1)) return;
 			this.options.feedback = parseFloat(feedback, 10);
-			this.feedbackGainNode.gain.value = this.feedback;
-		}
-	}
-
+			this.node.parameters.get('feedback').value = this.feedback;
+		},
+	},
 });
 export default PingPongDelay
