@@ -11,46 +11,49 @@ import { useRef, useState } from 'react';
  * `color` → `colorLeft` and hard-resets at the next stripe.
  *
  * The stripes pulse with the audio spectrum: the column's `frequency`
- * (FFT) data is averaged into 4 log-spaced bands (low → high, one per
- * stripe) and each stripe's brightness fades in/out with its own band
- * (exponentially smoothed per frame). Each column gets a random band split,
- * so different locked columns react to different frequency ranges. The stripe
- * angle still comes only from the `deg` prop — audio never rotates the
- * gradient.
+ * (FFT) data is averaged into 4 narrow bands — one per stripe — each chosen
+ * at random (distinct) so every locked column reacts to a different set of
+ * frequency ranges, and each stripe's brightness fades in/out with its band
+ * (exponentially smoothed per frame). The stripe angle still comes only from
+ * the `deg` prop — audio never rotates the gradient.
  */
 const STRIPES = 4;
 
 // resting stripe brightness; band magnitude normalisation
 const FLOOR = 0.65;
-const BIAS = 0.25;
-const GAIN = 2.2;
+const BIAS = 0.12;
+const GAIN = 1.1;
 const SMOOTH = 0.2;
 
-// random log-spaced partition of the audible range into 4 non-overlapping
-// bands — each GradientVisualizer instance (per locked column) gets its own
-// frequency split so different columns react to different ranges
+// frequency zones available for stripes; each stripe gets one distinct random
+// narrow band so different columns (and different stripes) visibly react to
+// different parts of the spectrum
+const ZONES: Array<[number, number]> = [
+	[40, 80],
+	[80, 160],
+	[160, 320],
+	[320, 640],
+	[640, 1280],
+	[1280, 2560],
+	[2560, 5120],
+	[5120, 12000],
+];
+
+// random distinct narrow bands (one per stripe), picked without replacement
+// then shuffled — each GradientVisualizer instance (per locked column) gets its
+// own frequency split so different columns react to different ranges
 function randomBands(): Array<[number, number]> {
-	const lo = Math.log10(40);
-	const hi = Math.log10(12000);
-	const minGap = 0.35; // min log gap (~2.2x ratio) so bands stay distinct
-	const cuts: number[] = [];
-	let attempts = 0;
-	while (cuts.length < STRIPES - 1 && attempts < 300) {
-		attempts++;
-		const c = lo + Math.random() * (hi - lo);
-		if (cuts.every((x) => Math.abs(x - c) >= minGap)) cuts.push(c);
+	const pool = ZONES.map((_, i) => i);
+	const chosen: Array<[number, number]> = [];
+	while (chosen.length < STRIPES && pool.length) {
+		const idx = Math.floor(Math.random() * pool.length);
+		chosen.push(ZONES[pool.splice(idx, 1)[0]]);
 	}
-	cuts.sort((a, b) => a - b);
-	if (cuts.length < STRIPES - 1) {
-		// fallback: even split over the octave range
-		for (let i = 1; i < STRIPES; i++) cuts.splice(i - 1, 0, lo + (i * (hi - lo)) / STRIPES);
+	for (let i = chosen.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[chosen[i], chosen[j]] = [chosen[j], chosen[i]];
 	}
-	const bounds = [lo, ...cuts, hi];
-	const bands: Array<[number, number]> = [];
-	for (let i = 0; i < STRIPES; i++) {
-		bands.push([Math.pow(10, bounds[i]), Math.pow(10, bounds[i + 1])]);
-	}
-	return bands;
+	return chosen;
 }
 
 // scale an rgb()/rgba() colour toward black by k (hue-preserving brightness)
@@ -88,6 +91,7 @@ export default function GradientVisualizer({
 		<Visualizer
 			id={id}
 			type='frequency'
+			options={{ fftSize: 2048 }}
 			color={color}
 			colorLeft={colorLeft}
 			colorRight={colorRight}
@@ -105,19 +109,18 @@ export default function GradientVisualizer({
 				const binHz = n ? sampleRate / 2 / n : 0;
 				const bands = bandsRef.current;
 
-				// per-band target brightness from the averaged FFT magnitudes
+				// per-band target brightness from the strongest bin in the band
+				// (byte frequency data is peaky — a mean sits near the floor)
 				for (let b = 0; b < STRIPES; b++) {
 					const [lo, hi] = freqBands[b];
 					const k0 = binHz ? Math.max(0, Math.floor(lo / binHz)) : 0;
 					const k1 = binHz ? Math.min(n - 1, Math.ceil(hi / binHz)) : 0;
-					let sum = 0;
-					let count = 0;
+					let peak = 0;
 					for (let k = k0; k <= k1; k++) {
-						sum += bins[k];
-						count++;
+						if (bins[k] > peak) peak = bins[k];
 					}
-					const avg = count ? sum / count / 255 : 0;
-					const target = Math.max(floor, Math.min(1, (avg - BIAS) * GAIN + floor));
+					const energy = peak / 255;
+					const target = Math.max(floor, Math.min(1, (energy - BIAS) * GAIN + floor));
 					bands[b] += (target - bands[b]) * SMOOTH;
 				}
 
