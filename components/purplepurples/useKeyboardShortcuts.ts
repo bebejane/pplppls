@@ -9,6 +9,7 @@ export interface KeyboardHandlers {
 	toggleControls: () => void;
 	toggleFullscreen: () => void;
 	randomValues: () => void;
+	restoreSettings: (slot: number) => void;
 	closeDialogs: () => void;
 	toggleHud: () => void;
 	masterstate: Record<string, any>;
@@ -31,8 +32,8 @@ export function useKeyboardShortcuts(handlersRef: React.MutableRefObject<Keyboar
 					H.onRecord(!H.recording);
 					break;
 				case 'Enter':
-					if (!H.masterstate.playing) Global.engine.master.play();
-					else Global.engine.master.stop();
+					Global.engine.master.play();
+					//else Global.engine.master.stop();
 					break;
 				case 'esc':
 					H.closeDialogs();
@@ -59,6 +60,10 @@ export function useKeyboardShortcuts(handlersRef: React.MutableRefObject<Keyboar
 					H.randomValues();
 					break;
 				default:
+					// 0-9 restore a saved random-value setting
+					if (e.key.length === 1 && e.key >= '0' && e.key <= '9') {
+						H.restoreSettings(parseInt(e.key, 10));
+					}
 					break;
 			}
 		};

@@ -21,6 +21,26 @@ import { useEngineListeners } from './useEngineListeners';
 import type { Model, MoveData } from './types';
 import s from './PurplePurples.module.scss';
 
+/** A snapshot of one sound's live settings, restored from B/randomValues slots. */
+interface SavedSoundSettings {
+	id: string;
+	volume: number;
+	rate: number;
+	pan: number;
+	muted: boolean;
+	loop: boolean;
+	loopStart: number;
+	loopEnd: number;
+	reversed: boolean;
+	locked: boolean;
+}
+
+/** One saved random-value result: the last 10 are kept, playable via 0-9. */
+interface SavedSettings {
+	at: number;
+	sounds: SavedSoundSettings[];
+}
+
 interface PurplePurplesState {
 	init: boolean;
 	model: string;
@@ -462,6 +482,7 @@ export default function PurplePurples() {
 		toggleControls: () => {},
 		toggleFullscreen: () => {},
 		randomValues: () => {},
+		restoreSettings: () => {},
 		closeDialogs: () => {},
 		toggleHud: () => {},
 		masterstate: {},
@@ -474,6 +495,7 @@ export default function PurplePurples() {
 		toggleControls: () => set({ controls: !stateRef.current.controls }),
 		toggleFullscreen: () => onFullscreen(!stateRef.current.fullscreen),
 		randomValues: () => randomValues(),
+		restoreSettings: (slot) => restoreSettings(slot),
 		closeDialogs: () => set({ newDialog: false, saveDialog: false }),
 		toggleHud: () => set({ hud: !stateRef.current.hud }),
 		masterstate: stateRef.current.masterstate,
@@ -805,6 +827,8 @@ export default function PurplePurples() {
 	);
 
 	// ---- randomize -------------------------------------------------------
+	const savedSettingsRef = useRef<SavedSettings[]>([]);
+
 	const randomValues = useCallback(() => {
 		Global.engine.master.stop();
 		const cols = stateRef.current.cols;
@@ -819,14 +843,50 @@ export default function PurplePurples() {
 			Global.engine.volume(channel.id, Math.random());
 			Global.engine.pan(channel.id, Math.random() * 180 - 90);
 		});
+		const snapshot: SavedSoundSettings[] = [];
 		Global.engine.sounds.forEach((s: any, idx) => {
 			const sound = s.sound;
 			const start = Math.random() * sound._duration;
 			const end = Math.random() * (sound._duration - start);
+			const loopOn = Math.random() < 0.5;
+			const lockedOn = Math.random() > 0.75;
 			Global.engine.loop(s.id, true, { start, end });
-			sound._loop = Math.random() < 0.5;
+			sound._loop = loopOn;
 			if (Math.random() < 0.5) Global.engine.reverse(s.id, true);
-			setTimeout(() => Global.engine.lock(s.id, Math.random() > 0.5), idx * 200);
+			setTimeout(() => Global.engine.lock(s.id, lockedOn), idx * 200);
+			snapshot.push({
+				id: s.id,
+				volume: sound._volume,
+				rate: sound._rate,
+				pan: sound._pan,
+				muted: sound._muted,
+				loop: sound._loop,
+				loopStart: sound._loopStart,
+				loopEnd: sound._loopEnd,
+				reversed: sound._reversed,
+				locked: lockedOn,
+			});
+		});
+		// remember the new settings — newest first, keep the last 10 (0-9 keys)
+		savedSettingsRef.current = [{ at: Date.now(), sounds: snapshot }, ...savedSettingsRef.current].slice(0, 10);
+		Global.engine.master.play();
+	}, []);
+
+	const restoreSettings = useCallback((slot: number) => {
+		const saved = savedSettingsRef.current[slot];
+		if (!saved) return;
+		saved.sounds.forEach((cfg) => {
+			if (!Global.engine.exist(cfg.id)) return;
+			// unmute first: engine.volume silently skips muted sounds, so the
+			// real mute state is re-applied last
+			Global.engine.mute(cfg.id, false);
+			Global.engine.volume(cfg.id, cfg.volume);
+			Global.engine.rate(cfg.id, cfg.rate);
+			Global.engine.pan(cfg.id, cfg.pan);
+			Global.engine.loop(cfg.id, !!cfg.loop, { start: cfg.loopStart, end: cfg.loopEnd });
+			Global.engine.reverse(cfg.id, !!cfg.reversed);
+			Global.engine.lock(cfg.id, !!cfg.locked);
+			Global.engine.mute(cfg.id, !!cfg.muted);
 		});
 		Global.engine.master.play();
 	}, []);
