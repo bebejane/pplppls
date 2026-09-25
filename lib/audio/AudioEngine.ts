@@ -4,7 +4,7 @@ import Global from '../Global';
 import Master from './Master';
 import AudioUtils from './utils';
 import Sound from './Sound';
-import WebMidi from 'webmidi';
+import { WebMidi } from 'webmidi';
 import { createEncoderWorker } from './workers';
 import Recorder from './Recorder';
 import Analyser from './Analyser';
@@ -842,56 +842,56 @@ class AudioEngine extends EventEmitter {
 	initMidi() {
 		return this.initMidiDevices();
 	}
-	initMidiDevices() {
-		return new Promise((resolve, reject) => {
-			console.log('init midi');
-			WebMidi.enable((err) => {
-				if (err) {
-					return reject('MIDI not supported');
-				}
+	async initMidiDevices() {
+		console.log('init midi');
+		try {
+			// WebMidi v3: enable() is a promise; the old callback form no longer
+			// receives an error (failures reject instead)
+			await WebMidi.enable();
+		} catch (err) {
+			throw 'MIDI not supported';
+		}
 
-				this.midiDevices = WebMidi.inputs.map((i) => {
-					return {
-						deviceId: i.id,
-						name: i.name,
-						connection: i.connection,
-						state: i.state,
-						manufacturer: i.manufacturer,
-					};
-				});
-
-				WebMidi.addListener('connected', (event) => {
-					const i = event.port;
-					if (i.type === 'output') return;
-					const device = {
-						deviceId: i.id,
-						name: i.name,
-						connection: i.connection,
-						state: i.state,
-						manufacturer: i.manufacturer,
-					};
-					if (this.midiDevices.filter((d) => d.deviceId === device.deviceId).length) return;
-					this.midiDevices.push(device);
-					this.emit('mididevices', this.midiDevices);
-				});
-				WebMidi.addListener('disconnected', (event) => {
-					const i = event.port;
-					if (i.type === 'output') return;
-					const device = {
-						deviceId: i.id,
-						name: i.name,
-						connection: i.connection,
-						state: i.state,
-						manufacturer: i.manufacturer,
-					};
-					this.midiDevices = this.midiDevices.filter((d) => d.deviceId !== device.deviceId);
-					this.emit('mididevices', this.midiDevices);
-				});
-				console.log('AVAILABLE MIDI DEVICES', this.midiDevices);
-				this.emit('mididevices', this.midiDevices);
-				resolve(this.midiDevices);
-			});
+		this.midiDevices = WebMidi.inputs.map((i) => {
+			return {
+				deviceId: i.id,
+				name: i.name,
+				connection: i.connection,
+				state: i.state,
+				manufacturer: i.manufacturer,
+			};
 		});
+
+		WebMidi.addListener('connected', (event) => {
+			const i = event.port;
+			if (i.type === 'output') return;
+			const device = {
+				deviceId: i.id,
+				name: i.name,
+				connection: i.connection,
+				state: i.state,
+				manufacturer: i.manufacturer,
+			};
+			if (this.midiDevices.filter((d) => d.deviceId === device.deviceId).length) return;
+			this.midiDevices.push(device);
+			this.emit('mididevices', this.midiDevices);
+		});
+		WebMidi.addListener('disconnected', (event) => {
+			const i = event.port;
+			if (i.type === 'output') return;
+			const device = {
+				deviceId: i.id,
+				name: i.name,
+				connection: i.connection,
+				state: i.state,
+				manufacturer: i.manufacturer,
+			};
+			this.midiDevices = this.midiDevices.filter((d) => d.deviceId !== device.deviceId);
+			this.emit('mididevices', this.midiDevices);
+		});
+		console.log('AVAILABLE MIDI DEVICES', this.midiDevices);
+		this.emit('mididevices', this.midiDevices);
+		return this.midiDevices;
 	}
 	initMidiSource(midiDeviceId) {
 		try {

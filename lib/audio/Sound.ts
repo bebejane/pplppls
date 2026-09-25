@@ -1,6 +1,6 @@
 // @ts-nocheck
 import AudioUtils from './utils';
-import arrayMove from 'array-move';
+import { arrayMoveImmutable as arrayMove } from 'array-move';
 import { EventEmitter } from 'events';
 
 const defaults = {
