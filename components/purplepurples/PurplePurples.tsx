@@ -9,6 +9,7 @@ import MobileDetect from 'mobile-detect';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import cn from 'classnames';
 import Column from './Column';
+import SavesBar from './SavesBar';
 import Controls from './Controls';
 import Home from './Home';
 import SaveDialog from './SaveDialog';
@@ -495,7 +496,7 @@ export default function PurplePurples() {
 		toggleControls: () => set({ controls: !stateRef.current.controls }),
 		toggleFullscreen: () => onFullscreen(!stateRef.current.fullscreen),
 		randomValues: () => randomValues(),
-		restoreSettings: (slot) => restoreSettings(slot),
+		restoreSettings: (slot) => flashAndRestore(slot),
 		closeDialogs: () => set({ newDialog: false, saveDialog: false }),
 		toggleHud: () => set({ hud: !stateRef.current.hud }),
 		masterstate: stateRef.current.masterstate,
@@ -829,7 +830,21 @@ export default function PurplePurples() {
 	// ---- randomize -------------------------------------------------------
 	const savedSettingsRef = useRef<SavedSettings[]>([]);
 
-	const randomValues = useCallback(() => {
+	// saved-slots bar: visible until 5s idle, hides, reappears on a number key
+	const [saves, setSaves] = useState<{ visible: boolean; lit: number; count: number }>({
+		visible: true,
+		lit: -1,
+		count: 0,
+	});
+	const savesHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	const hideSavesBar = () => setSaves({ visible: false, lit: -1, count: savedSettingsRef.current.length });
+	const revealSavesBar = () => {
+		if (savesHideTimer.current) clearTimeout(savesHideTimer.current);
+		savesHideTimer.current = setTimeout(hideSavesBar, 5000);
+	};
+
+	const randomValues = () => {
 		Global.engine.master.stop();
 		const cols = stateRef.current.cols;
 		Object.keys(cols).forEach((k) => {
@@ -869,8 +884,11 @@ export default function PurplePurples() {
 		});
 		// remember the new settings — newest first, keep the last 10 (0-9 keys)
 		savedSettingsRef.current = [{ at: Date.now(), sounds: snapshot }, ...savedSettingsRef.current].slice(0, 10);
+		// reveal the slots bar (count updated) so the new save is visible
+		setSaves((prev) => ({ ...prev, visible: true, count: savedSettingsRef.current.length }));
+		revealSavesBar();
 		Global.engine.master.play();
-	}, []);
+	};
 
 	const restoreSettings = useCallback((slot: number) => {
 		const saved = savedSettingsRef.current[slot];
@@ -889,6 +907,27 @@ export default function PurplePurples() {
 			Global.engine.mute(cfg.id, !!cfg.muted);
 		});
 		Global.engine.master.play();
+	}, []);
+
+	const flashAndRestore = (slot: number) => {
+			// invalid slot: just reveal the bar; no setting is saved at that key
+			const count = savedSettingsRef.current.length;
+			const valid = slot < count;
+			setSaves((prev) => ({ ...prev, visible: true, lit: valid ? slot : -1 }));
+			if (valid) {
+				setTimeout(() => setSaves((prev) => (prev.lit === slot ? { ...prev, lit: -1 } : prev)), 350);
+				restoreSettings(slot);
+			}
+			revealSavesBar();
+		};
+
+	// hide the slots bar after 5s idle from mount (it reappears on key presses)
+	useEffect(() => {
+		savesHideTimer.current = setTimeout(hideSavesBar, 5000);
+		return () => {
+			if (savesHideTimer.current) clearTimeout(savesHideTimer.current);
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	// ---- swipe / misc ----------------------------------------------------
@@ -1025,6 +1064,8 @@ export default function PurplePurples() {
 					</div>
 				</div>
 			)}
+
+			<SavesBar visible={saves.visible} lit={saves.lit} count={saves.count} onRestore={flashAndRestore} />
 
 			<div
 				ref={canvasRef}
