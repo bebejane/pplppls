@@ -80,8 +80,8 @@ export default function Column(props: ColumnProps) {
 		}, 10);
 		setTimeout(() => {
 			clearInterval(it);
-			// keep the last random angle (do not reset to 0: that previously fell
-			// back to a volume-driven gradient degree)
+			// fall back to the volume-derived angle, like the old CSS gradient
+			set({ randDeg: 0 });
 		}, 300);
 	};
 
@@ -220,9 +220,9 @@ export default function Column(props: ColumnProps) {
 		'rgb(' + (playing ? '88' : '68') + ', 0, ' + (playing ? 150 : volume * 80 + 30) + ')';
 	const rgba2 = 'rgb(' + (playing ? '104' : '68') + ', 0, ' + volume * 100 + ')';
 	const rgba3 = 'rgb(104,158,205)';
-	// gradient stripe angle: owned by the lock animation only (randDeg). It is
-	// NOT derived from volume — audio pulses the gradient, it never rotates it.
-	const deg = randDeg || 0;
+	// gradient stripe angle: spins during the lock animation (randDeg), then
+	// settles on the volume-derived angle like the old CSS gradient
+	const deg = randDeg || volume * 100 * 3.6;
 	//console.log(solo);
 	const style: React.CSSProperties = {
 		backgroundColor: click ? rgba3 : rgba,

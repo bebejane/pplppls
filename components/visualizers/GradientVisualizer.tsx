@@ -1,17 +1,18 @@
 'use client';
 
 import Visualizer from './Visualizer';
+import { useRef } from 'react';
 
 /**
- * Draws the locked-column striped gradient on a canvas, reproducing the old
- * `linear-gradient(deg, A 25%, B 25%, A 50%, B 50%, A 75%, B 75%, A 100%)`
- * background exactly: gradient line through the box center at the CSS angle
- * (0° = toward the top, clockwise), stripe thickness = 25% of the gradient
- * line length (`w·|sinθ| + h·|cosθ|`), opaque colors.
+ * Draws the locked-column gradient on a canvas along the CSS gradient line
+ * (angle 0° = toward the top, clockwise; line length `w·|sinθ| + h·|cosθ|`),
+ * with the color bands fading softly into each other instead of hard
+ * 25%-stop edges.
  *
- * The incoming audio level (analyser type 'volume') pulses the gradient by
- * dimming it toward black (hue-preserving) — never by rotating it. The stripe
- * angle comes only from the `deg` prop, so audio never moves the degree.
+ * The incoming audio level (analyser type 'volume') crossfades the gradient's
+ * brightness smoothly (exponential smoothing per frame) — like a light fading
+ * in/out — starting from the old CSS look when loud. The stripe angle comes
+ * only from the `deg` prop: audio never rotates the gradient.
  */
 export default function GradientVisualizer({
 	id,
@@ -19,7 +20,7 @@ export default function GradientVisualizer({
 	color,
 	colorLeft,
 	colorRight,
-	minOpacity = 0.35,
+	minOpacity = 0.55,
 	ready,
 }: {
 	id: string;
@@ -30,6 +31,9 @@ export default function GradientVisualizer({
 	minOpacity?: number;
 	ready?: boolean;
 }) {
+	// exponentially-smoothed brightness so the pulse is a fade, not a snap
+	const intensityRef = useRef(0.6);
+
 	return (
 		<Visualizer
 			id={id}
@@ -45,10 +49,13 @@ export default function GradientVisualizer({
 				{ width, height, color = 'rgb(88,0,150)', colorLeft = 'rgb(104,0,255)' },
 			) => {
 				if (!width || !height) return;
-				// volume is 0..100; floor the pulse so the gradient never fully
-				// disappears while the analyser is idle/quiet
+
+				// volume is 0..100; target brightness with a floor so the resting
+				// gradient still looks like the old CSS gradient
 				const volume = typeof data === 'number' ? data : 0;
-				const intensity = Math.max(minOpacity, Math.min(1, volume / 60));
+				const target = Math.max(minOpacity, Math.min(1, volume / 45));
+				intensityRef.current += (target - intensityRef.current) * 0.18;
+				const intensity = intensityRef.current;
 
 				// CSS linear-gradient angle measured clockwise from the top
 				const rad = ((deg % 360) * Math.PI) / 180;
@@ -64,25 +71,26 @@ export default function GradientVisualizer({
 					cx + (dx * L) / 2,
 					cy + (dy * L) / 2,
 				);
-				// stops mirror the original CSS gradient 1:1
+				// soft color bands: each stripe fades into the next (was a hard
+				// A 25% / B 25% stop in the CSS)
+				const w = 0.05; // half-width of the transition (fraction of the line)
 				grad.addColorStop(0, color);
-				grad.addColorStop(0.25, color);
-				grad.addColorStop(0.25, colorLeft);
-				grad.addColorStop(0.5, colorLeft);
-				grad.addColorStop(0.5, color);
-				grad.addColorStop(0.75, color);
-				grad.addColorStop(0.75, colorLeft);
+				grad.addColorStop(0.25 - w, color);
+				grad.addColorStop(0.25 + w, colorLeft);
+				grad.addColorStop(0.5 - w, colorLeft);
+				grad.addColorStop(0.5 + w, color);
+				grad.addColorStop(0.75 - w, color);
+				grad.addColorStop(0.75 + w, colorLeft);
 				grad.addColorStop(1, colorLeft);
 				grad.addColorStop(1, color);
 
 				ctx.fillStyle = grad;
 				ctx.fillRect(0, 0, width, height);
 
-				// pulse: overlay black at the inverse intensity — keeps the
-				// gradient opaque (same look as the CSS) while its brightness
-				// breathes with the audio
+				// brightness crossfade: hue-preserving dim toward black by the
+				// smoothed inverse intensity (opaque, so no background bleed)
 				const dim = 1 - intensity;
-				if (dim > 0.01) {
+				if (dim > 0.005) {
 					ctx.fillStyle = 'rgba(0,0,0,' + dim.toFixed(3) + ')';
 					ctx.fillRect(0, 0, width, height);
 				}
