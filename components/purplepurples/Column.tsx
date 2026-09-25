@@ -79,7 +79,7 @@ export default function Column(props: ColumnProps) {
 	};
 
 	const onDoubleClick = () => {
-		Global.engine.lock(id, !st.locked);
+		//Global.engine.lock(id, !st.locked);
 	};
 
 	const onClick = (e: React.MouseEvent) => {
