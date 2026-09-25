@@ -831,7 +831,17 @@ export default function PurplePurples() {
 	);
 
 	// ---- randomize -------------------------------------------------------
-	const savedSettingsRef = useRef<SavedSettings[]>([]);
+	// slots are a fixed 10-position array (index 0 = key '1' … index 9 = key '0');
+	// the newest save always lands at position 9, older ones shift toward 0
+	const savedSettingsRef = useRef<Array<SavedSettings | undefined>>([]);
+
+	const addSavedSetting = (snapshot: SavedSoundSettings[]): number => {
+		const next = [...savedSettingsRef.current, { at: Date.now(), sounds: snapshot }];
+		if (next.length > 10) next.shift(); // drop the oldest
+		while (next.length < 10) next.unshift(undefined); // keep newest pinned at 9
+		savedSettingsRef.current = next;
+		return next.filter((x) => x !== undefined).length;
+	};
 
 	// saved-slots bar: visible until 5s idle, hides, reappears on a number key
 	const [saves, setSaves] = useState<{ visible: boolean; lit: number; count: number }>({
@@ -841,7 +851,12 @@ export default function PurplePurples() {
 	});
 	const savesHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	const hideSavesBar = () => setSaves({ visible: false, lit: -1, count: savedSettingsRef.current.length });
+	const hideSavesBar = () =>
+		setSaves({
+			visible: false,
+			lit: -1,
+			count: savedSettingsRef.current.filter((x) => x !== undefined).length,
+		});
 	const revealSavesBar = () => {
 		if (savesHideTimer.current) clearTimeout(savesHideTimer.current);
 		savesHideTimer.current = setTimeout(hideSavesBar, 5000);
@@ -885,16 +900,17 @@ export default function PurplePurples() {
 				locked: lockedOn,
 			});
 		});
-		// remember the new settings — newest first, keep the last 10 (0-9 keys)
-		savedSettingsRef.current = [{ at: Date.now(), sounds: snapshot }, ...savedSettingsRef.current].slice(0, 10);
+		// remember the new settings — newest at slot 9 (key '0'), keep the last 10
+		const saveCount = addSavedSetting(snapshot);
 		// reveal the slots bar (count updated) so the new save is visible
-		setSaves((prev) => ({ ...prev, visible: true, count: savedSettingsRef.current.length }));
+		setSaves((prev) => ({ ...prev, visible: true, count: saveCount }));
 		revealSavesBar();
 		Global.engine.master.play();
 	};
 
 	const restoreSettings = useCallback((slot: number) => {
-		const saved = savedSettingsRef.current[slot];
+		const idx = slot === 0 ? 9 : slot - 1; // key '0' is slot 9 in the array
+		const saved = savedSettingsRef.current[idx];
 		if (!saved) return;
 		saved.sounds.forEach((cfg) => {
 			if (!Global.engine.exist(cfg.id)) return;
@@ -914,8 +930,8 @@ export default function PurplePurples() {
 
 	const flashAndRestore = (slot: number) => {
 			// invalid slot: just reveal the bar; no setting is saved at that key
-			const count = savedSettingsRef.current.length;
-			const valid = slot < count;
+			const idx = slot === 0 ? 9 : slot - 1; // key '0' is slot 9 in the array
+			const valid = !!savedSettingsRef.current[idx];
 			setSaves((prev) => ({ ...prev, visible: true, lit: valid ? slot : -1 }));
 			if (valid) {
 				setTimeout(() => setSaves((prev) => (prev.lit === slot ? { ...prev, lit: -1 } : prev)), 350);
