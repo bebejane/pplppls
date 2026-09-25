@@ -1,0 +1,84 @@
+.home {
+	display: flex;
+	position: absolute;
+	z-index: 100;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--color-bg);
+	color: #fff;
+}
+
+.container {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	width: 100%;
+	z-index: 10;
+}
+
+.canvas {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+}
+
+@keyframes purplite {
+	from {
+		font-size: 14px;
+	}
+	to {
+		font-size: 26px;
+	}
+}
+
+@keyframes purplite2 {
+	from {
+		background-color: rgba(68, 0, 63, 0.0);
+	}
+	to {
+		background-color: rgba(68, 0, 63, 0.2);
+	}
+}
+
+.purple,
+.purples {
+	display: flex;
+	align-items: center;
+	background-color: transparent;
+	color: rgba(255, 255, 255, 0.5);
+	padding: 10px;
+	cursor: pointer;
+	user-select: none;
+	min-height: 32px;
+	font-weight: bold;
+}
+
+.purple:hover {
+	color: rgba(255, 255, 255, 0.6);
+}
+
+.purple:active {
+	color: rgba(255, 255, 255, 0.7);
+}
+
+.purples:hover {
+	color: rgba(255, 255, 255, 0.6);
+}
+
+.purples:active {
+	color: rgba(255, 255, 255, 0.8);
+}
+
+.purples {
+	background-color: rgba(0, 0, 0, 0.0);
+	color: rgba(255, 255, 255, 0.5);
+	animation: purplite 0.2s normal forwards ease-in;
+	animation-iteration-count: 1;
+}

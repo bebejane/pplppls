@@ -1,23 +1,38 @@
 # AGENTS.md
 
-In-browser / Electron **DAW** built with React 16 + Create React App 3 (its README is stale boilerplate — `package.json` is the source of truth). No TypeScript; no passing tests.
+In-browser **DAW** built with **Next.js 16.3 (App Router) + TypeScript**. The WebAudio engine was ported from the old Create React App build (still in `legacy/` for reference). No testing framework; no TypeScript strictness on the engine.
 
 ## Commands
 
-- **Package manager is pnpm.** `yarn.lock` was deleted and `node_modules` is pnpm-installed; `pnpm-lock.yaml`/`pnpm-workspace.yaml` are untracked but active. Use `pnpm install` / `pnpm add`. Never regenerate `yarn.lock`. (`pnpm-workspace.yaml` only whitelists postinstall build scripts like core-js/fsevents — leave it.)
-- `pnpm dev` / `pnpm build` run through `react-app-rewired --openssl-legacy-provider`. The `--openssl-legacy-provider` flag is **required**: webpack 4 on Node ≥17 (pinned 24.x in `engines`) fails with `ERR_OSSL_EVP_UNSUPPORTED` without it. Keep it in the scripts.
-- `pnpm test` currently **fails by design**: `src/App.test.js` is leftover CRA boilerplate that imports `./App` (the component moved to `src/components/App.js`) and looks for a "learn react" link that doesn't exist. Don't treat test output as a quality signal; fix the test file if you touch it.
-- App needs real audio input at startup: `engine.init()` rejects without microphone permission, so verify manual changes in a real browser. `pnpm serve` serves the production build on :5000.
+- **Package manager is pnpm.** Use `pnpm install` / `pnpm add`. `pnpm-workspace.yaml` whitelists postinstall build scripts (core-js/fsevents/@parcel/watcher/unrs-resolver) — leave it.
+- `pnpm dev` → Next dev server (:3000). `pnpm build` → production build; `pnpm start` → serve it. `pnpm lint` (ESLint, 0 errors gated) and `pnpm typecheck` (`tsc --noEmit`) are the verification gates.
+- The app is **browser-only**: it requests microphone access at startup (`engine.init()` rejects without permission), so verify changes in a real browser. `Home` is the intro screen; click `PURPLE` → mic prompt → model loads.
+- The old `App.test.js` is gone (it was broken CRA boilerplate). Don't add Jest; there's no test runner wired up.
 
 ## Architecture
 
-- Entry: `src/index.js` → `src/components/App.js` renders one of the apps under `src/components/apps/`. **`PurplePurples/` is the product**; the other app dirs (`Wave`, `Spyders`, `Smokey`, `PitchShifter`, `Effing`, `Bloody`, `InputTest`, `Test`, `Wave2`, `MultiMixer`) are experimental mini-apps shown on a splash screen only when `localStorage['lastApp']` is unset.
-- The Web Audio engine lives in `src/services/AudioEngine/` (`index.js` is an `EventEmitter`). It is a singleton reachable via `import Global from '../Global'` → `Global.engine`; most apps construct it in their own constructor.
-- **Workers:** `react-app-rewired.config.js` routes every file ending in `worker.js` through `worker-loader` (emitting `static/js/[id].worker.[hash].js`). Audio workers live at `src/services/AudioEngine/{encoders,meter,record}/worker.js`. Keep the `worker.js` suffix on any new worker or it breaks the bundle.
-- **Effects:** each effect is a class in `src/services/AudioEngine/effects/`. Registering a new effect touches `effects/index.js` in **three** places: add a `defaults` entry to the `EFFECTS` array, `require` the class, and add a branch in `createEffect`.
-- Files prefixed with `_` (`_Sound.js`, `_Sequencer.js`, `_Sequence.js`, `Wave/_index.js`, `temp/_old_stuff.js`) are archived, unimported dead code — leave them alone.
-- Root-level `audio/`, `utils/`, `icons/` are gitignored, machine-local scratch dirs (project-file samples, Electron `.icns`), not part of the repo. Don't move their contents into `src/` or assume they exist on other machines.
+- Routing is a single route: `app/page.tsx` → `components/studio/Studio.tsx` (`'use client'`). **Studio builds the engine lazily in a `useEffect`** (`new AudioEngine(...)` on the `Global` singleton) — the engine must never be constructed during render/SSR (it creates an `AudioContext` and touches `window`). `Studio` renders `null` until the engine exists.
+- `components/purplepurples/PurplePurples.tsx` is the product (the grid DAW). It was split from one giant class component into:
+  - hooks: `useEngineListeners.ts` (engine events → state), `useKeyboardShortcuts.ts` (global keys via a mutable handlers ref)
+  - subcomponents: `Column` (`ColumnTools`, `ColumnRecord`, `Waveform`), `Controls` (`MasterFader`), `Home`, dialogs (`Save/New/Help/Recordings`), `NotSupported`, overlays
+  - types in `types.ts` (Model/ColState/MoveData)
+- **Engine**: everything under `lib/audio/` is **TypeScript** (`.ts`) now. The ported CRA-era DSP keeps its behavior; `lib/audio` is excluded from ESLint, and the files marked `// @ts-nocheck` (Sound, AudioEngine, Analyser, Recorder, Master, the WebAudio-heavy effects, mp3 encoder, paulstretch/timestretcher/stretch, recorder worklet) are type-unchecked so `tsc` stays green — treat them as "keep behavior intact":
+  - `AudioEngine.ts` (an `EventEmitter`), `Sound.ts`, `Recorder.ts` (uses an `AudioWorkletNode` loaded from a Blob URL — `record/worklet.ts` exports the processor source string; `audioWorklet.addModule` needs JS MIME), `Analyser.ts`, effects, `utils`, encoders.
+  - The transport/loop/effects logic was slimmed: `master` lives in `Master.ts`, effect classes share `createEffectBase` + an id→class registry in `effects/index.ts` (shared primitives in `effects/core.ts` — no circular imports), transport methods use `soundForEach`, `lib/audio/types.ts` gives components a typed `AudioEngine` facade (do **not** remove interface members the app calls — `tsc` will fail).
+  - DSP algorithms (`utils/`, `paulstretch`, `timestretcher`, encoders) and the worker message contract should not change.
+- The engine is a singleton: `import Global from '@/lib/Global'` → `Global.engine` (also `Global.bpm`, `Global.fileToMimeType`). The old `global.Global`/`global.bpm` references were converted to this module.
+- **Workers**: `lib/audio/workers.ts` constructs standard ESM module workers via `new Worker(new URL('./encoders/worker', import.meta.url), { type: 'module' })`. The three worker files (`encoders`, `meter`, `record`) are `.ts` (`self.onmessage`, `import`, `self.postMessage`). `encoders/mp3.ts`/`wav.ts` are imported by workers, so keep them free of `require()`/bare `postMessage`.
 
-## Electron
+## Styling
 
-- `public/electron.js` is the shell (frameless window, loads :3000 in dev, `build/index.html` in production). `pnpm electron-dev` runs dev server + shell; `pnpm electron-pack` runs electron-builder (mac dir target, icon `icons/purples.icns`).
+- **No SCSS variables.** Design tokens are CSS custom properties in `:root` inside `styles/globals.scss` (also holds fonts, `@keyframes` spin/blinker/point-zoom-out, and element styles like `input[type=range]`).
+- Every component has a co-located `X.module.scss` imported as `import s from './X.module.scss'`; conditional classes via `import cn from 'classnames'` → `cn(s.a, s.b)`.
+- Gotchas inherited from the port:
+  - Column roots carry `data-sound-point`; `PurplePurples.initModel` maps them via `document.querySelectorAll('[data-sound-point]')` (the old code queried a literal class name that is now module-hashed — keep using the data attribute).
+  - CSS Modules hashes class names, so anything that matches elements by CSS class in JS must use a data attribute or ref instead.
+  - **`Column` treats live sound state as engine-authoritative.** Engine-driven fields (`volume`, `rate`, `playing`, `locked`, …) arrive via `Global.engine` `'state'<id>` events, and the Column prop-sync helper explicitly skips `locked` so a stale parent prop can't clobber it. When locking/unlocking from UI, always go through `Global.engine.lock(id, on)` (never mutate parent `cols` directly).
+
+## Deferred from this migration
+
+- The 10 experimental mini-apps (`Wave`, `MultiMixer`, `PitchShifter`, `Spyders`, `Smokey`, `Effing`, `Bloody`, `InputTest`, `Test`…) and the Electron shell (`public/electron.js`, `TitleBar`, `is-electron` fs model loading) were dropped. Their code lives in `legacy/src/` (gitignored) if you need to resurrect anything.
+- `legacy/`, and root-level `audio/`, `utils/`, `icons/` are gitignored local scratch dirs, not repo content.

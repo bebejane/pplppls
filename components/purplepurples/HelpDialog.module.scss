@@ -1,0 +1,45 @@
+.dialog {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	color: #fff;
+	z-index: 1001;
+}
+
+.box {
+	position: relative;
+	display: flex;
+	flex-direction: row;
+	padding: 40px;
+	font-size: 14px;
+	background-color: #7b2482;
+	border: 20px solid rgba(255, 255, 255, 0.2);
+}
+
+.box > div:last-child {
+	margin-left: 40px;
+}
+
+.close {
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	margin: 20px;
+	font-size: 20px;
+	color: rgba(255, 255, 255, 0.4);
+	cursor: pointer;
+}
+
+.close:hover {
+	color: rgba(255, 255, 255, 0.5);
+}
+
+.icon {
+	font-size: 18px;
+	vertical-align: middle;
+}

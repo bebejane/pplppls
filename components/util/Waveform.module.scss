@@ -1,0 +1,153 @@
+.container {
+	position: relative;
+	display: flex;
+	height: 100%;
+	width: 100%;
+	flex: 1 1 auto;
+}
+
+.canvas {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+}
+
+.selectionContainer {
+	position: absolute;
+	display: block;
+	height: 100%;
+	width: 100%;
+	flex: 1 1 auto;
+	user-select: none;
+}
+
+.selection {
+	position: absolute;
+	background-color: rgba(0, 0, 0, 0.1);
+	top: 0;
+	left: 0;
+	height: 100%;
+	user-select: none;
+}
+
+.position {
+	position: absolute;
+	background-color: rgb(251, 0, 226);
+	top: 0px;
+	left: 0px;
+	height: 100%;
+	width: 1px;
+	z-index: 100;
+	/* visual-only: never steal clicks from the selection handles beneath it */
+	pointer-events: none;
+}
+
+.elapsed {
+	position: absolute;
+	top: 0;
+	right: 0;
+	font-size: 10px;
+	margin: 3px;
+	pointer-events: none;
+}
+
+.handleLeft,
+.handleRight,
+.handleTopLeft,
+.handleTopRight,
+.handleBottomLeft,
+.handleBottomRight {
+	position: absolute;
+	z-index: 10;
+	cursor: ew-resize;
+	user-select: none;
+	pointer-events: auto;
+}
+
+/* ---- edge handles -------------------------------------------------------
+   Wide, always-visible grab targets centered on the selection edges.
+   The transparent 16px strip gives plenty of mouse area while a thin line
+   shows where the edge is (previously the edges were a transparent 5px sliver
+   with only tiny corner dots visible, so they flickered in and out).          */
+.handleLeft,
+.handleRight {
+	top: 0;
+	bottom: 0;
+	width: 16px;
+	margin: 0;
+	transform: translateX(-50%);
+	background: linear-gradient(
+		to right,
+		transparent 0,
+		transparent 6px,
+		rgba(255, 255, 255, 0.45) 6px,
+		rgba(255, 255, 255, 0.45) 8px,
+		transparent 8px
+	);
+	background-size: 16px 100%;
+}
+
+.handleLeft:hover,
+.handleRight:hover {
+	background: linear-gradient(
+		to right,
+		transparent 0,
+		transparent 5px,
+		rgba(255, 255, 255, 0.9) 5px,
+		rgba(255, 255, 255, 0.9) 9px,
+		transparent 9px
+	);
+	background-size: 16px 100%;
+}
+
+/* ---- corner grips ------------------------------------------------------- */
+.handleTopLeft,
+.handleTopRight,
+.handleBottomLeft,
+.handleBottomRight {
+	width: 14px;
+	height: 14px;
+	background-color: rgba(255, 255, 255, 0.45);
+	border: 1px solid rgba(0, 0, 0, 0.35);
+}
+
+.handleTopLeft {
+	top: 0;
+	transform: translate(-50%, -50%);
+}
+
+.handleTopRight {
+	top: 0;
+	transform: translate(-50%, -50%);
+}
+
+.handleBottomLeft {
+	bottom: 0;
+	transform: translate(-50%, 50%);
+}
+
+.handleBottomRight {
+	bottom: 0;
+	transform: translate(-50%, 50%);
+}
+
+.loading {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1 1 auto;
+	color: #fff;
+	flex-direction: column;
+	width: 100%;
+	height: 100%;
+	z-index: 998;
+	pointer-events: none;
+}
+
+.loading > svg {
+	color: #fff;
+	animation: spin 1.1s linear infinite;
+}

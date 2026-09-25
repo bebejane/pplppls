@@ -1,0 +1,66 @@
+.tools {
+	position: absolute;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-end;
+	right: 0px;
+	bottom: 0px;
+	color: #fff;
+	font-size: 14px;
+	margin: 5px;
+	flex-wrap: wrap;
+	opacity: 0.3;
+}
+
+.hovering {
+	opacity: 1;
+}
+
+.tools > * {
+	font-size: 16px;
+	border-radius: 0px;
+	background-color: transparent;
+	padding: 4px;
+	margin: 2px;
+	color: rgba(255, 255, 255, 0.7);
+}
+
+.tools > *:hover {
+	background-color: rgba(255, 255, 255, 0.2);
+}
+
+.toggle {
+	color: #fff;
+	background-color: rgba(0, 0, 0, 0.4) !important;
+}
+
+.sampling {
+	animation: blinker 0.5s cubic-bezier(0.5, 0, 1, 1) infinite alternate;
+	color: red;
+}
+
+.mapped {
+	animation: blinker 0.5s cubic-bezier(0.5, 0, 1, 1);
+	background-color: #711d94 !important;
+}
+
+.mapping {
+	animation: blinker 0.3s cubic-bezier(0.3, 0, 1, 1) infinite alternate;
+	background-color: #711d94 !important;
+}
+
+.samplingProcessing {
+	animation: blinker 0.5s cubic-bezier(0.5, 0, 1, 1) infinite alternate;
+	color: gray;
+}
+
+.reversed {
+	display: inline-block;
+	transform: scale(-1, 1);
+	max-height: 24px;
+	max-width: 24px;
+	min-width: 24px;
+	text-align: center;
+	padding: 0px;
+}

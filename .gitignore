@@ -1,13 +1,13 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
-/audio
-/utils
-/icons
-/dist
 /node_modules
 /.pnp
 .pnp.js
+.next/
+
+# local scratch (not part of the repo)
+/audio
+/utils
+/icons
 
 # testing
 /coverage
@@ -26,6 +26,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Local Netlify folder
-.netlify
+*.tsbuildinfo
+next-env.d.ts
+legacy/

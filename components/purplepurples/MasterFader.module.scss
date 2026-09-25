@@ -1,0 +1,25 @@
+.fader {
+	display: flex;
+	align-items: center;
+	min-height: 10px;
+	justify-content: center;
+}
+
+.meter {
+	position: relative;
+	height: 20px;
+	width: 10px;
+	max-width: 10px;
+	max-height: 20px;
+	min-height: 20px;
+	margin-left: 5px;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.midiOn {
+	position: absolute;
+	bottom: 0;
+	background-color: pink;
+	min-width: 10px;
+	width: 10px;
+}

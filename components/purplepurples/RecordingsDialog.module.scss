@@ -1,0 +1,105 @@
+.dialog {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	color: #fff;
+	z-index: 1000;
+	background-color: transparent;
+}
+
+.box {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	padding: 40px;
+	max-height: 80%;
+	background-color: #7b2482;
+	box-sizing: border-box;
+	overflow-y: auto;
+	border: 20px solid rgba(255, 255, 255, 0.2);
+}
+
+.header {
+	margin-bottom: 10px;
+}
+
+.close {
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	margin: 20px;
+	font-size: 20px;
+	color: rgba(255, 255, 255, 0.4);
+	cursor: pointer;
+}
+
+.close:hover {
+	color: rgba(255, 255, 255, 0.5);
+}
+
+.row {
+	position: relative;
+	display: flex;
+	flex-direction: row;
+	padding: 10px;
+	padding-left: 0px;
+	box-sizing: border-box;
+}
+
+.row:first-child {
+	margin-top: 10px;
+}
+
+.tools {
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	margin-right: 5px;
+}
+
+.tools > svg {
+	font-size: 20px;
+	color: rgba(255, 255, 255, 0.5);
+}
+
+.tools > svg:hover {
+	color: rgba(255, 255, 255, 0.9);
+}
+
+.label {
+	display: flex;
+	align-items: center;
+	font-variant-numeric: tabular-nums;
+	max-width: 300px;
+	opacity: 0.8;
+}
+
+.download {
+	font-size: 12px;
+	background-color: rgba(255, 255, 255, 0.1);
+	padding: 5px;
+	line-height: 13px;
+	border-radius: 2px;
+	margin-left: 10px;
+	cursor: pointer;
+}
+
+.download:hover {
+	background-color: rgba(255, 255, 255, 0.2);
+}
+
+.empty {
+	min-width: 300px;
+	vertical-align: middle;
+	text-align: center;
+	color: rgba(255, 255, 255, 0.3);
+}
+
+.duration {
+	display: inline-block;
+}

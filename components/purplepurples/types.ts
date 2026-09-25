@@ -1,0 +1,59 @@
+export interface ModelFile {
+	filename: string;
+	mimeType?: string;
+	params?: Record<string, any>;
+	buffer?: ArrayBuffer;
+}
+
+export interface Model {
+	name: string;
+	cols: number;
+	rows: number;
+	files: ModelFile[];
+	contentLength?: number;
+	new?: boolean;
+}
+
+export interface ColData {
+	x: number;
+	y: number;
+	w: number;
+	h: number;
+	l: number;
+	r: number;
+	t: number;
+	b: number;
+	tl: number;
+	tr: number;
+	bl: number;
+	br: number;
+	heat: number;
+}
+
+export interface ColState {
+	model: string;
+	id: string;
+	row: number;
+	col: number;
+	subactive: boolean;
+	active: boolean;
+	fullscreen: boolean;
+	data: ColData;
+	related: Record<string, string>;
+	[key: string]: any;
+}
+
+export interface MoveData {
+	id: string;
+	heat: number;
+	l: number;
+	r: number;
+	t: number;
+	b: number;
+	tl: number;
+	tr: number;
+	bl: number;
+	br: number;
+	w: number;
+	h: number;
+}
