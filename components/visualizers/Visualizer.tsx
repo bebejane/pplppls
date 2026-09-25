@@ -58,19 +58,34 @@ export default function Visualizer({
 		[clear, colorBackground, color, colorLeft, colorRight, paint],
 	);
 
+	// Keep the latest draw/options behind refs so the analyser subscription
+	// below stays stable: `paint` is an inline arrow function in the wrapper
+	// components (new identity every render), so depending on `draw` here would
+	// tear down and rebuild the analyser connection on every re-render (e.g.
+	// every mouse-move across the grid), spamming console + restarting the
+	// analysis interval.
+	const drawRef = useRef(draw);
+	const optionsRef = useRef(options);
+	useEffect(() => {
+		drawRef.current = draw;
+	});
+	useEffect(() => {
+		optionsRef.current = options;
+	});
+
 	// subscribe to the analyser
 	useEffect(() => {
 		if (!Global.engine || !ready) return;
-		const analyser = Global.engine.analyse(id, type, options);
+		const analyser = Global.engine.analyse(id, type, optionsRef.current);
 		analyserRef.current = analyser;
 		if (!analyser) return;
-		const listener = (data: unknown, opt: unknown) => draw(data, opt);
-		analyser.addEventListener(type, options, listener);
+		const listener = (data: unknown, opt: unknown) => drawRef.current(data, opt);
+		analyser.addEventListener(type, optionsRef.current, listener);
 		return () => {
 			analyser.removeEventListener(type, listener);
 			analyserRef.current = null;
 		};
-	}, [id, type, ready, draw]);
+	}, [id, type, ready]);
 
 	// measure and track resize
 	useEffect(() => {

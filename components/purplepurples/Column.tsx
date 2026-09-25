@@ -78,9 +78,13 @@ export default function Column(props: ColumnProps) {
 		setTimeout(() => set({ click: false }), 200);
 	};
 
+	const onDoubleClick = () => {
+		Global.engine.lock(id, !st.locked);
+	};
+
 	const onClick = (e: React.MouseEvent) => {
 		if (st.fullscreen) return;
-		if (new Date().getTime() - lastClickRef.current < 200 && e.metaKey) {
+		if (new Date().getTime() - lastClickRef.current < 200) {
 			return onDoubleClick();
 		}
 		const el = ref.current;
@@ -111,8 +115,6 @@ export default function Column(props: ColumnProps) {
 	};
 
 	const lastClickRef = useRef(0);
-
-	const onDoubleClick = () => {};
 
 	const onModify = (e: React.MouseEvent) => {
 		if (st.fullscreen) return;

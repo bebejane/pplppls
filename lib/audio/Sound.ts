@@ -115,10 +115,6 @@ class Sound extends EventEmitter {
 		}
 
 		if (this._playing && this.source) this.source.stop();
-		//if (this._playing){
-		console.log('stopplay');
-		//	this.stop()
-		//}
 
 		const soloOn = this.engine.master.solo();
 
@@ -312,7 +308,7 @@ class Sound extends EventEmitter {
 		// _startedAt late, which previously pushed the marker past loopEnd
 		if (this._loop && this._loopEnd > this._loopStart) {
 			const len = this._loopEnd - this._loopStart;
-			const v = ((el - this._loopStart) % len + len) % len;
+			const v = (((el - this._loopStart) % len) + len) % len;
 			el = this._loopStart + v;
 		}
 		this._elapsed = el;
@@ -363,7 +359,7 @@ class Sound extends EventEmitter {
 
 		// where are we inside the current loop cycle (buffer-seconds)?
 		const now = this.context.currentTime;
-		const pos = (((now - this._startedAt) * this._rate + this._offset - this._loopStart) % len) || 0;
+		const pos = ((now - this._startedAt) * this._rate + this._offset - this._loopStart) % len || 0;
 		const into = pos < 0 ? pos + len : pos;
 		const nextWrap = now + (len - into) / this._rate;
 
