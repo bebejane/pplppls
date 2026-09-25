@@ -2,7 +2,7 @@
 
 import Visualizer from './Visualizer';
 import Global from '@/lib/Global';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 /**
  * Draws the locked-column gradient on a canvas along the CSS gradient line
@@ -13,24 +13,45 @@ import { useRef } from 'react';
  * The stripes pulse with the audio spectrum: the column's `frequency`
  * (FFT) data is averaged into 4 log-spaced bands (low → high, one per
  * stripe) and each stripe's brightness fades in/out with its own band
- * (exponentially smoothed per frame). The stripe angle still comes only from
- * the `deg` prop — audio never rotates the gradient.
+ * (exponentially smoothed per frame). Each column gets a random band split,
+ * so different locked columns react to different frequency ranges. The stripe
+ * angle still comes only from the `deg` prop — audio never rotates the
+ * gradient.
  */
 const STRIPES = 4;
-
-// one frequency band per stripe (Hz, low -> high)
-const BANDS: Array<[number, number]> = [
-	[20, 250],
-	[250, 1000],
-	[1000, 4000],
-	[4000, 16000],
-];
 
 // resting stripe brightness; band magnitude normalisation
 const FLOOR = 0.65;
 const BIAS = 0.25;
 const GAIN = 2.2;
 const SMOOTH = 0.2;
+
+// random log-spaced partition of the audible range into 4 non-overlapping
+// bands — each GradientVisualizer instance (per locked column) gets its own
+// frequency split so different columns react to different ranges
+function randomBands(): Array<[number, number]> {
+	const lo = Math.log10(40);
+	const hi = Math.log10(12000);
+	const minGap = 0.35; // min log gap (~2.2x ratio) so bands stay distinct
+	const cuts: number[] = [];
+	let attempts = 0;
+	while (cuts.length < STRIPES - 1 && attempts < 300) {
+		attempts++;
+		const c = lo + Math.random() * (hi - lo);
+		if (cuts.every((x) => Math.abs(x - c) >= minGap)) cuts.push(c);
+	}
+	cuts.sort((a, b) => a - b);
+	if (cuts.length < STRIPES - 1) {
+		// fallback: even split over the octave range
+		for (let i = 1; i < STRIPES; i++) cuts.splice(i - 1, 0, lo + (i * (hi - lo)) / STRIPES);
+	}
+	const bounds = [lo, ...cuts, hi];
+	const bands: Array<[number, number]> = [];
+	for (let i = 0; i < STRIPES; i++) {
+		bands.push([Math.pow(10, bounds[i]), Math.pow(10, bounds[i + 1])]);
+	}
+	return bands;
+}
 
 // scale an rgb()/rgba() colour toward black by k (hue-preserving brightness)
 function scaleRgb(value: string, k: number): string {
@@ -58,8 +79,10 @@ export default function GradientVisualizer({
 	floor?: number;
 	ready?: boolean;
 }) {
-	// per-stripe smoothed brightness (one per frequency band)
+	// per-stripe smoothed brightness (one per random frequency band)
 	const bandsRef = useRef<number[]>(new Array(STRIPES).fill(floor));
+	// this instance's random band split — generated once per locked column
+	const [freqBands] = useState<Array<[number, number]>>(() => randomBands());
 
 	return (
 		<Visualizer
@@ -84,7 +107,7 @@ export default function GradientVisualizer({
 
 				// per-band target brightness from the averaged FFT magnitudes
 				for (let b = 0; b < STRIPES; b++) {
-					const [lo, hi] = BANDS[b];
+					const [lo, hi] = freqBands[b];
 					const k0 = binHz ? Math.max(0, Math.floor(lo / binHz)) : 0;
 					const k1 = binHz ? Math.min(n - 1, Math.ceil(hi / binHz)) : 0;
 					let sum = 0;
