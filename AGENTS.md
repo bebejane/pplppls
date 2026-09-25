@@ -6,7 +6,7 @@ No test runner is wired up (the old CRA `App.test.js` was deleted). The app is b
 
 ## Commands
 
-- **pnpm** is the package manager. Use `pnpm install` / `pnpm add`. `pnpm-workspace.yaml` just whitelists postinstall build scripts (core-js/fsevents/@parcel/watcher/unrs-resolver) — leave it.
+- **pnpm** is the package manager. Use `pnpm install` / `pnpm add`. `pnpm-workspace.yaml` declares the single workspace package (`packages: ['.']`, required — pnpm 9 errors with "packages field missing or empty" without it) and whitelists postinstall build scripts (core-js/fsevents/@parcel/watcher/unrs-resolver) via `allowBuilds`, which pnpm ≥11 understands. `package.json` pins `"packageManager": "pnpm@12.3.4"` so Vercel/corepack runs the same pnpm as local.
 - `pnpm dev` → dev server (:3000). `pnpm build` → production build (Turbopack; runs `tsc` internally). `pnpm start` → serve build.
 - **Verification gates: `pnpm typecheck` (`tsc --noEmit`), `pnpm lint` (flat ESLint, 0 errors), `pnpm build`.** Run all three; the engine is excluded from lint but included in typecheck via `lib/audio/types.ts`.
 - `npm`/`yarn` should not be used (no `yarn.lock`).
@@ -58,7 +58,7 @@ Everything under `lib/audio/` is `.ts`. The ported DSP keeps its behavior; `lib/
 ## Data & deployment
 
 - `public/` holds static assets, fonts, drumkits, and **`public/models/`** (the `.zip` "models" loaded at startup; ~42MB, tracked in git — don't move them).
-- Deploy target: Vercel (`vercel.json` just silences GitHub comments). `pnpm build` output serves as-is.
+- Deploy target: Vercel. `vercel.json` pins the framework preset to `nextjs` (the project was a CRA app originally — without this Vercel looks for a `build` output directory instead of `.next`) and silences GitHub comments.
 - **Git**: mainline branch is `zwei`, primary remote `origin` (github.com/bebejane/pplppls). Don't add large binaries; GitHub rejects >100MB. `legacy/` is committed (archive of the old CRA source). Root `audio/`, `utils/`, `icons/` are gitignored local scratch — never stage them.
 
 ## Deferred from the migration
