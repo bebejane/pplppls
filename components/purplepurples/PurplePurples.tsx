@@ -217,6 +217,9 @@ export default function PurplePurples() {
 
 	const initModel = useCallback((model: Model) => {
 		Global.engine.destroy();
+		// saved random-value slots don't survive a model change
+		savedSettingsRef.current = [];
+		setSaves((prev) => ({ ...prev, count: 0 }));
 		const cols: Record<string, any> = {};
 		const rows: { id: string }[][] = [];
 		let fileIdx = 0;
