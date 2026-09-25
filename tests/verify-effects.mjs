@@ -1,6 +1,6 @@
 // Offline DSP harness for the effects AudioWorklet source. Runs each processor
 // in a simulated audio-thread environment and asserts behavior.
-import { EFFECTS_WORKLET_SOURCE } from './lib/audio/effects/workletSource.ts';
+import { EFFECTS_WORKLET_SOURCE } from '../lib/audio/effects/workletSource.ts';
 
 const SR = 44100;
 const BLOCK = 128;
