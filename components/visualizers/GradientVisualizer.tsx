@@ -6,14 +6,15 @@ import { useRef } from 'react';
 /**
  * Draws the locked-column gradient on a canvas along the CSS gradient line
  * (angle 0° = toward the top, clockwise; line length `w·|sinθ| + h·|cosθ|`),
- * as a run of identical stripes (same count as before) where each stripe
- * contains its own internal gradient — the tone sweeps A → B → A inside every
- * stripe, like the old CSS felt.
+ * as a run of identical stripes (4 per gradient line). Each stripe holds its
+ * own internal gradient — the tone sweeps `color` → `colorLeft` across the
+ * stripe and hard-resets at the next one (a sawtooth, matching the original
+ * CSS gradient look).
  *
  * The incoming audio level (analyser type 'volume') crossfades the gradient's
  * brightness smoothly (exponential smoothing per frame) — like a light fading
- * in/out — starting from the old CSS look when loud. The stripe angle comes
- * only from the `deg` prop: audio never rotates the gradient.
+ * in/out. The stripe angle comes only from the `deg` prop: audio never rotates
+ * the gradient.
  */
 export default function GradientVisualizer({
 	id,
@@ -72,17 +73,16 @@ export default function GradientVisualizer({
 					cx + (dx * L) / 2,
 					cy + (dy * L) / 2,
 				);
-				// repeating identical stripes, each holding its own internal
-				// gradient: A at every stripe boundary, ramping up to colorLeft
-				// at the stripe middle and back down to A — a smooth triangle
-				// wave, no hard edges, same stripe count as the original CSS
+				// 4 identical stripes that each hold their own internal gradient:
+				// the tone sweeps from `color` (light) to `colorLeft` (dark)
+				// across the stripe, then hard-resets to `color` at the next one
+				// (sawtooth, same as the original CSS look)
 				const stripes = 4;
-				for (let i = 0; i <= stripes; i++) {
-					grad.addColorStop(i / stripes, color);
-				}
 				for (let i = 0; i < stripes; i++) {
-					grad.addColorStop((i + 0.5) / stripes, colorLeft);
+					grad.addColorStop(i / stripes, color);
+					grad.addColorStop((i + 1) / stripes, colorLeft);
 				}
+				grad.addColorStop(1, colorLeft);
 
 				ctx.fillStyle = grad;
 				ctx.fillRect(0, 0, width, height);
