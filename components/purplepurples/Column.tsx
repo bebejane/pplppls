@@ -8,6 +8,7 @@ import cn from 'classnames';
 import ColumnRecord from './ColumnRecord';
 import ColumnTools from './ColumnTools';
 import Waveform from '@/components/util/Waveform';
+import GradientVisualizer from '@/components/visualizers/GradientVisualizer';
 import type { UploadedFile as ImportedUploadedFile } from '@/components/util/FileUploader';
 import s from './Column.module.scss';
 import VolumeVisualizer from '@/components/visualizers/VolumeVisualizer';
@@ -79,7 +80,8 @@ export default function Column(props: ColumnProps) {
 		}, 10);
 		setTimeout(() => {
 			clearInterval(it);
-			set({ randDeg: 0 });
+			// keep the last random angle (do not reset to 0: that previously fell
+			// back to a volume-driven gradient degree)
 		}, 300);
 	};
 
@@ -218,30 +220,12 @@ export default function Column(props: ColumnProps) {
 		'rgb(' + (playing ? '88' : '68') + ', 0, ' + (playing ? 150 : volume * 80 + 30) + ')';
 	const rgba2 = 'rgb(' + (playing ? '104' : '68') + ', 0, ' + volume * 100 + ')';
 	const rgba3 = 'rgb(104,158,205)';
-	const deg = randDeg || volume * 100 * 3.6;
+	// gradient stripe angle: owned by the lock animation only (randDeg). It is
+	// NOT derived from volume — audio pulses the gradient, it never rotates it.
+	const deg = randDeg || 0;
 	//console.log(solo);
 	const style: React.CSSProperties = {
 		backgroundColor: click ? rgba3 : rgba,
-		backgroundImage: locked
-			? 'linear-gradient(' +
-				deg +
-				'deg, ' +
-				rgba +
-				' 25%, ' +
-				rgba2 +
-				' 25%, ' +
-				rgba +
-				' 50%, ' +
-				rgba2 +
-				' 50%, ' +
-				rgba +
-				' 75%,' +
-				rgba2 +
-				' 75%, ' +
-				rgba +
-				' 100%)'
-			: undefined,
-		backgroundSize: 'cover',
 		boxSizing: 'border-box',
 		opacity: click || (soloId && soloId !== id) ? 0.4 : 0.7,
 	};
@@ -271,6 +255,11 @@ export default function Column(props: ColumnProps) {
 				onClick(e);
 			}}
 		>
+			{locked && (
+				<div className={s.gradientVisualizer} data-gradient-visualizer>
+					<GradientVisualizer id={id} deg={deg} color={rgba} colorLeft={rgba2} ready={ready} />
+				</div>
+			)}
 			{(points || []).map((pt, i) => (
 				<div
 					key={`${i}:${pt.x}:${pt.y}`}
