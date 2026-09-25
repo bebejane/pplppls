@@ -831,16 +831,14 @@ export default function PurplePurples() {
 	);
 
 	// ---- randomize -------------------------------------------------------
-	// slots are a fixed 10-position array (index 0 = key '1' … index 9 = key '0');
-	// the newest save always lands at position 9, older ones shift toward 0
-	const savedSettingsRef = useRef<Array<SavedSettings | undefined>>([]);
+	// slots are a FIFO in display order: array[0] = key '1' … array[9] = key '0'.
+	// New saves are assigned left-to-right ([1,2,...,9,0]); past 10 the oldest
+	// (leftmost) is dropped.
+	const savedSettingsRef = useRef<SavedSettings[]>([]);
 
 	const addSavedSetting = (snapshot: SavedSoundSettings[]): number => {
-		const next = [...savedSettingsRef.current, { at: Date.now(), sounds: snapshot }];
-		if (next.length > 10) next.shift(); // drop the oldest
-		while (next.length < 10) next.unshift(undefined); // keep newest pinned at 9
-		savedSettingsRef.current = next;
-		return next.filter((x) => x !== undefined).length;
+		savedSettingsRef.current = [...savedSettingsRef.current, { at: Date.now(), sounds: snapshot }].slice(-10);
+		return savedSettingsRef.current.length;
 	};
 
 	// saved-slots bar: visible until 5s idle, hides, reappears on a number key
@@ -855,7 +853,7 @@ export default function PurplePurples() {
 		setSaves({
 			visible: false,
 			lit: -1,
-			count: savedSettingsRef.current.filter((x) => x !== undefined).length,
+			count: savedSettingsRef.current.length,
 		});
 	const revealSavesBar = () => {
 		if (savesHideTimer.current) clearTimeout(savesHideTimer.current);

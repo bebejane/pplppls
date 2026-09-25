@@ -27,8 +27,8 @@ export default function SavesBar({
 	return (
 		<div className={s.bar} role='toolbar' aria-label='saved settings'>
 			{keys.map((k) => {
-				const idx = k === 0 ? 9 : k - 1; // key '1'..'9' -> slots 0..8, key '0' -> slot 9
-				const enabled = idx >= 10 - count; // newest saves fill from slot 9 leftward
+				const idx = k === 0 ? 9 : k - 1; // array position of displayed key k ([1,2,…,9,0])
+				const enabled = idx < count; // saves fill the array from index 0
 				return (
 					<button
 						key={k}
