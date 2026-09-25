@@ -101,7 +101,7 @@ export default function Waveform({
 	st.enableElapsed = enableElapsed;
 	st.disabled = disabled;
 
-	const zoomRef = useRef({ factor: 0.05, level: 0, start: 0, end: 0, duration: 0 });
+	const zoomRef = useRef<{ viewStart?: number; viewEnd?: number }>({});
 	const waveformDataRef = useRef<any>(null);
 
 	const setSel = (next: Selection) => {
@@ -195,7 +195,13 @@ export default function Waveform({
 		if (!canvas || !elapsedCanvas || !ctx || !ectx) return;
 		const width = canvas.width;
 		const height = canvas.height;
-		const mk = elapsed > 0 && st.duration > 0 ? (elapsed / st.duration) * width : 0;
+		// map the playhead through the visible (possibly zoomed) window; hide it
+		// when the play position is outside that view
+		let mk = 0;
+		if (elapsed > 0 && st.duration > 0) {
+			const px = timeToPx(elapsed);
+			if (px >= 0 && px <= width) mk = px;
+		}
 		const mkw = 1;
 		const m = 3;
 		const w = 50;
@@ -237,8 +243,8 @@ export default function Waveform({
 			setSel(next);
 			if (onSelectionChange && !noCallback)
 				onSelectionChange({
-					start: (next.x! / next.width!) * st.duration,
-					end: ((next.x! + next.width!) / st.width) * st.duration,
+					start: pxToTime(next.x!),
+					end: pxToTime(next.x! + next.width!),
 				});
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -262,6 +268,9 @@ export default function Waveform({
 
 		const onChange = (dur: number) => {
 			st.duration = dur;
+			// new duration invalidates the zoom window — reset to full view
+			zoomRef.current.viewStart = undefined;
+			zoomRef.current.viewEnd = undefined;
 			resetSelection();
 			if (!measure()) return;
 			updateWaveform(true);
@@ -348,8 +357,8 @@ export default function Waveform({
 			// restore current loop selection after sizing
 			if (st.loopStart || st.loopEnd) {
 				updateSelection({
-					start: Math.floor(((st.loopStart || 0) / (st.duration || 1)) * st.width),
-					end: Math.floor(((st.loopEnd || 0) / (st.duration || 1)) * st.width),
+					start: timeToPx(st.loopStart || 0),
+					end: timeToPx(st.loopEnd || 0),
 				});
 			}
 			updateWaveform(true);
@@ -364,8 +373,9 @@ export default function Waveform({
 				if (observerTimeout) clearTimeout(observerTimeout);
 				observerTimeout = setTimeout(() => {
 					if (st.duration) {
+						const win = viewWindow();
 						measure();
-						updateWaveform(true);
+						updateWaveform(true, { start: win.start, end: win.end });
 					}
 				}, 200);
 			});
@@ -391,24 +401,70 @@ export default function Waveform({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [id, enableElapsed]);
 
+	// visible time-window in seconds — [0, duration] unless zoomed
+	const viewWindow = () => {
+		const z = zoomRef.current;
+		const full = st.duration || 0;
+		if (
+			z.viewStart === undefined ||
+			z.viewEnd === undefined ||
+			z.viewEnd <= z.viewStart ||
+			z.viewEnd > full + 0.0001
+		)
+			return { start: 0, end: full };
+		return { start: z.viewStart, end: z.viewEnd };
+	};
+	const timeToPx = (t: number) => {
+		const { start, end } = viewWindow();
+		const width = st.width || 1;
+		const len = end - start || 1;
+		return Math.floor(((t - start) / len) * width);
+	};
+	const pxToTime = (px: number) => {
+		const { start, end } = viewWindow();
+		const width = st.width || 1;
+		const len = end - start || 1;
+		return start + (px / width) * len;
+	};
+
 	const zoom = useCallback(
 		(zoomIn: boolean, x: number) => {
+			const full = st.duration || 0;
+			if (!full) return;
 			const width = st.width || 1;
-			const timePerc = x / width;
+			const p = Math.max(0, Math.min(1, x / width));
 			const z = zoomRef.current;
-			z.factor = 0.025;
-			z.level = !zoomIn ? (z.level - 1 < 0 ? 0 : z.level - 1) : z.level + 1;
-			const factor = 1.0 - z.factor * z.level;
-			const duration = z.duration || st.duration;
-			const start = z.start || 0;
-			const end = z.end || st.duration;
-			const newDuration = duration * factor;
-			const durChange = duration - newDuration;
-			const offset = duration * timePerc;
-			z.duration = end + durChange / 2 + offset - (start + durChange / 2 + offset);
-			z.start = start + durChange / 2 + offset;
-			z.end = end - durChange / 2 + offset;
-			updateWaveform(true, { start: z.start, end: z.end });
+			const win = viewWindow();
+			const len = win.end - win.start || full;
+			const step = zoomIn ? 0.75 : 1.25;
+			// center the new view on the click point, clamped to [0, full]
+			const center = win.start + len * p;
+			const half = (len * step) / 2;
+			let start = center - half;
+			let end = center + half;
+			if (start < 0) {
+				end -= start;
+				start = 0;
+			}
+			if (end > full) {
+				start -= end - full;
+				end = full;
+			}
+			if (start < 0) start = 0;
+			if (end - start < 0.002) {
+				start = 0;
+				end = full;
+			}
+			z.viewStart = start;
+			z.viewEnd = end;
+			updateWaveform(true, { start, end });
+			// re-project an existing loop selection into the new view
+			if (st.loopStart || st.loopEnd) {
+				updateSelection({
+					start: timeToPx(st.loopStart || 0),
+					end: timeToPx(st.loopEnd || 0),
+				});
+			}
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[],
@@ -421,9 +477,9 @@ export default function Waveform({
 			if (next.start !== next.end) {
 				if (onSelection)
 					onSelection({
-						start: clampTime(((next.x || 0) / st.width) * st.duration),
-						end: clampTime((((next.x || 0) + (next.width || 0)) / st.width) * st.duration),
-						time: clampTime(((next.x || 0) / st.width) * st.duration),
+						start: clampTime(pxToTime(next.x || 0)),
+						end: clampTime(pxToTime((next.x || 0) + (next.width || 0))),
+						time: clampTime(pxToTime(next.x || 0)),
 					});
 			} else {
 				resetSelection();
@@ -431,7 +487,7 @@ export default function Waveform({
 					onSelection({
 						start: 0,
 						end: 0,
-						time: clampTime(((next.x || 0) / st.width) * st.duration),
+						time: clampTime(pxToTime(next.x || 0)),
 					});
 			}
 		},

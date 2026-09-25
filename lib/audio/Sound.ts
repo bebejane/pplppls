@@ -306,7 +306,16 @@ class Sound extends EventEmitter {
 	}
 	_checkElapsed() {
 		if (!this._playing || this._paused) return;
-		this._elapsed = this.context.currentTime - this._startedAt + this._offset;
+		let el = this.context.currentTime - this._startedAt + this._offset;
+		// keep the playhead inside the loop region: the native loop wraps at the
+		// exact boundary, but _loopEndReached (a laggy main-thread timer) resets
+		// _startedAt late, which previously pushed the marker past loopEnd
+		if (this._loop && this._loopEnd > this._loopStart) {
+			const len = this._loopEnd - this._loopStart;
+			const v = ((el - this._loopStart) % len + len) % len;
+			el = this._loopStart + v;
+		}
+		this._elapsed = el;
 		this.emit('elapsed', this._elapsed);
 		this.elapseTimeout = setTimeout(() => this._checkElapsed(), 30);
 	}
