@@ -44,8 +44,11 @@ class Master {
 			startedAt: this.engine.context.currentTime,
 			duration: this.duration(),
 		});
-		if (opt.enableElapsed || this.engine.enableElapsed)
+		if (opt.enableElapsed || this.engine.enableElapsed) {
+			// don't leak elapsed intervals: clear any previous one first
+			if (this.elapsedInterval) clearInterval(this.elapsedInterval);
 			this.elapsedInterval = setInterval(() => this._checkElapsed(), 50);
+		}
 	}
 
 	isPlaying() {
@@ -146,7 +149,8 @@ class Master {
 	}
 
 	_clearElapsed() {
-		clearInterval(this.elapsedInterval);
+		if (this.elapsedInterval) clearInterval(this.elapsedInterval);
+		this.elapsedInterval = null;
 		this.engine.emitMasterState({ elapsed: 0, startedAt: 0 });
 	}
 
