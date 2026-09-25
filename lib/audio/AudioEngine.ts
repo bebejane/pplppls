@@ -340,6 +340,7 @@ class AudioEngine extends EventEmitter {
 			isPlaying ? this.outputAnalyser.unpause() : this.outputAnalyser.pause();
 		});
 		sound.on('solo', (on) => {
+			this.emit('solo', sound.id, on);
 			this.emitMasterState({
 				solo: this.master.solo(),
 			});
@@ -366,9 +367,9 @@ class AudioEngine extends EventEmitter {
 	}
 	remove(id) {
 		console.log('remove sound', id);
-		const sound = this.get(id) ? this.get(id).sound : null;
-		if (!sound) return;
-		this.get(id).sound.destroy();
+		const item = this.soundMap[id];
+		if (!item) return;
+		item.sound.destroy();
 		delete this.soundMap[id];
 		this.sounds = this.sounds.filter((s) => s.id !== id);
 		this.emit('remove', id);
@@ -378,6 +379,12 @@ class AudioEngine extends EventEmitter {
 	}
 	replace(id, url, filename) {
 		this.unload(id);
+		const has = this.sounds.some((i) => i.id === id);
+		if (!has) {
+			// uploading into a column that has no sound yet → create it
+			this.add(id, url, filename);
+			return;
+		}
 		const sounds = this.sounds.map((i, idx) => {
 			if (i.id === id) {
 				console.log('replace sound', id, idx);
@@ -433,7 +440,7 @@ class AudioEngine extends EventEmitter {
 	}
 	soundForEach(id, fn) {
 		if (id) {
-			const item = this.get(id);
+			const item = this.soundMap[id];
 			if (item) fn(item.sound, id);
 		} else {
 			this.get().forEach((item) => fn(item.sound, item.id));
@@ -442,7 +449,7 @@ class AudioEngine extends EventEmitter {
 	unload(id) {
 		if (!id) return this.get().forEach((s) => this.unload(s.id));
 
-		const s = this.get(id);
+		const s = this.soundMap[id];
 		if (!s) return;
 		if (s.sound.source) this.stop(id);
 
@@ -484,12 +491,15 @@ class AudioEngine extends EventEmitter {
 		return this.get(id).sound._loopEnd;
 	}
 	volume(id, vol) {
-		if (vol === undefined) return this.get(id).sound.volume();
+		if (vol === undefined) {
+			const s = this._sound(id);
+			return s ? s.volume() : undefined;
+		}
+		if (!Number.isFinite(vol)) return;
 
 		if (id) {
-			if (!this.get(id).sound._muted) {
-				this.get(id).sound.volume(vol);
-			}
+			const s = this._sound(id);
+			if (s && !s._muted) s.volume(vol);
 		} else {
 			this.get().forEach((s) => {
 				if (!s.sound._muted) s.sound.volume(vol);
@@ -497,8 +507,10 @@ class AudioEngine extends EventEmitter {
 		}
 	}
 	gain(id, gain) {
-		if (id) return this.get(id).sound.gain(gain);
-
+		if (id) {
+			const s = this._sound(id);
+			return s && s.gain(gain);
+		}
 		this.get().forEach((s) => s.sound.gain(gain));
 	}
 	rate(id, rate) {
@@ -515,7 +527,8 @@ class AudioEngine extends EventEmitter {
 		this.soundForEach(id, (sound) => sound.unmute(false));
 	}
 	pan(id, deg) {
-		return this.get(id).sound.pan(deg);
+		const s = this._sound(id);
+		return s ? s.pan(deg) : undefined;
 	}
 	duration(id) {
 		return this.get(id).sound._duration;
@@ -530,8 +543,11 @@ class AudioEngine extends EventEmitter {
 		});
 	}
 	lock(id, on) {
-		if (id) return this.get(id).sound.lock(on);
-		else this.get().forEach((s) => s.sound.lock(on));
+		if (id) {
+			const s = this._sound(id);
+			return s ? s.lock(on) : undefined;
+		}
+		this.get().forEach((s) => s.sound.lock(on));
 	}
 	reverse(id, on) {
 		this.get(id).sound.reverse(on);
@@ -587,6 +603,13 @@ class AudioEngine extends EventEmitter {
 	onError(id, err) {
 		this.emit('error', err, id);
 	}
+	// safe per-id sound lookup — missing ids return undefined instead of throwing,
+	// so id-based accessors can no-op on columns that have state but no sound
+	_sound(id) {
+		if (!id) return undefined;
+		const item = this.soundMap[id];
+		return item ? item.sound : undefined;
+	}
 	get(id) {
 		if (!id) return this.sounds;
 		if (!this.soundMap[id]) throw new Error("ID '" + id + "' doesn't exist!");
@@ -632,7 +655,8 @@ class AudioEngine extends EventEmitter {
 		return this.get(id).sound.effectBypass(idx, on);
 	}
 	effectParams(id, idx, params) {
-		return this.get(id).sound.effectParams(idx, params);
+		const s = this._sound(id);
+		return s ? s.effectParams(idx, params) : undefined;
 	}
 	disableEffects(id) {
 		return this.get(id).sound.disableEffects();

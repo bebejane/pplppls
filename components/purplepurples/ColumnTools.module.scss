@@ -55,6 +55,33 @@
 	color: gray;
 }
 
+.vol {
+	position: relative;
+	display: inline-block;
+}
+
+.volSlider {
+	position: absolute;
+	bottom: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 26px;
+	padding-bottom: 8px; /* hover bridge so the mouse can move from icon to slider */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.15s ease;
+	z-index: 20;
+}
+
+.vol:hover .volSlider,
+.volSlider:hover {
+	opacity: 1;
+	pointer-events: auto;
+}
+
 .reversed {
 	display: inline-block;
 	transform: scale(-1, 1);

@@ -39,6 +39,16 @@
 	flex-direction: column;
 }
 
+.visualizer {
+	position: absolute;
+	left: 0px;
+	bottom: 0px;
+	width: 2px;
+	height: 100%;
+	z-index: 998;
+	pointer-events: none;
+}
+
 .loading {
 	position: absolute;
 	display: flex;

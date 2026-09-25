@@ -96,6 +96,7 @@ export interface AudioEngine
 	play(id: string, opt?: Record<string, unknown>): void;
 	pause(id?: string, on?: boolean): Any;
 	stop(id?: string): void;
+	exist(id: string): boolean;
 	mute(id: string, on?: boolean): void;
 	unmute(id: string): void;
 	solo(id: string, on: boolean, multi?: boolean): void;

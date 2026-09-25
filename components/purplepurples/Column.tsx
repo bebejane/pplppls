@@ -10,6 +10,7 @@ import ColumnTools from './ColumnTools';
 import Waveform from '@/components/util/Waveform';
 import type { UploadedFile as ImportedUploadedFile } from '@/components/util/FileUploader';
 import s from './Column.module.scss';
+import VolumeVisualizer from '@/components/visualizers/VolumeVisualizer';
 
 export default function Column(props: ColumnProps) {
 	const { id } = props;
@@ -18,7 +19,11 @@ export default function Column(props: ColumnProps) {
 	const lastRateRef = useRef<Record<string, number>>({});
 
 	// merged audio state: props are the base, engine 'state'+id events update live
-	const [st, setSt] = useState<Record<string, any>>(() => ({ ...props, locked: false }));
+	const [st, setSt] = useState<Record<string, any>>(() => ({
+		...props,
+		locked: false,
+		soloId: null,
+	}));
 
 	const set = (patch: Record<string, any>) => setSt((prev) => ({ ...prev, ...patch }));
 
@@ -54,11 +59,17 @@ export default function Column(props: ColumnProps) {
 			if (updated.playing) triggerClick();
 			if (updated.locked) lock();
 		};
+		const onSolo = (id, solo: boolean) => {
+			//console.log(id, solo);
+			set({ soloId: id });
+		};
 		Global.engine.on('loopend' + id, onLoopEnd);
 		Global.engine.on('state' + id, onState);
+		Global.engine.on('solo', onSolo);
 		return () => {
 			Global.engine.off('loopend' + id, onLoopEnd);
 			Global.engine.off('state' + id, onState);
+			Global.engine.off('solo', onSolo);
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [id]);
@@ -95,16 +106,15 @@ export default function Column(props: ColumnProps) {
 		const width = el.clientWidth;
 		const percX = Math.abs((e.pageX - l) / width);
 		const percY = Math.abs((e.pageY - t) / height);
-		pointRef.current = { x: percX, y: percY };
-		set({ point: pointRef.current });
-
+		//pointRef.current = { x: percX, y: percY };
+		if (!st.locked) set({ point: { x: percX, y: percY } });
 		set({ click: true });
 		setTimeout(() => set({ click: false }), 100);
 
 		if (!e.altKey && !e.metaKey && !e.ctrlKey) {
 			props.onPlay({ rate: Math.ceil(percX * 12) / 10 });
 		} else if (e.altKey) {
-			pointRef.current = null;
+			set({ point: null });
 			return props.onStop();
 		} else if (e.ctrlKey) {
 			return props.onLocked(!st.locked);
@@ -197,6 +207,8 @@ export default function Column(props: ColumnProps) {
 		loopEndTrigger,
 		fullscreen,
 		randDeg,
+		point,
+		soloId,
 	} = st;
 
 	const controls = props.controls;
@@ -205,7 +217,7 @@ export default function Column(props: ColumnProps) {
 	const rgba2 = 'rgb(' + (playing ? '104' : '68') + ', 0, ' + volume * 100 + ')';
 	const rgba3 = 'rgb(104,158,205)';
 	const deg = randDeg || volume * 100 * 3.6;
-
+	//console.log(solo);
 	const style: React.CSSProperties = {
 		backgroundColor: click ? rgba3 : rgba,
 		backgroundImage: locked
@@ -229,9 +241,9 @@ export default function Column(props: ColumnProps) {
 			: undefined,
 		backgroundSize: 'cover',
 		boxSizing: 'border-box',
-		opacity: click ? 0.4 : 0.7,
+		opacity: click || (soloId && soloId !== id) ? 0.4 : 0.7,
 	};
-
+	//console.log(solo);
 	if (fullscreen) {
 		style.position = 'absolute';
 		style.opacity = 1.0;
@@ -257,13 +269,13 @@ export default function Column(props: ColumnProps) {
 				onClick(e);
 			}}
 		>
-			{pointRef.current && (
+			{point && (
 				<div
-					key={JSON.stringify(pointRef.current)}
+					key={JSON.stringify(point)}
 					className={cn(s.clickPoint, playing && !loopEndTrigger && s.clickPointPlaying)}
 					style={{
-						left: pointRef.current.x * 100 + '%',
-						top: pointRef.current.y * 100 + '%',
+						left: point.x * 100 + '%',
+						top: point.y * 100 + '%',
 					}}
 					onMouseDown={(e) => {
 						//e.stopPropagation();
@@ -315,10 +327,12 @@ export default function Column(props: ColumnProps) {
 					reversed={st.reversed}
 					solo={st.solo}
 					hovering={st.hovering}
+					volume={volume}
 					onPlay={() => props.onPlay({ enableElapsed: fullscreen })}
 					onStop={() => props.onStop()}
 					onSampleRecord={(on) => props.onSampleRecord(on)}
 					onMute={(on) => props.onMute(on)}
+					onVolume={(vol) => props.onVolume(vol)}
 					onLoop={(on) => props.onLoop(on)}
 					onReverse={(on) => props.onReverse(on)}
 					onEffectsEnabled={(on) => props.onEffectsEnabled(on)}
@@ -335,7 +349,9 @@ export default function Column(props: ColumnProps) {
 					onLocked={(on) => props.onLocked(on)}
 				/>
 			)}
-
+			<div className={s.visualizer}>
+				<VolumeVisualizer id={id} color={'#b750e7'} ready={ready} />
+			</div>
 			<div className={s.loading}>{!ready && <AiOutlineLoading />}</div>
 		</div>
 	);

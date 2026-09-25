@@ -50,7 +50,12 @@ interface PurplePurplesState {
 	newDialog: boolean;
 	recordingDialog: boolean;
 	volume: number;
-	notification: null | { message: string; description?: string; loading?: boolean; close?: boolean };
+	notification: null | {
+		message: string;
+		description?: string;
+		loading?: boolean;
+		close?: boolean;
+	};
 	inputNotAllowed: boolean;
 	error: string | null;
 	recordingProgress: Record<string, any>;
@@ -118,12 +123,9 @@ export default function PurplePurples() {
 		setState((prev) => ({ ...prev, ...patch }));
 	}, []);
 
-	const setCols = useCallback(
-		(updater: (cols: Record<string, any>) => Record<string, any>) => {
-			setState((prev) => ({ ...prev, cols: updater(prev.cols) }));
-		},
-		[],
-	);
+	const setCols = useCallback((updater: (cols: Record<string, any>) => Record<string, any>) => {
+		setState((prev) => ({ ...prev, cols: updater(prev.cols) }));
+	}, []);
 
 	useEngineListeners(set, setCols, stateRef);
 
@@ -148,46 +150,49 @@ export default function PurplePurples() {
 		return res.data;
 	}, []);
 
-	const loadModel = useCallback(async (name: string, zipContent?: ArrayBuffer): Promise<Model | undefined> => {
-		const models = modelsRef.current;
-		const model = models.filter((m) => m.name === name)[0];
-		if (model && model.files.length && model.files[0].buffer) return model;
-		if (model && model.new) return model;
+	const loadModel = useCallback(
+		async (name: string, zipContent?: ArrayBuffer): Promise<Model | undefined> => {
+			const models = modelsRef.current;
+			const model = models.filter((m) => m.name === name)[0];
+			if (model && model.files.length && model.files[0].buffer) return model;
+			if (model && model.new) return model;
 
-		let zipData = zipContent;
-		if (!zipData) {
-			const zipFile = '/models/' + name + '.zip';
+			let zipData = zipContent;
+			if (!zipData) {
+				const zipFile = '/models/' + name + '.zip';
+				try {
+					zipData = (await loadFile(zipFile)) as ArrayBuffer;
+				} catch (err) {
+					handleError(err);
+					return;
+				}
+			}
+
+			setState((prev) => ({
+				...prev,
+				notification: { message: 'Extracting', description: name },
+			}));
+
 			try {
-				zipData = (await loadFile(zipFile)) as ArrayBuffer;
+				const zip = new JSZip();
+				const z = await zip.loadAsync(zipData);
+				const m: Model = JSON.parse(await z.files['index.json'].async('text'));
+				for (let i = 0; i < m.files.length; i++) {
+					if (typeof (m.files[i] as unknown as string) === 'string')
+						m.files[i] = { filename: m.files[i] as unknown as string };
+					if (z.files[m.files[i].filename])
+						m.files[i].buffer = await z.files[m.files[i].filename].async('arraybuffer');
+				}
+				setState((prev) => ({ ...prev, notification: null, model: m.name }));
+				return m;
 			} catch (err) {
+				setState((prev) => ({ ...prev, notification: null }));
 				handleError(err);
-				return;
+				return undefined;
 			}
-		}
-
-		setState((prev) => ({
-			...prev,
-			notification: { message: 'Extracting', description: name },
-		}));
-
-		try {
-			const zip = new JSZip();
-			const z = await zip.loadAsync(zipData);
-			const m: Model = JSON.parse(await z.files['index.json'].async('text'));
-			for (let i = 0; i < m.files.length; i++) {
-				if (typeof (m.files[i] as unknown as string) === 'string')
-					m.files[i] = { filename: m.files[i] as unknown as string };
-				if (z.files[m.files[i].filename])
-					m.files[i].buffer = await z.files[m.files[i].filename].async('arraybuffer');
-			}
-			setState((prev) => ({ ...prev, notification: null, model: m.name }));
-			return m;
-		} catch (err) {
-			setState((prev) => ({ ...prev, notification: null }));
-			handleError(err);
-			return undefined;
-		}
-	}, [loadFile]);
+		},
+		[loadFile],
+	);
 
 	const initModel = useCallback((model: Model) => {
 		Global.engine.destroy();
@@ -311,8 +316,7 @@ export default function PurplePurples() {
 			Global.engine
 				.init(lastInputDevice, lastMidiDevice)
 				.then((info: any) => {
-					if (info && info.devices)
-						set({ deviceId: info.selected, inputDevices: info.devices });
+					if (info && info.devices) set({ deviceId: info.selected, inputDevices: info.devices });
 					if (start) initDone(true);
 				})
 				.catch((err: unknown) => {
@@ -329,8 +333,7 @@ export default function PurplePurples() {
 				.then((devices: { deviceId: string; name: string }[]) => {
 					set({ midiDevices: devices, midiSupported: true });
 					if (!devices.length) return;
-					const device =
-						devices.filter((d) => d.deviceId === lastMidiDevice)[0] || devices[0];
+					const device = devices.filter((d) => d.deviceId === lastMidiDevice)[0] || devices[0];
 					onMidiDeviceChange(device.deviceId);
 				})
 				.catch(() => {
@@ -380,8 +383,7 @@ export default function PurplePurples() {
 	}, []);
 
 	const handleError = useCallback((err: unknown) => {
-		const error =
-			typeof err === 'string' ? err : err instanceof Error ? err.message : String(err);
+		const error = typeof err === 'string' ? err : err instanceof Error ? err.message : String(err);
 		set({ error });
 		console.error(err);
 	}, []);
@@ -418,8 +420,7 @@ export default function PurplePurples() {
 			const target = event.target as HTMLInputElement;
 			if (!target.files || !target.files.length) return;
 			const file = target.files[0];
-			if (!file.name.toLowerCase().endsWith('.zip'))
-				return handleError('Format not supported');
+			if (!file.name.toLowerCase().endsWith('.zip')) return handleError('Format not supported');
 
 			set({ notification: { message: 'Loading', description: '0%' } });
 			const reader = new FileReader();
@@ -529,23 +530,26 @@ export default function PurplePurples() {
 		setRecordings((prev) => prev.filter((r) => r.id !== id));
 	}, []);
 
-	const onDownload = useCallback(async (recId: number, type: 'wav' | 'mp3') => {
-		const recording = recordings.filter((r) => r.id === recId)[0];
-		if (!recording) return;
-		if (type === 'wav') return forceDownload(recording.blob, recording.name + '.wav');
-		set({ notification: { message: 'Converting to mp3', close: true } });
-		Global.engine
-			.encodeAudio(recording.buffer, 'mp3')
-			.then((blob: Blob) => {
-				forceDownload(blob, recording.name + '.mp3');
-			})
-			.catch((err: unknown) => {
-				if (err === 'CANCELLED') return;
-				handleError(err);
-			})
-			.finally(() => set({ notification: null }));
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [recordings]);
+	const onDownload = useCallback(
+		async (recId: number, type: 'wav' | 'mp3') => {
+			const recording = recordings.filter((r) => r.id === recId)[0];
+			if (!recording) return;
+			if (type === 'wav') return forceDownload(recording.blob, recording.name + '.wav');
+			set({ notification: { message: 'Converting to mp3', close: true } });
+			Global.engine
+				.encodeAudio(recording.buffer, 'mp3')
+				.then((blob: Blob) => {
+					forceDownload(blob, recording.name + '.mp3');
+				})
+				.catch((err: unknown) => {
+					if (err === 'CANCELLED') return;
+					handleError(err);
+				})
+				.finally(() => set({ notification: null }));
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+		},
+		[recordings],
+	);
 
 	const onDownloadSample = useCallback((id: string) => {
 		const s = Global.engine.get(id);
@@ -567,32 +571,42 @@ export default function PurplePurples() {
 		}, 100);
 	}, []);
 
-	const onUpload = useCallback((id: string, buffer: ArrayBuffer, filename: string) => {
-		const name = filename.toLowerCase();
-		if (name && name.endsWith('.zip')) {
-			loadModel(name.replace('.zip', ''), buffer)
-				.then((model) => {
-					if (model) initModel(model);
-				})
-				.catch((err) => handleError(err));
-			return;
-		}
-		const objURL = URL.createObjectURL(new Blob([buffer], { type: Global.fileToMimeType(filename) }));
-		Global.engine.replace(id, objURL, filename);
-	}, [loadModel, initModel]);
+	const onUpload = useCallback(
+		(id: string, buffer: ArrayBuffer, filename: string) => {
+			const name = filename.toLowerCase();
+			if (name && name.endsWith('.zip')) {
+				loadModel(name.replace('.zip', ''), buffer)
+					.then((model) => {
+						if (model) initModel(model);
+					})
+					.catch((err) => handleError(err));
+				return;
+			}
+			const objURL = URL.createObjectURL(
+				new Blob([buffer], { type: Global.fileToMimeType(filename) }),
+			);
+			Global.engine.replace(id, objURL, filename);
+		},
+		[loadModel, initModel],
+	);
 
-	const onMultiUpload = useCallback((id: string, files: { contents: ArrayBuffer; filename: string }[]) => {
-		let offset = 0;
-		Global.engine.sounds.forEach((s: any, idx: number) => {
-			if (id === s.id) offset = idx;
-		});
-		files.forEach((f, idx) => {
-			if (Global.engine.sounds.length < offset + idx) return;
-			const targetId = Global.engine.sounds[offset + idx].id;
-			const objURL = URL.createObjectURL(new Blob([f.contents], { type: Global.fileToMimeType(f.filename) }));
-			Global.engine.replace(targetId, objURL, f.filename);
-		});
-	}, []);
+	const onMultiUpload = useCallback(
+		(id: string, files: { contents: ArrayBuffer; filename: string }[]) => {
+			let offset = 0;
+			Global.engine.sounds.forEach((s: any, idx: number) => {
+				if (id === s.id) offset = idx;
+			});
+			files.forEach((f, idx) => {
+				if (offset + idx >= Global.engine.sounds.length) return;
+				const targetId = Global.engine.sounds[offset + idx].id;
+				const objURL = URL.createObjectURL(
+					new Blob([f.contents], { type: Global.fileToMimeType(f.filename) }),
+				);
+				Global.engine.replace(targetId, objURL, f.filename);
+			});
+		},
+		[],
+	);
 
 	// ---- fullscreen ------------------------------------------------------
 	const onFullscreen = useCallback((on: boolean) => {
@@ -646,7 +660,9 @@ export default function PurplePurples() {
 			});
 		}
 		zip.file('index.json', JSON.stringify(model, null, 4));
-		Object.keys(zip.files).forEach((name) => (model.contentLength += (zip.files[name] as any)._data.length));
+		Object.keys(zip.files).forEach(
+			(name) => (model.contentLength += (zip.files[name] as any)._data.length),
+		);
 		try {
 			const content = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
 			forceDownload(content, modelName + '.purple.zip');
@@ -794,19 +810,23 @@ export default function PurplePurples() {
 		const cols = stateRef.current.cols;
 		Object.keys(cols).forEach((k) => {
 			const channel = cols[k];
+			// a col can exist in state without a sound (no file in the model, or
+			// mid teardown while loading a new model) — skip those
+			if (!Global.engine.exist(channel.id)) return;
 			const mul = Math.random();
 			Global.engine.rate(channel.id, mul);
 			Global.engine.mute(channel.id, Math.random() > 0.5);
 			Global.engine.volume(channel.id, Math.random());
 			Global.engine.pan(channel.id, Math.random() * 180 - 90);
 		});
-		Global.engine.sounds.forEach((s: any) => {
+		Global.engine.sounds.forEach((s: any, idx) => {
 			const sound = s.sound;
 			const start = Math.random() * sound._duration;
 			const end = Math.random() * (sound._duration - start);
 			Global.engine.loop(s.id, true, { start, end });
 			sound._loop = Math.random() < 0.5;
 			if (Math.random() < 0.5) Global.engine.reverse(s.id, true);
+			setTimeout(() => Global.engine.lock(s.id, Math.random() > 0.5), idx * 200);
 		});
 		Global.engine.master.play();
 	}, []);
