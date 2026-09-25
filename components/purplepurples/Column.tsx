@@ -15,7 +15,6 @@ import VolumeVisualizer from '@/components/visualizers/VolumeVisualizer';
 export default function Column(props: ColumnProps) {
 	const { id } = props;
 	const ref = useRef<HTMLDivElement>(null);
-	const pointRef = useRef<{ x: number; y: number } | null>(null);
 	const lastRateRef = useRef<Record<string, number>>({});
 
 	// merged audio state: props are the base, engine 'state'+id events update live
@@ -106,15 +105,18 @@ export default function Column(props: ColumnProps) {
 		const width = el.clientWidth;
 		const percX = Math.abs((e.pageX - l) / width);
 		const percY = Math.abs((e.pageY - t) / height);
-		//pointRef.current = { x: percX, y: percY };
-		if (!st.locked) set({ point: { x: percX, y: percY } });
+		// keep the last 4 click spots so the column shows a click history
+		if (!st.locked) {
+			const last4 = [{ x: percX, y: percY }, ...(st.points || [])].slice(0, 4);
+			set({ points: last4 });
+		}
 		set({ click: true });
 		setTimeout(() => set({ click: false }), 100);
 
 		if (!e.altKey && !e.metaKey && !e.ctrlKey) {
 			props.onPlay({ rate: Math.ceil(percX * 12) / 10 });
 		} else if (e.altKey) {
-			set({ point: null });
+			set({ points: [] });
 			return props.onStop();
 		} else if (e.ctrlKey) {
 			return props.onLocked(!st.locked);
@@ -207,7 +209,7 @@ export default function Column(props: ColumnProps) {
 		loopEndTrigger,
 		fullscreen,
 		randDeg,
-		point,
+		points,
 		soloId,
 	} = st;
 
@@ -269,20 +271,20 @@ export default function Column(props: ColumnProps) {
 				onClick(e);
 			}}
 		>
-			{point && (
+			{(points || []).map((pt, i) => (
 				<div
-					key={JSON.stringify(point)}
-					className={cn(s.clickPoint, playing && !loopEndTrigger && s.clickPointPlaying)}
+					key={`${i}:${pt.x}:${pt.y}`}
+					data-click-point
+					className={cn(
+						i === 0 ? s.clickPoint : s.clickPointPrev,
+						i === 0 && playing && !loopEndTrigger && s.clickPointPlaying,
+					)}
 					style={{
-						left: point.x * 100 + '%',
-						top: point.y * 100 + '%',
-					}}
-					onMouseDown={(e) => {
-						//e.stopPropagation();
-						//props.onLocked(!locked);
+						left: pt.x * 100 + '%',
+						top: pt.y * 100 + '%',
 					}}
 				></div>
-			)}
+			))}
 			<div className={s.point}>
 				<ColumnRecord
 					id={id}
