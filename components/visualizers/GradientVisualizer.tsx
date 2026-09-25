@@ -6,8 +6,9 @@ import { useRef } from 'react';
 /**
  * Draws the locked-column gradient on a canvas along the CSS gradient line
  * (angle 0° = toward the top, clockwise; line length `w·|sinθ| + h·|cosθ|`),
- * with the color bands fading softly into each other instead of hard
- * 25%-stop edges.
+ * as a run of identical stripes (same count as before) where each stripe
+ * contains its own internal gradient — the tone sweeps A → B → A inside every
+ * stripe, like the old CSS felt.
  *
  * The incoming audio level (analyser type 'volume') crossfades the gradient's
  * brightness smoothly (exponential smoothing per frame) — like a light fading
@@ -71,18 +72,17 @@ export default function GradientVisualizer({
 					cx + (dx * L) / 2,
 					cy + (dy * L) / 2,
 				);
-				// soft color bands: each stripe fades into the next (was a hard
-				// A 25% / B 25% stop in the CSS)
-				const w = 0.05; // half-width of the transition (fraction of the line)
-				grad.addColorStop(0, color);
-				grad.addColorStop(0.25 - w, color);
-				grad.addColorStop(0.25 + w, colorLeft);
-				grad.addColorStop(0.5 - w, colorLeft);
-				grad.addColorStop(0.5 + w, color);
-				grad.addColorStop(0.75 - w, color);
-				grad.addColorStop(0.75 + w, colorLeft);
-				grad.addColorStop(1, colorLeft);
-				grad.addColorStop(1, color);
+				// repeating identical stripes, each holding its own internal
+				// gradient: A at every stripe boundary, ramping up to colorLeft
+				// at the stripe middle and back down to A — a smooth triangle
+				// wave, no hard edges, same stripe count as the original CSS
+				const stripes = 4;
+				for (let i = 0; i <= stripes; i++) {
+					grad.addColorStop(i / stripes, color);
+				}
+				for (let i = 0; i < stripes; i++) {
+					grad.addColorStop((i + 0.5) / stripes, colorLeft);
+				}
 
 				ctx.fillStyle = grad;
 				ctx.fillRect(0, 0, width, height);
