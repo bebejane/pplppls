@@ -15,6 +15,7 @@ export default function Column(props: ColumnProps) {
 	const { id } = props;
 	const ref = useRef<HTMLDivElement>(null);
 	const pointRef = useRef<{ x: number; y: number } | null>(null);
+	const lastRateRef = useRef<Record<string, number>>({});
 
 	// merged audio state: props are the base, engine 'state'+id events update live
 	const [st, setSt] = useState<Record<string, any>>(() => ({ ...props, locked: false }));
@@ -126,7 +127,12 @@ export default function Column(props: ColumnProps) {
 			return props.onLoop(st.loop, { start: loopStart, end: loopEnd });
 		} else if (!st.locked) {
 			const percX = Math.abs((e.pageX - el.offsetLeft) / el.clientWidth);
-			Global.engine.rate(id, parseFloat((percX * 2.0).toFixed(1)));
+			const nextRate = parseFloat((percX * 2.0).toFixed(1));
+			// only ship to the engine when the (0.1-step) value actually changes
+			if (lastRateRef.current[id] !== nextRate) {
+				lastRateRef.current[id] = nextRate;
+				Global.engine.rate(id, nextRate);
+			}
 		}
 	};
 

@@ -1,38 +1,66 @@
 # AGENTS.md
 
-In-browser **DAW** built with **Next.js 16.3 (App Router) + TypeScript**. The WebAudio engine was ported from the old Create React App build (still in `legacy/` for reference). No testing framework; no TypeScript strictness on the engine.
+**PurplePurples** — an in-browser **DAW** (Web Audio sampler/sequencer/mixer) built with **Next.js 16.3 (App Router) + TypeScript + SCSS Modules**, migrated from an old Create React App build (original source archived in `legacy/`).
+
+No test runner is wired up (the old CRA `App.test.js` was deleted). The app is browser-only and hard to exercise headlessly (needs microphone permission), so verify behavior in a real browser.
 
 ## Commands
 
-- **Package manager is pnpm.** Use `pnpm install` / `pnpm add`. `pnpm-workspace.yaml` whitelists postinstall build scripts (core-js/fsevents/@parcel/watcher/unrs-resolver) — leave it.
-- `pnpm dev` → Next dev server (:3000). `pnpm build` → production build; `pnpm start` → serve it. `pnpm lint` (ESLint, 0 errors gated) and `pnpm typecheck` (`tsc --noEmit`) are the verification gates.
-- The app is **browser-only**: it requests microphone access at startup (`engine.init()` rejects without permission), so verify changes in a real browser. `Home` is the intro screen; click `PURPLE` → mic prompt → model loads.
-- The old `App.test.js` is gone (it was broken CRA boilerplate). Don't add Jest; there's no test runner wired up.
+- **pnpm** is the package manager. Use `pnpm install` / `pnpm add`. `pnpm-workspace.yaml` just whitelists postinstall build scripts (core-js/fsevents/@parcel/watcher/unrs-resolver) — leave it.
+- `pnpm dev` → dev server (:3000). `pnpm build` → production build (Turbopack; runs `tsc` internally). `pnpm start` → serve build.
+- **Verification gates: `pnpm typecheck` (`tsc --noEmit`), `pnpm lint` (flat ESLint, 0 errors), `pnpm build`.** Run all three; the engine is excluded from lint but included in typecheck via `lib/audio/types.ts`.
+- `npm`/`yarn` should not be used (no `yarn.lock`).
+- Boot flow: open the app → click `PURPLE` → grant mic → "PURPLES" → grid loads. If mic is denied you get the error overlay; `engine.init()` rejects without permission.
 
 ## Architecture
 
-- Routing is a single route: `app/page.tsx` → `components/studio/Studio.tsx` (`'use client'`). **Studio builds the engine lazily in a `useEffect`** (`new AudioEngine(...)` on the `Global` singleton) — the engine must never be constructed during render/SSR (it creates an `AudioContext` and touches `window`). `Studio` renders `null` until the engine exists.
-- `components/purplepurples/PurplePurples.tsx` is the product (the grid DAW). It was split from one giant class component into:
+### App layer
+- Single route: `app/layout.tsx` (metadata, imports `styles/globals.scss`) → `app/page.tsx` → `components/studio/Studio.tsx` (`'use client'`).
+- **`Studio` builds the engine lazily in a `useEffect`** (`new AudioEngine(...)` on the `Global` singleton), never during render/SSR — the engine creates an `AudioContext` and touches `window`. It renders `null` until the engine exists.
+- `components/purplepurples/PurplePurples.tsx` is the product (the "grid" DAW: a grid of Columns, each a looping sampler cell). Split from one giant class into:
   - hooks: `useEngineListeners.ts` (engine events → state), `useKeyboardShortcuts.ts` (global keys via a mutable handlers ref)
-  - subcomponents: `Column` (`ColumnTools`, `ColumnRecord`, `Waveform`), `Controls` (`MasterFader`), `Home`, dialogs (`Save/New/Help/Recordings`), `NotSupported`, overlays
-  - types in `types.ts` (Model/ColState/MoveData)
-- **Engine**: everything under `lib/audio/` is **TypeScript** (`.ts`) now. The ported CRA-era DSP keeps its behavior; `lib/audio` is excluded from ESLint, and the files marked `// @ts-nocheck` (Sound, AudioEngine, Analyser, Recorder, Master, the WebAudio-heavy effects, mp3 encoder, paulstretch/timestretcher/stretch, recorder worklet) are type-unchecked so `tsc` stays green — treat them as "keep behavior intact":
-  - `AudioEngine.ts` (an `EventEmitter`), `Sound.ts`, `Recorder.ts` (uses an `AudioWorkletNode` loaded from a Blob URL — `record/worklet.ts` exports the processor source string; `audioWorklet.addModule` needs JS MIME), `Analyser.ts`, effects, `utils`, encoders.
-  - The transport/loop/effects logic was slimmed: `master` lives in `Master.ts`, effect classes share `createEffectBase` + an id→class registry in `effects/index.ts` (shared primitives in `effects/core.ts` — no circular imports), transport methods use `soundForEach`, `lib/audio/types.ts` gives components a typed `AudioEngine` facade (do **not** remove interface members the app calls — `tsc` will fail).
-  - DSP algorithms (`utils/`, `paulstretch`, `timestretcher`, encoders) and the worker message contract should not change.
-- The engine is a singleton: `import Global from '@/lib/Global'` → `Global.engine` (also `Global.bpm`, `Global.fileToMimeType`). The old `global.Global`/`global.bpm` references were converted to this module.
-- **Workers**: `lib/audio/workers.ts` constructs standard ESM module workers via `new Worker(new URL('./encoders/worker', import.meta.url), { type: 'module' })`. The three worker files (`encoders`, `meter`, `record`) are `.ts` (`self.onmessage`, `import`, `self.postMessage`). `encoders/mp3.ts`/`wav.ts` are imported by workers, so keep them free of `require()`/bare `postMessage`.
+  - `Column.tsx` (+ `ColumnTools`, `ColumnRecord`), `Controls.tsx` (+ `MasterFader`), `Home.tsx` (intro/canvas), dialogs (`Save/New/Help/Recordings`), `NotSupported`, overlays; shared UI in `components/util/` (`Select`, `FileUploader`, `Waveform`), canvases in `components/visualizers/`.
+  - `types.ts` (Model/ColState/MoveData).
+
+### Engine — `lib/audio/` (fully TypeScript)
+Everything under `lib/audio/` is `.ts`. The ported DSP keeps its behavior; `lib/audio` is excluded from ESLint, and the files marked `// @ts-nocheck` (Sound, AudioEngine, Analyser, Recorder, Master, the WebAudio-heavy effects, `encoders/mp3.ts`, paulstretch/timestretcher/stretch, `record/worklet.ts`) are intentionally type-unchecked so `tsc` stays green — treat them as **"keep behavior intact"** and don't remove the `@ts-nocheck`.
+
+- **Singleton**: `import Global from '@/lib/Global'` → `Global.engine` (also `Global.bpm`, `Global.fileToMimeType`). Components never construct an engine.
+- **Key refactors (behavior-preserving, don't regress):**
+  - `master` transport state lives in `Master.ts`; `AudioEngine` keeps `this.master = new Master(this)`.
+  - Effect classes share `createEffectBase` (constructor defaults/param merge, runs at the **end** of each constructor because setters touch nodes) and an id→class registry in `effects/index.ts`; shared primitives (`baseEffect`, `Utils`, `createEffectBase`) live in `effects/core.ts` — **no circular imports** between effects and index.
+  - Transport methods use `soundForEach(id, fn)` instead of duplicated `if (id) … else forEach`.
+  - `lib/audio/types.ts` is the typed `AudioEngine` facade components import through `Global.engine`. **Do not remove interface members the app calls — `tsc` will fail.**
+  - Gained smoothing (anti-zipper-noise, must stay): `Sound.mute()` ramps a unified gain to `0` via `setTargetAtTime` — **it never disconnects/reconnects the audio graph** (previously it did, causing clicks/cuts while moving over the grid). `volume`/`gain`/`pan` also converge via `setTargetAtTime`; effect dry/wet `mix` gains use `setTargetAtTime`.
+  - **Loop-boundary anti-click fades**: `Sound.ts` inserts a dedicated `fadeNode` (`node → fadeNode → panner`) and a look-ahead scheduler schedules ~6ms fades to silence at each loop wrap (and at loopStart on play). It re-anchors on `loop()`/`rate()` changes and cleans up on stop/pause/destroy. Don't remove fadeNode from `_connectChain`/`_disconnectChain`.
+- **Workers** (`lib/audio/workers.ts`): standard ESM module workers via `new Worker(new URL('./encoders/worker', import.meta.url), { type: 'module' })`. The three worker files (`encoders`, `meter`, `record`) are `.ts`; `encoders/mp3.ts`/`wav.ts` are imported *by* workers, so keep them free of `require()`/bare `postMessage`.
+- **Recorder uses an AudioWorkletNode**, but `record/worklet.ts` exports the processor as a **source string** loaded through a Blob URL (`audioWorklet.addModule` requires a JS MIME; raw `.ts` assets fail MIME checks). Don't switch back to `new URL('./worklet', import.meta.url)` or `createScriptProcessor`.
+- Removed during the slimming (don't reintroduce): `utils/{copy,fill}.ts`, `Sequencer.js`/`Sequencer2.js` and the `waaclock` dep (unused by the app), `Sound.getState()`, `createGainNode()` polyfills, `kali.min.js`.
+
+## Interactivity gotchas (hard-won — read before touching)
+
+- **`Column` treats live sound state as engine-authoritative.** Live fields (`volume`, `rate`, `playing`, `locked`, …) arrive via `Global.engine` `'state'<id>` events; the Column prop-sync helper **explicitly skips `locked`** so a stale parent prop can't clobber it. Lock/unlock from UI always goes through `Global.engine.lock(id, on)` — never mutate parent `cols` directly.
+- **`data-sound-point`** attribute: `PurplePurples.initModel` maps columns via `document.querySelectorAll('[data-sound-point]')` (module-hashed class names broke the old literal-class query — keep using the attribute).
+- Mouse-move over a column drives per-move audio writes (volume/pan/rate/delay/mute). This is now *smooth* (fades are engine-side); `Column.onModify` only sends `rate()` when the 0.1-step value changes. Keep writes quantized/throttled — don't reintroduce per-move graph rewiring.
+- **Waveform (`components/util/Waveform.tsx`)** — nothing is queried by CSS class from JS:
+  - Canvas draws use the canvas backing store directly (`measure()` sets `canvas.width/height`), a `ResizeObserver` handles fullscreen sizing (a `window.resize` listener alone misses it), and the elapsed overlay is driven through `setTargetAtTime`-style updates.
+  - Selection: drag to select a loop; on release the selection is **committed and stops tracking the mouse** (persist deactivated state via `updateSelection` before `newSelection`). Starting a drag in the left/right gutter anchors the selection to the start/end edge (`armFromEdge` in the window mouse handler). The edge handles are 16px-wide grab zones with a visible line; the red cursor line has `pointer-events: none` so it never steals handle clicks. Selections/clicks at `x=0` must not be dropped, and loop times are clamped to `[0, duration]` (negative loopStart crashes `AudioBufferSourceNode.start`).
+  - The two canvases (waveform + elapsed) are full-size; the main canvas routes `mousemove` through `handleMouseEvents` (it stops propagation itself) so drags work even with no selection overlay present.
 
 ## Styling
 
-- **No SCSS variables.** Design tokens are CSS custom properties in `:root` inside `styles/globals.scss` (also holds fonts, `@keyframes` spin/blinker/point-zoom-out, and element styles like `input[type=range]`).
-- Every component has a co-located `X.module.scss` imported as `import s from './X.module.scss'`; conditional classes via `import cn from 'classnames'` → `cn(s.a, s.b)`.
-- Gotchas inherited from the port:
-  - Column roots carry `data-sound-point`; `PurplePurples.initModel` maps them via `document.querySelectorAll('[data-sound-point]')` (the old code queried a literal class name that is now module-hashed — keep using the data attribute).
-  - CSS Modules hashes class names, so anything that matches elements by CSS class in JS must use a data attribute or ref instead.
-  - **`Column` treats live sound state as engine-authoritative.** Engine-driven fields (`volume`, `rate`, `playing`, `locked`, …) arrive via `Global.engine` `'state'<id>` events, and the Column prop-sync helper explicitly skips `locked` so a stale parent prop can't clobber it. When locking/unlocking from UI, always go through `Global.engine.lock(id, on)` (never mutate parent `cols` directly).
+- **No SCSS variables.** All design tokens are CSS custom properties in `:root` inside `styles/globals.scss` (also fonts, `@keyframes` spin/blinker/point-zoom-out, element styles like `input[type=range]`). Module files reference `var(--…)`.
+- Component styles are co-located `X.module.scss` imported as `import s from './X.module.scss'`; conditional classes via `import cn from 'classnames'` → `cn(s.a, s.b)`.
+- **There is deliberately no global `* { box-sizing: border-box }`** — the app is `content-box` based (the column tool icon buttons size off `1em` + padding; a border-box reset shrank them). Set `box-sizing` per-selector where a layout needs it.
+- CSS Modules hashes class names → any JS DOM lookup by CSS class must use a data attribute or ref.
 
-## Deferred from this migration
+## Data & deployment
 
-- The 10 experimental mini-apps (`Wave`, `MultiMixer`, `PitchShifter`, `Spyders`, `Smokey`, `Effing`, `Bloody`, `InputTest`, `Test`…) and the Electron shell (`public/electron.js`, `TitleBar`, `is-electron` fs model loading) were dropped. Their code lives in `legacy/src/` (gitignored) if you need to resurrect anything.
-- `legacy/`, and root-level `audio/`, `utils/`, `icons/` are gitignored local scratch dirs, not repo content.
+- `public/` holds static assets, fonts, drumkits, and **`public/models/`** (the `.zip` "models" loaded at startup; ~42MB, tracked in git — don't move them).
+- Deploy target: Vercel (`vercel.json` just silences GitHub comments). `pnpm build` output serves as-is.
+- **Git**: mainline branch is `zwei`, primary remote `origin` (github.com/bebejane/pplppls). Don't add large binaries; GitHub rejects >100MB. `legacy/` is committed (archive of the old CRA source). Root `audio/`, `utils/`, `icons/` are gitignored local scratch — never stage them.
+
+## Deferred from the migration
+
+- The 10 experimental mini-apps (`Wave`, `MultiMixer`, `PitchShifter`, `Spyders`, `Smokey`, `Effing`, `Bloody`, `InputTest`, `Test`, …) and the Electron shell were dropped. Originals live under `legacy/src/` if resurrecting.
+- Possible next step (not done): timer-driven loop restarts with per-cycle fades for fully click-proof looping under rate scrubbing (native `source.loop` + the fadeNode envelope is currently near-perfect but approximate during continuous rate drags).

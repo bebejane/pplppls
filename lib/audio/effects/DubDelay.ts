@@ -58,8 +58,9 @@ DubDelay.prototype = Object.create(baseEffect, {
 				return;
 
 			this.options.mix = mix;
-			this.dryGainNode.gain.value = Utils.getDryLevel(this.mix);
-			this.wetGainNode.gain.value = Utils.getWetLevel(this.mix);
+			const mixTime = this.context.currentTime;
+			this.dryGainNode.gain.setTargetAtTime(Utils.getDryLevel(this.mix), mixTime, 0.02);
+			this.wetGainNode.gain.setTargetAtTime(Utils.getWetLevel(this.mix), mixTime, 0.02);
 		}
 	},
 

@@ -1,0 +1,10 @@
+{
+  "files.exclude": {
+    "**/.jj": true,
+    "audio": true,
+    "icons": true,
+    ".next": true,
+    "node_modules": true,
+    ".vscode": true
+  }
+}

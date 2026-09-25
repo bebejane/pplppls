@@ -79,6 +79,14 @@ class Sound extends EventEmitter {
 		this.panner = this.context.createPanner({
 			panningModel: 'equalpower',
 		});
+		// dedicated gain for the loop-boundary fade envelope — kept separate
+		// from node.gain (volume/mute) so they never fight each other
+		this.fadeNode = this.context.createGain();
+		this.fadeNode.gain.value = 1;
+		this._loopFadeDur = 0.006;
+		this._loopFadeTimer = null;
+		this._boundary = 0;
+		this._cycle = 0;
 		this.source = null;
 		this.effectsInputNode = this.context.createGain();
 		this.effectsOutputNode = this.context.createGain();
@@ -140,6 +148,7 @@ class Sound extends EventEmitter {
 		this._startedAt = this.context.currentTime;
 		this._playing = true;
 		this._emit('playing', true);
+		this._startLoopFades();
 
 		if (this.enableElapsed || opt.enableElapsed) {
 			this._clearElapsed();
@@ -169,7 +178,8 @@ class Sound extends EventEmitter {
 				lastOutput = e.effect;
 			});
 		lastOutput.connect(this.node);
-		this.node.connect(this.panner);
+		this.node.connect(this.fadeNode);
+		this.fadeNode.connect(this.panner);
 		this.panner.connect(this.engine.masterGain);
 		this._connected = true;
 	}
@@ -178,7 +188,8 @@ class Sound extends EventEmitter {
 			const effects = this.effects;
 			this.source.disconnect();
 			effects.forEach((e) => e.effect.disconnect());
-			this.node.disconnect(this.panner);
+			this.node.disconnect(this.fadeNode);
+			this.fadeNode.disconnect(this.panner);
 			this.panner.disconnect(this.masterGain);
 		}
 		this._connected = false;
@@ -321,6 +332,84 @@ class Sound extends EventEmitter {
 	_clearLoopEnd() {
 		clearTimeout(this.loopEndTimeout);
 	}
+
+	/**
+	 * Loop-boundary anti-click fades. Native looping jumps from loopEnd to
+	 * loopStart at a non-zero sample, which clicks every cycle. We schedule a
+	 * short gain envelope on `fadeNode` in *audio time* (look-ahead scheduling)
+	 * so the gain is ~0 exactly at each wrap, with a ~6ms fade back in:
+	 *
+	 *   ...—silence—fadeBackIn→loopStart→...→loopEnd→silence—✓wrap—...
+	 *
+	 * A low-frequency interval keeps enough cycles pre-scheduled, and rate()
+	 * re-aligns the envelope when the loop period changes.
+	 */
+	_startLoopFades() {
+		this._clearLoopFades();
+		if (!this._loop || this._paused || this._rate <= 0) return;
+		const len = this._loopEnd - this._loopStart;
+		if (len <= 0) return;
+		const cycle = len / this._rate;
+		if (cycle < this._loopFadeDur * 3) return; // too tiny to fade meaningfully
+
+		// where are we inside the current loop cycle (buffer-seconds)?
+		const now = this.context.currentTime;
+		const pos = (((now - this._startedAt) * this._rate + this._offset - this._loopStart) % len) || 0;
+		const into = pos < 0 ? pos + len : pos;
+		const nextWrap = now + (len - into) / this._rate;
+
+		this._cycle = cycle;
+		this._boundary = nextWrap;
+		this._scheduleLoopFades(true);
+		this._loopFadeTimer = setInterval(() => {
+			if (!this._playing || this._paused) return this._clearLoopFades();
+			if (this._boundary - this.context.currentTime < 0.7) this._scheduleLoopFades(false);
+		}, 150);
+	}
+
+	_scheduleLoopFades(startNow) {
+		if (!this.fadeNode) return;
+		const g = this.fadeNode.gain;
+		const dur = this._loopFadeDur;
+		const cycle = this._cycle;
+		let t = this._boundary;
+
+		if (startNow) {
+			// cover the click at the moment playback begins (offset = loopStart)
+			try {
+				g.cancelScheduledValues(this.context.currentTime);
+			} catch (e) {}
+			g.setValueAtTime(0.0001, this.context.currentTime);
+			g.linearRampToValueAtTime(1, this.context.currentTime + dur);
+		} else {
+			try {
+				g.cancelScheduledValues(t - 0.02);
+			} catch (e) {}
+		}
+
+		// schedule the next several wraps: hold 1 → fade out to ~0 at the wrap
+		// → fade back in
+		for (let i = 0; i < 4; i++) {
+			g.setValueAtTime(1, t - dur);
+			g.linearRampToValueAtTime(0.0001, t);
+			g.setValueAtTime(0.0001, t);
+			g.linearRampToValueAtTime(1, t + dur);
+			t += cycle;
+		}
+		this._boundary = t;
+		g.setValueAtTime(1, t);
+	}
+
+	_clearLoopFades() {
+		clearInterval(this._loopFadeTimer);
+		this._loopFadeTimer = null;
+		if (!this.fadeNode) return;
+		try {
+			const g = this.fadeNode.gain;
+			g.cancelScheduledValues(this.context.currentTime);
+			g.setTargetAtTime(1, this.context.currentTime, 0.01);
+		} catch (e) {}
+	}
 	_loopEndReached() {
 		// never reschedule while paused/stopped — the guard in _checkLoopEnd
 		// (re)arms only on play/rate changes
@@ -337,6 +426,7 @@ class Sound extends EventEmitter {
 
 		this._clearElapsed();
 		this._clearLoopEnd();
+		this._clearLoopFades();
 		clearTimeout(this.fadeOutTimeout);
 		clearTimeout(this.fadeInTimeout);
 
@@ -459,6 +549,7 @@ class Sound extends EventEmitter {
 	}
 	pause(on) {
 		if (on) {
+			this._clearLoopFades();
 			if (this.source) {
 				this._pausedAt = this._startedAt ? this.context.currentTime - this._startedAt : 0;
 				this.source.stop();
@@ -488,40 +579,36 @@ class Sound extends EventEmitter {
 		});
 	}
 	mute(on) {
-		if (on === undefined) return this._mute;
-		if (this.source) {
-			if (on) this._disconnectChain();
-			else {
-				this._connectChain();
-			}
-		}
+		if (on === undefined) return this._muted;
+		if (this._muted === on) return;
 		this._muted = on;
+		// ramped mute gain instead of disconnecting the chain — hard graph
+		// rewiring on every toggle caused audible cuts/clicks when the grid
+		// muted/unmuted columns during mouse moves
+		if (this.source) this._applyGain();
 		this._emit('muted', on);
 	}
 
+	// effective output gain = volume * (1 + gain), 0 while muted.
+	_targetGain() {
+		return this._muted ? 0 : this._volume * (1 + (this._gain || 0));
+	}
+	// state-based smoothing: repeated calls just move the target, so fast
+	// parameter updates (mouse moves) converge without zipper noise
+	_applyGain() {
+		if (!this.node) return;
+		this.node.gain.setTargetAtTime(this._targetGain(), this.context.currentTime, 0.02);
+	}
+
 	volume(vol) {
-		//console.log(this.id, vol, this._volume)
-		if (vol !== undefined) {
-			//vol = parseFloat(vol.toFixed(2))
-			//console.log(this.id, vol)
-			this.node.gain.cancelScheduledValues(this.context.currentTime);
-			this.node.gain.setValueAtTime(this._volume, this.context.currentTime + 0.01);
-			this.node.gain.linearRampToValueAtTime(vol, this.context.currentTime + 0.05);
-		}
-		this._volume = vol !== undefined ? vol : this._volume;
+		if (vol !== undefined) this._volume = vol;
+		this._applyGain();
 		this._emit('volume', this._volume);
 		return this._volume;
 	}
 	gain(gain) {
-		if (gain !== undefined) {
-			this.node.gain.cancelScheduledValues(this.context.currentTime);
-			this.node.gain.setValueAtTime(this._volume * (this._gain + 1), this.context.currentTime);
-			this.node.gain.linearRampToValueAtTime(
-				this._volume * (this._gain + 1),
-				this.context.currentTime + 0.2,
-			);
-		}
-		this._gain = gain !== undefined ? gain : this._gain;
+		if (gain !== undefined) this._gain = gain;
+		this._applyGain();
 		this._emit('gain', this._gain);
 		return this._gain;
 	}
@@ -535,6 +622,7 @@ class Sound extends EventEmitter {
 		this._rate = rate !== undefined ? parseFloat(rate) : this._rate;
 		this._emit('rate', this._rate);
 		this._checkLoopEnd();
+		this._startLoopFades(); // re-align the loop envelope with the new period
 		//if(this._playing) this.play()
 		return this._rate;
 	}
@@ -549,13 +637,9 @@ class Sound extends EventEmitter {
 
 		if (this.source && this.panner) {
 			if (this._panX !== x && this.panner.positionX) {
-				this.panner.positionX.cancelScheduledValues(this.context.currentTime);
-				this.panner.positionX.setValueAtTime(this._panX, this.context.currentTime);
-				this.panner.positionX.linearRampToValueAtTime(x, this.context.currentTime + 0.3);
+				this.panner.positionX.setTargetAtTime(x, this.context.currentTime, 0.05);
 			} else if (this._panZ !== z && this.panner.positionZ) {
-				this.panner.positionZ.cancelScheduledValues(this.context.currentTime);
-				this.panner.positionZ.setValueAtTime(this._panZ, this.context.currentTime);
-				this.panner.positionZ.linearRampToValueAtTime(z, this.context.currentTime + 0.3);
+				this.panner.positionZ.setTargetAtTime(z, this.context.currentTime, 0.05);
 			}
 		}
 
@@ -588,8 +672,13 @@ class Sound extends EventEmitter {
 			this.source.loopEnd = this._loopEnd;
 			this.source.loop = on;
 		}
-		if (!this._loop) this._clearLoopEnd();
-		else if (this._playing) this._checkLoopEnd();
+		if (!this._loop) {
+			this._clearLoopEnd();
+			this._clearLoopFades();
+		} else if (this._playing) {
+			this._checkLoopEnd();
+			this._startLoopFades();
+		}
 		this._emit('loop', on);
 		return this._loop;
 	}
@@ -840,6 +929,10 @@ class Sound extends EventEmitter {
 		this.buffer = null;
 		this._buffer = null;
 		this._clearElapsed();
+		this._clearLoopFades();
+		try {
+			if (this.fadeNode && this.fadeNode.disconnect) this.fadeNode.disconnect();
+		} catch (e) {}
 		clearTimeout(this.loopEndTimeout);
 		clearTimeout(this.fadeOutTimeout);
 	}

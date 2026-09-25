@@ -280,10 +280,44 @@ export default function Waveform({
 			setSel(sel);
 		};
 
+		// starting a press outside the waveform (left/right gutter) anchors the
+		// new selection at the near edge — drag over the waveform to extend it
+		const armFromEdge = (edge: number) => {
+			const sel = { ...st.selection };
+			sel.start = edge;
+			sel.end = edge;
+			sel.active = true;
+			sel.handleActive = false;
+			sel.movingActive = false;
+			sel.leaveLeft = false;
+			sel.leaveRight = false;
+			setSel(sel);
+		};
+
 		// selection dragged outside the container still completes on release
 		const onMouseOutside = (e: MouseEvent) => {
 			const sel = st.selection;
-			if (!sel.leaveLeft && !sel.leaveRight) return;
+
+			if (e.type === 'mousedown') {
+				const container = refContainer.current;
+				if (!container || st.disabled || !st.duration) return;
+				const rect = container.getBoundingClientRect();
+				// only when the press is vertically within the waveform band and
+				// horizontally outside it
+				if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
+					if (e.clientX < rect.left) armFromEdge(0);
+					else if (e.clientX > rect.right) armFromEdge(st.width);
+				}
+				return;
+			}
+
+			if (!sel.leaveLeft && !sel.leaveRight) {
+				// an armed press that never became a drag would stay "active"
+				// forever — clear it on release
+				if (e.type === 'mouseup' && sel.active && sel.start === sel.end)
+					resetSelection();
+				return;
+			}
 			if (sel.active || sel.handleActive || sel.movingActive) {
 				if (e.type === 'mouseup') {
 					if (sel.leaveLeft) sel.start = 0;
