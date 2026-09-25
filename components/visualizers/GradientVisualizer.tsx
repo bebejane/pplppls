@@ -27,7 +27,7 @@ const BANDS: Array<[number, number]> = [
 ];
 
 // resting stripe brightness; band magnitude normalisation
-const FLOOR = 0.3;
+const FLOOR = 0.65;
 const BIAS = 0.25;
 const GAIN = 2.2;
 const SMOOTH = 0.2;
