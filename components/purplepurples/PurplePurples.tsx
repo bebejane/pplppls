@@ -489,6 +489,7 @@ export default function PurplePurples() {
 		restoreSettings: () => {},
 		closeDialogs: () => {},
 		toggleHud: () => {},
+		stop: () => {},
 		masterstate: {},
 		hud: true,
 		recording: false,
@@ -499,6 +500,7 @@ export default function PurplePurples() {
 		toggleControls: () => set({ controls: !stateRef.current.controls }),
 		toggleFullscreen: () => onFullscreen(!stateRef.current.fullscreen),
 		randomValues: () => randomValues(),
+		stop: () => Global.engine.master.stop(),
 		restoreSettings: (slot) => flashAndRestore(slot),
 		closeDialogs: () => set({ newDialog: false, saveDialog: false }),
 		toggleHud: () => set({ hud: !stateRef.current.hud }),
@@ -529,6 +531,7 @@ export default function PurplePurples() {
 	}, []);
 
 	const onSampleRecord = useCallback((id: string, start: boolean) => {
+		console.log('onSampleRecord', id, start);
 		if (stateRef.current.loading) return;
 		if (start) {
 			set({ sampling: id });
@@ -837,7 +840,10 @@ export default function PurplePurples() {
 	const savedSettingsRef = useRef<SavedSettings[]>([]);
 
 	const addSavedSetting = (snapshot: SavedSoundSettings[]): number => {
-		savedSettingsRef.current = [...savedSettingsRef.current, { at: Date.now(), sounds: snapshot }].slice(-10);
+		savedSettingsRef.current = [
+			...savedSettingsRef.current,
+			{ at: Date.now(), sounds: snapshot },
+		].slice(-10);
 		return savedSettingsRef.current.length;
 	};
 
@@ -927,16 +933,16 @@ export default function PurplePurples() {
 	}, []);
 
 	const flashAndRestore = (slot: number) => {
-			// invalid slot: just reveal the bar; no setting is saved at that key
-			const idx = slot === 0 ? 9 : slot - 1; // key '0' is slot 9 in the array
-			const valid = !!savedSettingsRef.current[idx];
-			setSaves((prev) => ({ ...prev, visible: true, lit: valid ? slot : -1 }));
-			if (valid) {
-				setTimeout(() => setSaves((prev) => (prev.lit === slot ? { ...prev, lit: -1 } : prev)), 350);
-				restoreSettings(slot);
-			}
-			revealSavesBar();
-		};
+		// invalid slot: just reveal the bar; no setting is saved at that key
+		const idx = slot === 0 ? 9 : slot - 1; // key '0' is slot 9 in the array
+		const valid = !!savedSettingsRef.current[idx];
+		setSaves((prev) => ({ ...prev, visible: true, lit: valid ? slot : -1 }));
+		if (valid) {
+			setTimeout(() => setSaves((prev) => (prev.lit === slot ? { ...prev, lit: -1 } : prev)), 350);
+			restoreSettings(slot);
+		}
+		revealSavesBar();
+	};
 
 	// hide the slots bar after 5s idle from mount (it reappears on key presses)
 	useEffect(() => {
@@ -1082,7 +1088,12 @@ export default function PurplePurples() {
 				</div>
 			)}
 
-			<SavesBar visible={saves.visible} lit={saves.lit} count={saves.count} onRestore={flashAndRestore} />
+			<SavesBar
+				visible={saves.visible}
+				lit={saves.lit}
+				count={saves.count}
+				onRestore={flashAndRestore}
+			/>
 
 			<div
 				ref={canvasRef}

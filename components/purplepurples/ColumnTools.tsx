@@ -116,8 +116,8 @@ export default function ColumnTools({
 	if (!hovering) return null;
 
 	const sampleRecord = (on: boolean) => {
-		if (isSampling && !sampling) return;
-		if (sampling) return;
+		//if (isSampling && !sampling) return;
+		//if (sampling) return;
 		onSampleRecord(on);
 	};
 

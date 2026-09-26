@@ -12,6 +12,7 @@ export interface KeyboardHandlers {
 	restoreSettings: (slot: number) => void;
 	closeDialogs: () => void;
 	toggleHud: () => void;
+	stop: () => void;
 	masterstate: Record<string, any>;
 	hud: boolean;
 	recording: boolean;
@@ -25,11 +26,13 @@ export function useKeyboardShortcuts(handlersRef: React.MutableRefObject<Keyboar
 	useEffect(() => {
 		const onKeyDown = (e: KeyboardEvent) => {
 			if ((e.target as HTMLElement).tagName === 'INPUT') return;
+			const ctrlKey = e.metaKey || e.ctrlKey;
 			const H = handlersRef.current;
 			switch (e.key) {
 				case ' ':
 				case 'Space':
-					H.onRecord(!H.recording);
+					ctrlKey && H.onRecord(!H.recording);
+					!ctrlKey && H.stop();
 					break;
 				case 'Enter':
 					Global.engine.master.play();
@@ -58,6 +61,9 @@ export function useKeyboardShortcuts(handlersRef: React.MutableRefObject<Keyboar
 					break;
 				case 'b':
 					H.randomValues();
+					break;
+				case 'x':
+					H.stop();
 					break;
 				default:
 					// 0-9 restore a saved random-value setting

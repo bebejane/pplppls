@@ -1,5 +1,6 @@
 'use client';
 
+import s from './Column.module.scss';
 import Global from '@/lib/Global';
 import { useEffect, useRef, useState } from 'react';
 import { AiOutlineLoading } from 'react-icons/ai';
@@ -10,8 +11,6 @@ import ColumnTools from './ColumnTools';
 import Waveform from '@/components/util/Waveform';
 import GradientVisualizer from '@/components/visualizers/GradientVisualizer';
 import type { UploadedFile as ImportedUploadedFile } from '@/components/util/FileUploader';
-import s from './Column.module.scss';
-import VolumeVisualizer from '@/components/visualizers/VolumeVisualizer';
 
 export default function Column(props: ColumnProps) {
 	const { id } = props;
@@ -61,7 +60,7 @@ export default function Column(props: ColumnProps) {
 		};
 		const onSolo = (id, solo: boolean) => {
 			//console.log(id, solo);
-			set({ soloId: id });
+			set({ soloId: id && solo ? id : null });
 		};
 		Global.engine.on('loopend' + id, onLoopEnd);
 		Global.engine.on('state' + id, onState);
@@ -77,12 +76,12 @@ export default function Column(props: ColumnProps) {
 	const lock = () => {
 		const it = setInterval(() => {
 			setSt((prev) => ({ ...prev, randDeg: Math.floor(Math.random() * 360) + 0 }));
-		}, 10);
-		setTimeout(() => {
-			clearInterval(it);
-			// fall back to the volume-derived angle, like the old CSS gradient
-			set({ randDeg: 0 });
-		}, 300);
+		}, 40);
+		// setTimeout(() => {
+		// 	clearInterval(it);
+		// 	// fall back to the volume-derived angle, like the old CSS gradient
+		// 	set({ randDeg: 0 });
+		// }, 300);
 	};
 
 	const triggerClick = () => {
@@ -159,35 +158,8 @@ export default function Column(props: ColumnProps) {
 		else Global.engine.stop(id);
 	};
 
-	const onSwipe = (e: React.TouchEvent) => {
-		const myLocation = e.changedTouches[0];
-		const realTarget = document.elementFromPoint(myLocation.clientX, myLocation.clientY);
-		if (realTarget) {
-			const targetId = realTarget.id.replace('p-', '');
-			onMove(e.touches[0], targetId);
-		}
-		e.preventDefault();
-	};
-
 	const onMove = (touch: React.Touch | Touch, targetId: string) => {
 		// column-local move event (legacy path)
-	};
-
-	const onActive = (active: boolean) => {
-		if (!active) set({ showGain: false, showPitch: false });
-		props.onActive(active);
-	};
-
-	const formatDuration = (secs: number) => {
-		const tempTime = moment.duration(secs * 1000);
-		return (
-			(tempTime.hours() ? tempTime.hours() + ':' : '') +
-			tempTime.minutes() +
-			':' +
-			tempTime.seconds() +
-			':' +
-			tempTime.milliseconds().toFixed(0)
-		);
 	};
 
 	const {
@@ -340,9 +312,9 @@ export default function Column(props: ColumnProps) {
 					onLocked={(on) => props.onLocked(on)}
 				/>
 			)}
-			<div className={s.visualizer}>
+			{/* <div className={s.visualizer}>
 				<VolumeVisualizer id={id} color={'#b750e7'} ready={ready} />
-			</div>
+			</div> */}
 			<div className={s.loading}>{!ready && <AiOutlineLoading />}</div>
 		</div>
 	);
