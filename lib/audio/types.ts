@@ -7,6 +7,28 @@
  * names/args are caught by tsc.
  */
 
+import type {
+	Model,
+	ModelFile,
+	ModelMeta,
+	Preset,
+	PresetSlot,
+	PresetSound,
+	SoundSettings,
+	EffectSnapshot,
+} from './model-types';
+
+export type {
+	Model,
+	ModelFile,
+	ModelMeta,
+	Preset,
+	PresetSlot,
+	PresetSound,
+	SoundSettings,
+	EffectSnapshot,
+};
+
 export interface MediaDeviceInfoLike {
 	deviceId: string;
 	label: string;
@@ -121,6 +143,24 @@ export interface AudioEngine
 	extractPeaks(id: string, spp?: number, opt?: Record<string, Any>): Any;
 	reset(id: string): void;
 	destroy(force?: boolean): void;
+
+	// ---- models & presets (ModelManager) ----
+	models: ModelMeta[];
+	presets: PresetSlot[];
+	model: Model | null;
+	loadModels(): Promise<ModelMeta[]>;
+	loadModel(name: string, zipContent?: ArrayBuffer): Promise<Model | undefined>;
+	loadModelFromFile(file: File, onProgress?: (e: ProgressEvent<FileReader>) => void): Promise<Model>;
+	createModel(name: string, cols: number, rows: number): Model;
+	saveModel(name?: string): Promise<{ blob: Blob; model: Model } | null>;
+	downloadModel(name?: string): Promise<Model | undefined>;
+	downloadSound(id: string): void;
+	download(blob: Blob, filename: string): void;
+	savePreset(name?: string): Preset;
+	restorePreset(index: number): void;
+	randomizePreset(index?: number): Preset;
+	hasPreset(index: number): boolean;
+	clearPresets(): void;
 }
 
 export interface RawSound {

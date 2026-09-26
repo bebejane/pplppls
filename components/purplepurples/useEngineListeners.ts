@@ -19,6 +19,10 @@ export function useEngineListeners(
 		const onInputDevices = (devices: unknown) => set({ inputDevices: devices });
 		const onMidiDevices = (devices: unknown) => set({ midiDevices: devices });
 
+		const onModels = (models: unknown) => set({ models });
+		const onPresets = (presets: unknown) => set({ presets });
+		const onNotification = (notification: unknown) => set({ notification });
+
 		const onMasterState = (masterstate: unknown) => set({ masterstate });
 
 		const onRecordingProgress = (prog: unknown) => set({ recordingProgress: prog });
@@ -60,6 +64,9 @@ export function useEngineListeners(
 
 		engine.on('inputdevices', onInputDevices);
 		engine.on('mididevices', onMidiDevices);
+		engine.on('models', onModels);
+		engine.on('presets', onPresets);
+		engine.on('notification', onNotification);
 		engine.on('masterstate', onMasterState);
 		engine.on('recordingprogress', onRecordingProgress);
 		engine.on('loadingprogress', onLoadingProgress);
@@ -71,6 +78,9 @@ export function useEngineListeners(
 		return () => {
 			engine.off('inputdevices', onInputDevices);
 			engine.off('mididevices', onMidiDevices);
+			engine.off('models', onModels);
+			engine.off('presets', onPresets);
+			engine.off('notification', onNotification);
 			engine.off('masterstate', onMasterState);
 			engine.off('recordingprogress', onRecordingProgress);
 			engine.off('loadingprogress', onLoadingProgress);

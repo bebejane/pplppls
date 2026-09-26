@@ -1,15 +1,13 @@
 'use client';
 
 import Global from '@/lib/Global';
-import axios from 'axios';
-import JSZip from 'jszip';
 import screenfull from 'screenfull';
 import { AiOutlineLoading } from 'react-icons/ai';
 import MobileDetect from 'mobile-detect';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import cn from 'classnames';
 import Column from './Column';
-import SavesBar from './SavesBar';
+import SavesBar, { keyToSlot } from './SavesBar';
 import Controls from './Controls';
 import Home from './Home';
 import SaveDialog from './SaveDialog';
@@ -19,28 +17,8 @@ import RecordingsDialog, { type Recording } from './RecordingsDialog';
 import NotSupported from './NotSupported';
 import { useKeyboardShortcuts, type KeyboardHandlers } from './useKeyboardShortcuts';
 import { useEngineListeners } from './useEngineListeners';
-import type { Model, MoveData } from './types';
+import type { Model, MoveData, PresetSlot } from './types';
 import s from './PurplePurples.module.scss';
-
-/** A snapshot of one sound's live settings, restored from B/randomValues slots. */
-interface SavedSoundSettings {
-	id: string;
-	volume: number;
-	rate: number;
-	pan: number;
-	muted: boolean;
-	loop: boolean;
-	loopStart: number;
-	loopEnd: number;
-	reversed: boolean;
-	locked: boolean;
-}
-
-/** One saved random-value result: the last 10 are kept, playable via 0-9. */
-interface SavedSettings {
-	at: number;
-	sounds: SavedSoundSettings[];
-}
 
 interface PurplePurplesState {
 	init: boolean;
@@ -53,6 +31,8 @@ interface PurplePurplesState {
 	numCols: number;
 	numRows: number;
 	masterstate: Record<string, any>;
+	models: Model[];
+	presets: PresetSlot[];
 	inputDevices: { label: string; deviceId: string }[];
 	midiDevices: { name: string; deviceId: string }[];
 	midiSupported: boolean;
@@ -94,6 +74,8 @@ const initialState: PurplePurplesState = {
 	numCols: 0,
 	numRows: 0,
 	masterstate: {},
+	models: [],
+	presets: [],
 	inputDevices: [],
 	midiDevices: [],
 	midiSupported: false,
@@ -121,19 +103,15 @@ const initialState: PurplePurplesState = {
 
 export default function PurplePurples() {
 	const [state, setState] = useState<PurplePurplesState>(initialState);
-	const [models, setModels] = useState<Model[]>([]);
 	const [recordings, setRecordings] = useState<Recording[]>([]);
 
 	const stateRef = useRef(state);
 	stateRef.current = state;
-	const modelsRef = useRef<Model[]>([]);
 	const elementMapRef = useRef<Record<string, HTMLElement>>({});
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const fileUploaderRef = useRef<HTMLInputElement>(null);
 	const introTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const touchStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
-	const audioRef = useRef<HTMLAudioElement | null>(null);
-
 	const mobile = useRef(new MobileDetect(window.navigator.userAgent)).current;
 	const ios = useRef(
 		/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream,
@@ -150,76 +128,10 @@ export default function PurplePurples() {
 
 	useEngineListeners(set, setCols, stateRef);
 
-	// ---- model loading helpers -------------------------------------------
-
-	const loadFile = useCallback(async (file: string): Promise<unknown> => {
-		const binary = !file.toLowerCase().endsWith('.json');
-		const type = binary ? 'arraybuffer' : 'json';
-		const res = await axios.get(file, {
-			responseType: type,
-			onDownloadProgress: (prog) => {
-				if (!binary) return;
-				const total = prog.total || 0;
-				const perc = total ? ((prog.loaded / total) * 100).toFixed(0) : '0';
-				setState((prev) => ({
-					...prev,
-					notification: { message: '', description: perc + '%', loading: false },
-				}));
-			},
-		});
-		setState((prev) => ({ ...prev, notification: null }));
-		return res.data;
-	}, []);
-
-	const loadModel = useCallback(
-		async (name: string, zipContent?: ArrayBuffer): Promise<Model | undefined> => {
-			const models = modelsRef.current;
-			const model = models.filter((m) => m.name === name)[0];
-			if (model && model.files.length && model.files[0].buffer) return model;
-			if (model && model.new) return model;
-
-			let zipData = zipContent;
-			if (!zipData) {
-				const zipFile = '/models/' + name + '.zip';
-				try {
-					zipData = (await loadFile(zipFile)) as ArrayBuffer;
-				} catch (err) {
-					handleError(err);
-					return;
-				}
-			}
-
-			setState((prev) => ({
-				...prev,
-				notification: { message: 'Extracting', description: name },
-			}));
-
-			try {
-				const zip = new JSZip();
-				const z = await zip.loadAsync(zipData);
-				const m: Model = JSON.parse(await z.files['index.json'].async('text'));
-				for (let i = 0; i < m.files.length; i++) {
-					if (typeof (m.files[i] as unknown as string) === 'string')
-						m.files[i] = { filename: m.files[i] as unknown as string };
-					if (z.files[m.files[i].filename])
-						m.files[i].buffer = await z.files[m.files[i].filename].async('arraybuffer');
-				}
-				setState((prev) => ({ ...prev, notification: null, model: m.name }));
-				return m;
-			} catch (err) {
-				setState((prev) => ({ ...prev, notification: null }));
-				handleError(err);
-				return undefined;
-			}
-		},
-		[loadFile],
-	);
-
-	const initModel = useCallback((model: Model) => {
-		Global.engine.destroy();
-		// saved random-value slots don't survive a model change
-		savedSettingsRef.current = [];
-		setSaves((prev) => ({ ...prev, count: 0 }));
+	// ---- model grid ------------------------------------------------------
+	// The engine owns model I/O + presets (lib/audio/model.ts); this only builds
+	// the grid state for the model the engine just populated.
+	const buildGrid = useCallback((model: Model) => {
 		const cols: Record<string, any> = {};
 		const rows: { id: string }[][] = [];
 		let fileIdx = 0;
@@ -228,31 +140,7 @@ export default function PurplePurples() {
 			for (let col = 0; col < model.cols; col++) {
 				const id = row + '-' + col;
 				const file = model.files[fileIdx++];
-				const filename = file ? file.filename : null;
 				const params = file && file.params ? file.params : {};
-				const effectParams =
-					file && file.params && file.params.effects && file.params.effects.length
-						? file.params.effects[0].params
-						: undefined;
-				const effectBypass =
-					file && file.params && file.params.effects && file.params.effects.length
-						? file.params.effects[0].bypassed
-						: undefined;
-				const url =
-					file && file.buffer
-						? URL.createObjectURL(new Blob([file.buffer], { type: file.mimeType }))
-						: filename
-							? '/audio/' + model.name + '/' + filename
-							: null;
-				if (url) {
-					Global.engine.add(id, url, filename, { ...params, enableAnalyser: false });
-					Global.engine.addEffect(
-						id,
-						'delay',
-						effectBypass !== undefined ? effectBypass : false,
-						effectParams,
-					);
-				}
 				cols[id] = {
 					model: model.name,
 					id,
@@ -312,19 +200,16 @@ export default function PurplePurples() {
 			elements.forEach((el) => (elementMapRef.current[(el as HTMLElement).id] = el as HTMLElement));
 			Global.engine.load();
 		}, 0);
-
-		if (!modelsRef.current.filter((m) => m.name === model.name).length)
-			modelsRef.current.push(model);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	const initDone = useCallback(
-		async (start?: boolean) => {
-			const model = await loadModel(stateRef.current.model);
-			if (model) initModel(model);
-		},
-		[loadModel, initModel],
-	);
+	const initDone = useCallback(async () => {
+		try {
+			const model = await Global.engine.loadModel(stateRef.current.model);
+			if (model) buildGrid(model);
+		} catch (err) {
+			handleError(err);
+		}
+	}, [buildGrid]);
 
 	const init = useCallback(
 		(start?: boolean) => {
@@ -341,12 +226,12 @@ export default function PurplePurples() {
 				.init(lastInputDevice, lastMidiDevice)
 				.then((info: any) => {
 					if (info && info.devices) set({ deviceId: info.selected, inputDevices: info.devices });
-					if (start) initDone(true);
+					if (start) initDone();
 				})
 				.catch((err: unknown) => {
 					if (err === 'NOTALLOWED') {
 						set({ inputNotAllowed: true });
-						if (start) initDone(true);
+						if (start) initDone();
 						return;
 					}
 					handleError(err);
@@ -419,9 +304,7 @@ export default function PurplePurples() {
 		let cancelled = false;
 		(async () => {
 			try {
-				const list = (await loadFile('/models/index.json')) as Model[];
-				modelsRef.current = list;
-				if (!cancelled) setModels(list);
+				await Global.engine.loadModels();
 				if (!cancelled) init(false);
 			} catch (err) {
 				handleError(err);
@@ -444,40 +327,15 @@ export default function PurplePurples() {
 			const target = event.target as HTMLInputElement;
 			if (!target.files || !target.files.length) return;
 			const file = target.files[0];
-			if (!file.name.toLowerCase().endsWith('.zip')) return handleError('Format not supported');
-
-			set({ notification: { message: 'Loading', description: '0%' } });
-			const reader = new FileReader();
-			reader.addEventListener('load', (e) => {
-				const name = file.name.replace(/(\.zip)/gi, '');
-				loadModel(name, e.target!.result as ArrayBuffer)
-					.then((model) => {
-						if (model) initModel(model);
-					})
-					.catch((err) => handleError(err))
-					.finally(() => set({ notification: null }));
-			});
-			reader.addEventListener('progress', (e) => {
-				set({
-					notification: {
-						message: 'Loading',
-						description: parseInt(((e.loaded / e.total) * 100).toString(), 10) + '%',
-					},
-				});
-			});
-			reader.addEventListener('error', (err) => {
-				console.error(err);
-				set({ error: String(err), notification: null });
-			});
-			reader.addEventListener('abort', () => {
-				set({ notification: null });
-			});
-			reader.readAsArrayBuffer(file);
+			Global.engine
+				.loadModelFromFile(file)
+				.then((model) => model && buildGrid(model))
+				.catch((err) => err !== 'CANCELLED' && handleError(err))
+				.finally(() => (target.value = ''));
 		};
 		el.addEventListener('change', onChange);
 		return () => el.removeEventListener('change', onChange);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [loadModel, initModel]);
+	}, [buildGrid]);
 
 	// ---- keyboard shortcuts ---------------------------------------------
 	const handlersRef = useRef<KeyboardHandlers>({
@@ -486,7 +344,7 @@ export default function PurplePurples() {
 		toggleControls: () => {},
 		toggleFullscreen: () => {},
 		randomValues: () => {},
-		restoreSettings: () => {},
+		pressSlot: () => {},
 		closeDialogs: () => {},
 		toggleHud: () => {},
 		stop: () => {},
@@ -501,7 +359,7 @@ export default function PurplePurples() {
 		toggleFullscreen: () => onFullscreen(!stateRef.current.fullscreen),
 		randomValues: () => randomValues(),
 		stop: () => Global.engine.master.stop(),
-		restoreSettings: (slot) => flashAndRestore(slot),
+		pressSlot: (key) => pressSlot(key),
 		closeDialogs: () => set({ newDialog: false, saveDialog: false }),
 		toggleHud: () => set({ hud: !stateRef.current.hud }),
 		masterstate: stateRef.current.masterstate,
@@ -512,22 +370,18 @@ export default function PurplePurples() {
 
 	// ---- transport / record ---------------------------------------------
 	const onRecord = useCallback((start: boolean) => {
-		if (stateRef.current.loading) return;
-		if (start) {
-			if (stateRef.current.masterstate.recording) return;
-			set({ recording: true });
-			Global.engine
-				.record(true)
-				.then((recording: Recording) => {
-					setRecordings((prev) => [recording, ...prev]);
-				})
-				.catch((err: unknown) => {
-					if (err === 'CANCELLED') return;
-					console.error(err);
-					handleError(err);
-				})
-				.finally(() => set({ recording: false }));
-		} else Global.engine.record(false);
+		if (stateRef.current.loading || stateRef.current.masterstate.recording) return;
+		if (!start) return Global.engine.record(false);
+		set({ recording: true });
+		Global.engine
+			.record(true)
+			.then((recording: Recording) => setRecordings((prev) => [recording, ...prev]))
+			.catch((err: unknown) => {
+				if (err === 'CANCELLED') return;
+				console.error(err);
+				handleError(err);
+			})
+			.finally(() => set({ recording: false }));
 	}, []);
 
 	const onSampleRecord = useCallback((id: string, start: boolean) => {
@@ -563,12 +417,12 @@ export default function PurplePurples() {
 		async (recId: number, type: 'wav' | 'mp3') => {
 			const recording = recordings.filter((r) => r.id === recId)[0];
 			if (!recording) return;
-			if (type === 'wav') return forceDownload(recording.blob, recording.name + '.wav');
+			if (type === 'wav') return Global.engine.download(recording.blob, recording.name + '.wav');
 			set({ notification: { message: 'Converting to mp3', close: true } });
 			Global.engine
 				.encodeAudio(recording.buffer, 'mp3')
 				.then((blob: Blob) => {
-					forceDownload(blob, recording.name + '.mp3');
+					Global.engine.download(blob, recording.name + '.mp3');
 				})
 				.catch((err: unknown) => {
 					if (err === 'CANCELLED') return;
@@ -581,32 +435,17 @@ export default function PurplePurples() {
 	);
 
 	const onDownloadSample = useCallback((id: string) => {
-		const s = Global.engine.get(id);
-		const blob = new Blob([s.sound._buffer], { type: s.sound.mimeType });
-		forceDownload(blob, s.sound.filename);
-	}, []);
-
-	const forceDownload = useCallback((blob: Blob, filename: string) => {
-		const a = document.createElement('a');
-		a.style.display = 'none';
-		document.body.appendChild(a);
-		const url = window.URL.createObjectURL(blob);
-		a.href = url;
-		a.download = filename;
-		a.click();
-		setTimeout(() => {
-			document.body.removeChild(a);
-			window.URL.revokeObjectURL(url);
-		}, 100);
+		Global.engine.downloadSound(id);
 	}, []);
 
 	const onUpload = useCallback(
 		(id: string, buffer: ArrayBuffer, filename: string) => {
 			const name = filename.toLowerCase();
 			if (name && name.endsWith('.zip')) {
-				loadModel(name.replace('.zip', ''), buffer)
+				Global.engine
+					.loadModel(name.replace('.zip', ''), buffer)
 					.then((model) => {
-						if (model) initModel(model);
+						if (model) buildGrid(model);
 					})
 					.catch((err) => handleError(err));
 				return;
@@ -616,7 +455,7 @@ export default function PurplePurples() {
 			);
 			Global.engine.replace(id, objURL, filename);
 		},
-		[loadModel, initModel],
+		[buildGrid],
 	);
 
 	const onMultiUpload = useCallback(
@@ -665,36 +504,8 @@ export default function PurplePurples() {
 			saveDialog: false,
 			notification: { message: 'Saving: ' + modelName, description: '' },
 		});
-		const st = stateRef.current;
-		const model: Model = {
-			name: modelName,
-			files: [],
-			cols: st.numCols,
-			rows: st.numRows,
-			contentLength: 0,
-		};
-		const zip = new JSZip();
-		const sounds = Global.engine.sounds;
-		for (let i = 0; i < sounds.length; i++) {
-			const sound = sounds[i].sound;
-			if (sound._loaded) {
-				const blob = new Blob([sound._buffer], { type: sound.mimeType });
-				zip.file(sound._filename, blob, { binary: false, base64: true });
-				model.contentLength += blob.size;
-			}
-			model.files.push({
-				filename: sound._filename,
-				mimeType: Global.fileToMimeType(sound._filename) || undefined,
-				params: sound.getSaveState(),
-			});
-		}
-		zip.file('index.json', JSON.stringify(model, null, 4));
-		Object.keys(zip.files).forEach(
-			(name) => (model.contentLength += (zip.files[name] as any)._data.length),
-		);
 		try {
-			const content = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
-			forceDownload(content, modelName + '.purple.zip');
+			await Global.engine.downloadModel(modelName);
 		} catch (err) {
 			handleError(err);
 		} finally {
@@ -702,23 +513,29 @@ export default function PurplePurples() {
 		}
 	}, []);
 
-	const createModel = useCallback((name: string, cols: number, rows: number) => {
-		if (modelsRef.current.filter((m) => m.name.toLowerCase() === name.toLowerCase()).length)
-			return handleError('Name is already taken!');
-		const model: Model = { name, cols, rows, files: [], new: true };
-		set({ newDialog: false });
-		initModel(model);
-	}, []);
+	const createModel = useCallback(
+		(name: string, cols: number, rows: number) => {
+			try {
+				const model = Global.engine.createModel(name, cols, rows);
+				set({ newDialog: false });
+				buildGrid(model);
+			} catch (err) {
+				handleError(err);
+			}
+		},
+		[buildGrid],
+	);
 
 	const onLoadModel = useCallback(
 		(name: string) => {
-			loadModel(name)
+			Global.engine
+				.loadModel(name)
 				.then((model) => {
-					if (model) initModel(model);
+					if (model) buildGrid(model);
 				})
 				.catch((err) => handleError(err));
 		},
-		[loadModel, initModel],
+		[buildGrid],
 	);
 
 	const onUploadModelFromFile = useCallback(() => {
@@ -833,114 +650,44 @@ export default function PurplePurples() {
 		[elementByPos, onMove],
 	);
 
-	// ---- randomize -------------------------------------------------------
-	// slots are a FIFO in display order: array[0] = key '1' … array[9] = key '0'.
-	// New saves are assigned left-to-right ([1,2,...,9,0]); past 10 the oldest
-	// (leftmost) is dropped.
-	const savedSettingsRef = useRef<SavedSettings[]>([]);
-
-	const addSavedSetting = (snapshot: SavedSoundSettings[]): number => {
-		savedSettingsRef.current = [
-			...savedSettingsRef.current,
-			{ at: Date.now(), sounds: snapshot },
-		].slice(-10);
-		return savedSettingsRef.current.length;
-	};
+	// ---- randomize / presets ---------------------------------------------
+	// Presets are owned by the engine (ModelManager) and persisted inside the
+	// model file. There is one slot per number key: array[0] = key '1' …
+	// array[9] = key '0'. A slot stays empty until its key is pressed the
+	// first time — nothing is generated up front.
 
 	// saved-slots bar: visible until 5s idle, hides, reappears on a number key
-	const [saves, setSaves] = useState<{ visible: boolean; lit: number; count: number }>({
+	const [saves, setSaves] = useState<{ visible: boolean; lit: number }>({
 		visible: true,
 		lit: -1,
-		count: 0,
 	});
 	const savesHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	const hideSavesBar = () =>
-		setSaves({
-			visible: false,
-			lit: -1,
-			count: savedSettingsRef.current.length,
-		});
+	const hideSavesBar = () => setSaves({ visible: false, lit: -1 });
 	const revealSavesBar = () => {
 		if (savesHideTimer.current) clearTimeout(savesHideTimer.current);
 		savesHideTimer.current = setTimeout(hideSavesBar, 5000);
 	};
 
+	// 'b': randomize into the next free slot (live only when all 10 are taken)
 	const randomValues = () => {
-		Global.engine.master.stop();
-		const cols = stateRef.current.cols;
-		Object.keys(cols).forEach((k) => {
-			const channel = cols[k];
-			// a col can exist in state without a sound (no file in the model, or
-			// mid teardown while loading a new model) — skip those
-			if (!Global.engine.exist(channel.id)) return;
-			const mul = Math.random();
-			Global.engine.rate(channel.id, mul);
-			Global.engine.mute(channel.id, Math.random() > 0.5);
-			Global.engine.volume(channel.id, Math.random());
-			Global.engine.pan(channel.id, Math.random() * 180 - 90);
-		});
-		const snapshot: SavedSoundSettings[] = [];
-		Global.engine.sounds.forEach((s: any, idx) => {
-			const sound = s.sound;
-			const start = Math.random() * sound._duration;
-			const end = Math.random() * (sound._duration - start);
-			const loopOn = Math.random() < 0.5;
-			const lockedOn = Math.random() > 0.75;
-			Global.engine.loop(s.id, true, { start, end });
-			sound._loop = loopOn;
-			if (Math.random() < 0.5) Global.engine.reverse(s.id, true);
-			setTimeout(() => Global.engine.lock(s.id, lockedOn), idx * 200);
-			snapshot.push({
-				id: s.id,
-				volume: sound._volume,
-				rate: sound._rate,
-				pan: sound._pan,
-				muted: sound._muted,
-				loop: sound._loop,
-				loopStart: sound._loopStart,
-				loopEnd: sound._loopEnd,
-				reversed: sound._reversed,
-				locked: lockedOn,
-			});
-		});
-		// remember the new settings — newest at slot 9 (key '0'), keep the last 10
-		const saveCount = addSavedSetting(snapshot);
-		// reveal the slots bar (count updated) so the new save is visible
-		setSaves((prev) => ({ ...prev, visible: true, count: saveCount }));
+		Global.engine.randomizePreset();
+		// reveal the slots bar so the new preset is visible (state follows engine)
+		setSaves((prev) => ({ ...prev, visible: true }));
 		revealSavesBar();
-		Global.engine.master.play();
 	};
 
-	const restoreSettings = useCallback((slot: number) => {
-		const idx = slot === 0 ? 9 : slot - 1; // key '0' is slot 9 in the array
-		const saved = savedSettingsRef.current[idx];
-		if (!saved) return;
-		saved.sounds.forEach((cfg) => {
-			if (!Global.engine.exist(cfg.id)) return;
-			// unmute first: engine.volume silently skips muted sounds, so the
-			// real mute state is re-applied last
-			Global.engine.mute(cfg.id, false);
-			Global.engine.volume(cfg.id, cfg.volume);
-			Global.engine.rate(cfg.id, cfg.rate);
-			Global.engine.pan(cfg.id, cfg.pan);
-			Global.engine.loop(cfg.id, !!cfg.loop, { start: cfg.loopStart, end: cfg.loopEnd });
-			Global.engine.reverse(cfg.id, !!cfg.reversed);
-			Global.engine.lock(cfg.id, !!cfg.locked);
-			Global.engine.mute(cfg.id, !!cfg.muted);
-		});
-		Global.engine.master.play();
-	}, []);
-
-	const flashAndRestore = (slot: number) => {
-		// invalid slot: just reveal the bar; no setting is saved at that key
-		const idx = slot === 0 ? 9 : slot - 1; // key '0' is slot 9 in the array
-		const valid = !!savedSettingsRef.current[idx];
-		setSaves((prev) => ({ ...prev, visible: true, lit: valid ? slot : -1 }));
-		if (valid) {
-			setTimeout(() => setSaves((prev) => (prev.lit === slot ? { ...prev, lit: -1 } : prev)), 350);
-			restoreSettings(slot);
-		}
+	/**
+	 * A number key (or a bar button): play that slot's preset when it has one,
+	 * otherwise generate a random preset into that slot — so the first press
+	 * of a key creates something and every press after replays it.
+	 */
+	const pressSlot = (key: number) => {
+		const idx = keyToSlot(key);
+		if (Global.engine.hasPreset(idx)) Global.engine.restorePreset(idx);
+		else Global.engine.randomizePreset(idx);
+		setSaves({ visible: true, lit: key });
+		setTimeout(() => setSaves((prev) => (prev.lit === key ? { ...prev, lit: -1 } : prev)), 350);
 		revealSavesBar();
 	};
 
@@ -983,6 +730,8 @@ export default function PurplePurples() {
 		hud,
 		controls,
 		model,
+		models,
+		presets,
 		notification,
 		inputDevices,
 		deviceId,
@@ -1088,12 +837,7 @@ export default function PurplePurples() {
 				</div>
 			)}
 
-			<SavesBar
-				visible={saves.visible}
-				lit={saves.lit}
-				count={saves.count}
-				onRestore={flashAndRestore}
-			/>
+			<SavesBar visible={saves.visible} lit={saves.lit} presets={presets} onPress={pressSlot} />
 
 			<div
 				ref={canvasRef}

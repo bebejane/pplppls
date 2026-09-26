@@ -1,15 +1,11 @@
 .bar {
 	position: fixed;
-	top: 10px;
+	top: 20px;
 	left: 50%;
 	transform: translateX(-50%);
 	z-index: 1000000;
 	display: flex;
 	gap: 6px;
-	padding: 6px 10px;
-	background: rgba(0, 0, 0, 0.55);
-	border-radius: 8px;
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
 }
 
 .key {
@@ -22,26 +18,26 @@
 	font-size: 14px;
 	color: #fff;
 	border: 1px solid rgba(255, 255, 255, 0.35);
-	border-radius: 4px;
+	border-radius: 0px;
 	background: rgba(255, 255, 255, 0.08);
 	cursor: pointer;
 	user-select: none;
-	transition: background-color 0.15s ease, box-shadow 0.15s ease;
+	transition: background-color 0.05s ease-out;
 }
 
-.key:hover:not(:disabled) {
+.key:hover {
 	background: rgba(255, 255, 255, 0.22);
 }
 
-.disabled {
+// slot with no preset yet: still clickable (it creates a random preset)
+.empty {
 	color: rgba(255, 255, 255, 0.35);
 	background: rgba(255, 255, 255, 0.03);
 	border-color: rgba(255, 255, 255, 0.12);
-	cursor: default;
 }
 
 .lit {
 	background: #b750e7;
 	border-color: #e7b1f7;
-	box-shadow: 0 0 12px rgba(183, 80, 231, 0.9);
+	//box-shadow: 0 0 12px rgba(183, 80, 231, 0.9);
 }

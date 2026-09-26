@@ -54,6 +54,10 @@ export default function HelpDialog({ onClose }: { onClose: () => void }) {
 								<td>Toggle Mute</td>
 							</tr>
 							<tr>
+								<td>0 - 9</td>
+								<td>Play setting, or random one on first press</td>
+							</tr>
+							<tr>
 								<td>B</td>
 								<td>Random</td>
 							</tr>

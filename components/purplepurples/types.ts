@@ -1,18 +1,13 @@
-export interface ModelFile {
-	filename: string;
-	mimeType?: string;
-	params?: Record<string, any>;
-	buffer?: ArrayBuffer;
-}
-
-export interface Model {
-	name: string;
-	cols: number;
-	rows: number;
-	files: ModelFile[];
-	contentLength?: number;
-	new?: boolean;
-}
+export type {
+	Model,
+	ModelFile,
+	ModelMeta,
+	Preset,
+	PresetSlot,
+	PresetSound,
+	SoundSettings,
+	EffectSnapshot,
+} from '@/lib/audio/model-types';
 
 export interface ColData {
 	x: number;

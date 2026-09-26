@@ -14,6 +14,7 @@ import { EFFECTS, createEffect } from './effects';
 import { ensureEffectsWorklet } from './effects/worklet';
 import BPM from 'bpm';
 import { EventEmitter } from 'events';
+import ModelManager from './model';
 
 class AudioEngine extends EventEmitter {
 	constructor(
@@ -99,6 +100,10 @@ class AudioEngine extends EventEmitter {
 			});
 
 		this.master = new Master(this, this._volume);
+
+		// Model/preset I/O (load/save/download .purple.zip + settings snapshots).
+		// Kept in a separate class so AudioEngine stays focused on the audio graph.
+		this.modelManager = new ModelManager(this);
 
 		// Effects run on an AudioWorklet: register their processors early so
 		// the first addEffect() (even during model load) can create a node
@@ -639,6 +644,56 @@ class AudioEngine extends EventEmitter {
 			this.removeAllListeners();
 			this.closeInputStream();
 		}
+	}
+
+	// ---- models & presets: thin facade over ModelManager -----------------
+	get models() {
+		return this.modelManager.models;
+	}
+	get presets() {
+		return this.modelManager.presets;
+	}
+	get model() {
+		return this.modelManager.model;
+	}
+	loadModels() {
+		return this.modelManager.loadModels();
+	}
+	loadModel(name, zipContent) {
+		return this.modelManager.loadModel(name, zipContent);
+	}
+	loadModelFromFile(file, onProgress) {
+		return this.modelManager.loadModelFromFile(file, onProgress);
+	}
+	createModel(name, cols, rows) {
+		return this.modelManager.createModel(name, cols, rows);
+	}
+	saveModel(name) {
+		return this.modelManager.saveModel(name);
+	}
+	downloadModel(name) {
+		return this.modelManager.downloadModel(name);
+	}
+	downloadSound(id) {
+		return this.modelManager.downloadSound(id);
+	}
+	download(blob, filename) {
+		return this.modelManager.download(blob, filename);
+	}
+	savePreset(name) {
+		return this.modelManager.savePreset(name);
+	}
+	restorePreset(index) {
+		return this.modelManager.restorePreset(index);
+	}
+	randomizePreset(index) {
+		return this.modelManager.randomizePreset(index);
+	}
+	hasPreset(index) {
+		return this.modelManager.hasPreset(index);
+	}
+	clearPresets() {
+		return this.modelManager.clearPresets();
 	}
 
 	async addEffect(id, type, bypass, opt) {

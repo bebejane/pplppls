@@ -73,6 +73,12 @@ export default function Column(props: ColumnProps) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [id]);
 
+	useEffect(() => {
+		if (!st.hovering) return;
+		const to = setTimeout(() => set({ hovering: false }), 2000);
+		return () => clearTimeout(to);
+	}, [st.hovering]);
+
 	const lock = () => {
 		const it = setInterval(() => {
 			setSt((prev) => ({ ...prev, randDeg: Math.floor(Math.random() * 360) + 0 }));
@@ -217,7 +223,10 @@ export default function Column(props: ColumnProps) {
 			ref={ref}
 			className={s.wrap}
 			style={style}
-			onMouseMove={(e) => onModify(e)}
+			onMouseMove={(e) => {
+				onModify(e);
+				set({ hovering: true });
+			}}
 			onMouseEnter={() => set({ hovering: true })}
 			onMouseLeave={() => set({ hovering: false })}
 			onMouseDown={(e) => !e.ctrlKey && onClick(e)}
