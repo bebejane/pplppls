@@ -32,6 +32,7 @@ interface PurplePurplesState {
 	numCols: number;
 	numRows: number;
 	masterstate: Record<string, any>;
+	automation: { recording: boolean; playing: boolean; count: number };
 	models: Model[];
 	presets: PresetSlot[];
 	inputDevices: { label: string; deviceId: string }[];
@@ -77,6 +78,7 @@ const initialState: PurplePurplesState = {
 	numCols: 0,
 	numRows: 0,
 	masterstate: {},
+	automation: { recording: false, playing: false, count: 0 },
 	models: [],
 	presets: [],
 	inputDevices: [],
@@ -117,6 +119,11 @@ export default function PurplePurples() {
 	const fileUploaderRef = useRef<HTMLInputElement>(null);
 	const introTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const touchStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
+	// pointer moves are coalesced to at most one grid update per animation frame
+	// (a trackpad can fire well over 100/s; each one otherwise cloned every
+	// column and triggered a full grid re-render)
+	const moveFrameRef = useRef<number | null>(null);
+	const pendingMoveRef = useRef<MoveData | null>(null);
 	const mobile = useRef(new MobileDetect(window.navigator.userAgent)).current;
 	const ios = useRef(
 		/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream,
@@ -187,6 +194,10 @@ export default function PurplePurples() {
 			rows.push(rowCols);
 		}
 
+		// a brand-new model has no files (and so no sounds), meaning no 'ready'
+		// event will ever fire to close the loading dialog — show its grid
+		// straight away instead of leaving it stuck on "0/0"
+		const hasFiles = model.files.length > 0;
 		setState((prev) => ({
 			...prev,
 			cols,
@@ -195,9 +206,11 @@ export default function PurplePurples() {
 			numCols: model.cols,
 			numRows: model.rows,
 			loaded: 0,
-			loading: true,
+			loading: hasFiles,
 			modelVersion: prev.modelVersion + 1,
-			notification: { message: 'Loading', description: '0/' + model.files.length },
+			notification: hasFiles
+				? { message: 'Loading', description: '0/' + model.files.length }
+				: null,
 		}));
 
 		// wait for the DOM to render the columns, then map them and load
@@ -356,6 +369,8 @@ export default function PurplePurples() {
 		closeDialogs: () => {},
 		toggleHud: () => {},
 		stop: () => {},
+		toggleAutomationRecord: () => {},
+		toggleAutomationPlay: () => {},
 		masterstate: {},
 		hud: true,
 		recording: false,
@@ -371,6 +386,8 @@ export default function PurplePurples() {
 		pressSlot: (key) => pressSlot(key),
 		closeDialogs: () => set({ newDialog: false, saveDialog: false }),
 		toggleHud: () => set({ hud: !stateRef.current.hud }),
+		toggleAutomationRecord: () => Global.engine.automation.record(),
+		toggleAutomationPlay: () => Global.engine.automation.play(),
 		masterstate: stateRef.current.masterstate,
 		hud: stateRef.current.hud,
 		recording: stateRef.current.recording,
@@ -657,9 +674,29 @@ export default function PurplePurples() {
 			const heatX = x <= pos.w / 2 ? x / (pos.w / 2) : pos.w / x - 1.0;
 			const heatY = y <= pos.h / 2 ? y / (pos.h / 2) : pos.h / y - 1.0;
 			pos.heat = parseInt((((heatX + heatY) / 2) * 100).toString(), 10);
-			if (pos.id) onMove(pos);
+			if (!pos.id) return;
+			// keep only the latest position and flush once per frame; multiple
+			// moves within a frame collapse into a single onMove
+			pendingMoveRef.current = pos;
+			if (moveFrameRef.current === null) {
+				moveFrameRef.current = requestAnimationFrame(() => {
+					moveFrameRef.current = null;
+					const pending = pendingMoveRef.current;
+					pendingMoveRef.current = null;
+					if (pending) onMove(pending);
+				});
+			}
 		},
 		[elementByPos, onMove],
+	);
+
+	// cancel any in-flight move frame on unmount
+	useEffect(
+		() => () => {
+			if (moveFrameRef.current !== null) cancelAnimationFrame(moveFrameRef.current);
+			moveFrameRef.current = null;
+		},
+		[],
 	);
 
 	// ---- randomize / presets ---------------------------------------------
@@ -771,6 +808,7 @@ export default function PurplePurples() {
 		recordingDialog,
 		helpDialog,
 		masterstate,
+		automation,
 		sampling,
 	} = state;
 
@@ -897,6 +935,9 @@ export default function PurplePurples() {
 					/>
 				)}
 				{recording && <div className={s.rec}>{recording ? '[REC]' : ''}</div>}
+				{(automation.recording || automation.playing) && (
+					<div className={s.automation}>{automation.recording ? '[AUTO REC]' : '[LOOP]'}</div>
+				)}
 				{saveDialog && (
 					<SaveDialog
 						model={model}

@@ -14,7 +14,12 @@
  *
  * `from` must be within [0, data.length - 1].
  */
-const findZeroCrossing = (data, from, dir = 1, maxLook = 256) => {
+const findZeroCrossing = (
+	data: Float32Array,
+	from: number,
+	dir = 1,
+	maxLook = 256,
+): number => {
 	const n = data.length;
 	if (n < 2 || from < 0 || from > n - 1) return -1;
 	const limit = Math.min(maxLook, n);

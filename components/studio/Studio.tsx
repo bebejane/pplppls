@@ -31,7 +31,8 @@ export default function Studio() {
 					trim: true,
 					normalize: true,
 				},
-			} as never) as unknown as typeof Global.engine;
+			});
+
 			setReady(true);
 		} catch (err) {
 			console.error(err);

@@ -36,6 +36,17 @@
 	animation: blinker 0.5s cubic-bezier(0.5, 0, 1, 1) infinite alternate;
 }
 
+.automation {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	font-size: 18px;
+	color: #fff;
+	padding: 10px;
+	pointer-events: none;
+	animation: blinker 0.6s cubic-bezier(0.5, 0, 1, 1) infinite alternate;
+}
+
 .loading {
 	position: absolute;
 	top: 0;

@@ -171,9 +171,7 @@ function MasterStrip({
 						ymax={100}
 						ystep={1}
 						yreverse
-						onChange={({ y }) =>
-							Global.engine.master.volume(Math.min(1, Math.max(0, y / 100)) || 0)
-						}
+						onChange={({ y }) => Global.engine.master.volume(Math.min(1, Math.max(0, y / 100)))}
 						styles={faderStyle}
 					/>
 				</div>

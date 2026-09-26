@@ -25,6 +25,8 @@ export function useEngineListeners(
 
 		const onMasterState = (masterstate: unknown) => set({ masterstate });
 
+		const onAutomation = (automation: unknown) => set({ automation });
+
 		const onRecordingProgress = (prog: unknown) => set({ recordingProgress: prog });
 
 		const onLoadingProgress = (progress: unknown) => set({ progress });
@@ -68,6 +70,7 @@ export function useEngineListeners(
 		engine.on('presets', onPresets);
 		engine.on('notification', onNotification);
 		engine.on('masterstate', onMasterState);
+		engine.on('automation', onAutomation);
 		engine.on('recordingprogress', onRecordingProgress);
 		engine.on('loadingprogress', onLoadingProgress);
 		engine.on('loaderror', onLoadError);
@@ -82,6 +85,7 @@ export function useEngineListeners(
 			engine.off('presets', onPresets);
 			engine.off('notification', onNotification);
 			engine.off('masterstate', onMasterState);
+			engine.off('automation', onAutomation);
 			engine.off('recordingprogress', onRecordingProgress);
 			engine.off('loadingprogress', onLoadingProgress);
 			engine.off('loaderror', onLoadError);

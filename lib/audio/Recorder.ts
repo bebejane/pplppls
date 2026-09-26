@@ -1,5 +1,5 @@
-// @ts-nocheck
 import AudioUtils from './utils'
+import type { ProcessSampleOptions } from './types'
 import { createRecordWorker, createEncoderWorker } from './workers';
 import moment from 'moment'
 import {EventEmitter} from 'events'
@@ -13,10 +13,52 @@ const defaults = {
         fade:true
     }
 }
-class Recorder extends EventEmitter{
+interface RecorderOptions extends Record<string, any> {
+    sampleRate?: number;
+    numChannels?: number;
+    sampler?: boolean;
+    processSample?: boolean | ProcessSampleOptions;
+}
 
-    constructor(context, opt = {}){
-        super(opt)
+/** A pending record()/encode() promise's resolve/reject pair. */
+interface Deferred<T = unknown> {
+    resolve: (value: T) => void;
+    reject: (reason?: unknown) => void;
+}
+
+type RejectableWorker = Worker & { reject?: (err?: unknown) => void };
+
+class Recorder extends EventEmitter{
+    context: AudioContext;
+    _sampleRate: number;
+    _numChannels: number;
+    _sampler: boolean;
+    _node: AudioNode | null;
+    _silentSink: GainNode | null;
+    _recording: boolean;
+    _processing: boolean;
+    _rectime: number;
+    _processSample: ProcessSampleOptions | false;
+    _recordingId: number;
+    worker: Worker | null;
+    encoderWorker: RejectableWorker | null;
+    _processor: AudioWorkletNode | null;
+    _outputStream: MediaStreamAudioDestinationNode | null;
+    _inputPoint: GainNode | null;
+    _realAudioInput: MediaStreamAudioSourceNode | null;
+    _splitter: ChannelSplitterNode | null;
+    _merger: ChannelMergerNode | null;
+    _id: string | number | undefined;
+    _promise: Deferred | null;
+    _duration: number;
+    _elapsed: number;
+    _error: unknown;
+    recordingProgress: ReturnType<typeof setInterval> | null;
+    rectime: number;
+    _encoderPromise: Deferred<Blob> | null;
+
+    constructor(context: AudioContext, opt: RecorderOptions = {}){
+        super()
         opt = {...defaults, ...opt}
         this.context = context;
         this._sampleRate = opt.sampleRate;
@@ -27,7 +69,8 @@ class Recorder extends EventEmitter{
         this._recording = false;
         this._processing = false;
         this._rectime = 0;
-        this._processSample = opt.processSample;
+        this._processSample =
+            typeof opt.processSample === 'object' ? opt.processSample : false;
         this._recordingId = 0;
         this.worker = null;
         this.encoderWorker = null;
@@ -37,11 +80,11 @@ class Recorder extends EventEmitter{
 
         this.worker = createRecordWorker();
         this.initProcessor();
-        this.worker.addEventListener('error', (err)=>{
+        this.worker.addEventListener('error', (err: unknown)=>{
             console.error('error record worker', err)
             this.emit('error', err)
         })
-        this.worker.addEventListener('message', (event)=>{
+        this.worker.addEventListener('message', (event: MessageEvent)=>{
             
             if(event.data.cancelled){
                 console.log('Worker: CANCELLED')
@@ -59,9 +102,9 @@ class Recorder extends EventEmitter{
                return this._handleFinish(blob,buffer,this._duration)
 
             console.log('processing sample', this._id, this._duration)
-            this._process(buffer, this._id).then((data)=>{
+            this._process(buffer, this._id).then((data: { blob: Blob; buffer: Float32Array[] })=>{
                 this._handleFinish(data.blob, data.buffer, this._duration)
-            }).catch((err)=>{
+            }).catch((err: unknown)=>{
                 console.error(err)
                 this._handleError(err, this._duration)
             }).then(()=>{
@@ -77,7 +120,7 @@ class Recorder extends EventEmitter{
                 console.log('Worker: DONE!')
             })
         })
-        this.worker.addEventListener('error', (err)=>{
+        this.worker.addEventListener('error', (err: unknown)=>{
             this._handleError(err)
         })
         
@@ -100,7 +143,7 @@ class Recorder extends EventEmitter{
                 numberOfOutputs: 1,
                 channelCount: Math.max(1, this._numChannels),
             });
-            this._processor.port.onmessage = (event) => {
+            this._processor.port.onmessage = (event: MessageEvent) => {
                 this.worker.postMessage({ buffer: event.data.buffer });
             };
         }catch(err){
@@ -108,7 +151,7 @@ class Recorder extends EventEmitter{
             this._processor = null;
         }
     }
-    record(node, id){
+    record(node: AudioNode, id?: string | number){
         if(this._recording)
             return Promise.reject('RECORDING')
         this._id = id;
@@ -144,7 +187,7 @@ class Recorder extends EventEmitter{
             */
             this._node.connect(this._outputStream)
             this._inputPoint = this._outputStream.context.createGain();
-            this._realAudioInput = this._outputStream.context.createMediaStreamSource(this._outputStream.stream);
+            this._realAudioInput = (this._outputStream.context as AudioContext).createMediaStreamSource(this._outputStream.stream);
             this._realAudioInput.connect(this._inputPoint);
             this._inputPoint.connect(this._processor)
         }
@@ -173,7 +216,7 @@ class Recorder extends EventEmitter{
         else
             this.emit('recording', true);
     }
-    _handleError(err, duration = 0){
+    _handleError(err: unknown, duration = 0){
         //this.emit('progress', this._recordingId, {error:err, start:this.rectime, elapsed:duration, duration:duration, recording:false, processing:false})
         this._error = err;
 
@@ -186,7 +229,7 @@ class Recorder extends EventEmitter{
         
         this._clearProgress()
     }
-    _handleFinish(blob,buffer,duration){
+    _handleFinish(blob: Blob, buffer: Float32Array[], duration: number){
         
         const name = "Purple #" + (this._recordingId+1) + " " + moment().format("MMM DD HH:mm:ss")
         const recording = {
@@ -233,29 +276,31 @@ class Recorder extends EventEmitter{
         
     }
    
-    _process(buffer, id){
+    _process(buffer: Float32Array[], id?: string | number){
         
-        const { trim } = this._processSample;
-        
+        // only called when _processSample is truthy (see init message handler)
+        const ps = this._processSample as ProcessSampleOptions;
+        const trim = ps.trim;
+
         this.emit('sampleprocess', this._id, true)
         console.time('processsample')
 
         return new Promise((resolve,reject)=>{
             let data = buffer;
             if(trim)
-                data = AudioUtils.trim(buffer, typeof trim === 'object' ? trim : {level:0.01, trimLeft:true, trimRight:false})            
+                data = AudioUtils.trim(buffer, typeof trim === 'object' ? trim : {level:0.01, trimLeft:true, trimRight:false})
             
             if(!data || !data[0].length) 
                 return reject('I didn\'t hear what u said. Speak louder!')
 
-            if(this._processSample.normalize)            
+            if(ps.normalize)
               data =  AudioUtils.normalize(data);
             
-            if(this._processSample.fade){
+            if(ps.fade){
                 //data = AudioUtils.fade(data, 1000)
             }
             
-            return this._encodeAudio(data, 'wav', {sampleRate:this._sampleRate, numChannels:data.length}).then((b)=>{
+            return this._encodeAudio(data, 'wav', {sampleRate:this._sampleRate, numChannels:data.length}).then((b: Blob)=>{
                 const blob = new Blob([b], {type:'audio/wav'})
                 resolve({blob:blob, buffer:data})
             })
@@ -265,14 +310,14 @@ class Recorder extends EventEmitter{
             return data;
         })
     }
-    _encodeAudio(buffer, format, opt) {
+    _encodeAudio(buffer: Float32Array[], format: string, opt: Record<string, unknown>) {
 
         this._processing = true
         return new Promise((resolve, reject)=>{
             this._encoderPromise = {resolve,reject}
             this.encoderWorker = createEncoderWorker();
             this.encoderWorker.reject = reject;
-            this.encoderWorker.addEventListener('message', (event)=>{
+            this.encoderWorker.addEventListener('message', (event: MessageEvent)=>{
 
                 if(event.data.progress)
                     return this.emit('encodingprogress', event.data.progress)
@@ -284,7 +329,7 @@ class Recorder extends EventEmitter{
                 this._encoderPromise.resolve(event.data)
             
             })
-            this.encoderWorker.addEventListener('error', (err)=>{
+            this.encoderWorker.addEventListener('error', (err: unknown)=>{
                 if(this.encoderWorker && this.encoderWorker.terminate){
                     this.encoderWorker.terminate()
                     this.encoderWorker = null

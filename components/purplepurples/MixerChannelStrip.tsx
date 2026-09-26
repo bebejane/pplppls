@@ -51,7 +51,14 @@ export default function MixerChannelStrip({
 		solo: !!params?.solo,
 		loop: !!params?.loop,
 		reversed: !!params?.reversed,
-		effects: Array.isArray(params?.effects) ? params.effects : [],
+		// seed from the live engine, not just the model params — the engine may
+		// have added the legacy default delay after the grid was built, and
+		// `effects` is no longer carried on every state event
+		effects: (() => {
+			const live = Global.engine?.get?.(id)?.sound?.effectParams?.();
+			if (Array.isArray(live) && live.length) return live;
+			return Array.isArray(params?.effects) ? params.effects : [];
+		})(),
 		volume: typeof params?.volume === 'number' ? params.volume : 0.5,
 		pan: typeof params?.pan === 'number' ? params.pan : 0,
 		rate: typeof params?.rate === 'number' ? params.rate : 1,

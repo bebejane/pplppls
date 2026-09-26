@@ -1,4 +1,4 @@
-const EFFECTS = [ 
+const EFFECTS: EffectDefinition[] = [
 	{
 		id: 'compressor',
 		name: 'Compressor',
@@ -139,10 +139,23 @@ import RingModulator from './RingModulator'
 import StereoPanner from './StereoPanner'
 import StonePhaser from './StonePhaser'
 import Tremolo from './Tremolo'
-import { Utils, baseEffect, createEffectBase } from './core'
+import { Utils, Effect, type EffectDefaults } from './core'
 import { ensureEffectsWorklet } from './worklet'
 
-const EFFECT_CLASSES: Record<string, any> = {
+/** A catalog entry: an effect that can be added to a chain. */
+export interface EffectDefinition {
+	id: string;
+	name: string;
+	defaults: EffectDefaults;
+}
+
+/** Constructor for any concrete effect class. */
+export type EffectCtor = new (
+	context: AudioContext,
+	options?: Record<string, any>,
+) => Effect;
+
+const EFFECT_CLASSES: Record<string, EffectCtor> = {
 	delay: Delay,
 	dubdelay: DubDelay,
 	flanger: Flanger,
@@ -160,14 +173,20 @@ const EFFECT_CLASSES: Record<string, any> = {
 	lowpassfilter: LowPassFilter,
 }
 
-const createEffect = async (id: string, context: AudioContext, opt: Record<string, any> = {}): Promise<any> => {
+const createEffect = async (id: string, context: AudioContext, opt: Record<string, any> = {}): Promise<Effect> => {
 	const defs = EFFECTS.filter((eff) => eff.id === id)[0];
 	if (!defs || !EFFECT_CLASSES[id]) throw new Error('Effect doesnt exist: ' + id);
 	const options = { ...opt };
-	Object.keys(defs.defaults).forEach((param) => (options[param] = defs.defaults[param].value));
+	// only fill in params the caller didn't supply — this used to overwrite
+	// every value with the catalog default, so saved effect params passed in
+	// from a model load were silently discarded
+	Object.keys(defs.defaults).forEach((param) => {
+		if (options[param] === undefined || options[param] === null)
+			options[param] = defs.defaults[param].value;
+	});
 	// AudioWorkletNode construction requires the processor to be registered
 	await ensureEffectsWorklet(context);
 	return new EFFECT_CLASSES[id](context, options);
 }
 
-export { createEffect, createEffectBase, baseEffect, Utils, EFFECTS, EFFECT_CLASSES }
+export { createEffect, Utils, Effect, EFFECTS, EFFECT_CLASSES }

@@ -14,13 +14,15 @@ export interface KeyboardHandlers {
 	closeDialogs: () => void;
 	toggleHud: () => void;
 	stop: () => void;
+	toggleAutomationRecord: () => void;
+	toggleAutomationPlay: () => void;
 	masterstate: Record<string, any>;
 	hud: boolean;
 	recording: boolean;
 }
 
 /**
- * Global keyboard shortcuts (space record, enter play, v/m/p/s/c/f/b, 0-9 presets, esc).
+ * Global keyboard shortcuts (space record, enter play, v/m/p/s/c/f/b, r/l automation, 0-9 presets, esc).
  * Reads a mutable handlers ref so it never needs re-subscribing.
  */
 export function useKeyboardShortcuts(handlersRef: React.MutableRefObject<KeyboardHandlers>) {
@@ -65,6 +67,14 @@ export function useKeyboardShortcuts(handlersRef: React.MutableRefObject<Keyboar
 					break;
 				case 'x':
 					H.stop();
+					break;
+				case 'r':
+					// R: record engine changes (R again stops)
+					H.toggleAutomationRecord();
+					break;
+				case 'l':
+					// L: loop the recorded changes (L again stops)
+					H.toggleAutomationPlay();
 					break;
 				default:
 					// 0-9 play that key's preset, or generate one when the slot is empty

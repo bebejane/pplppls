@@ -2,7 +2,7 @@
 
 import Visualizer from './Visualizer';
 import Global from '@/lib/Global';
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 /**
  * Draws the locked-column gradient on a canvas along the CSS gradient line
@@ -14,10 +14,22 @@ import { useMemo, useRef, useState } from 'react';
  * (FFT) data is averaged into 4 narrow bands — one per stripe — each chosen
  * at random (distinct) so every locked column reacts to a different set of
  * frequency ranges, and each stripe's brightness fades in/out with its band
- * (exponentially smoothed per frame). The stripe angle still comes only from
- * the `deg` prop — audio never rotates the gradient.
+ * (exponentially smoothed per frame). Audio never rotates the gradient — the
+ * angle is the resting `deg` prop.
+ *
+ * On lock the component plays its own short "spin" (a random angle every 40ms
+ * for 1s, then back to the resting angle), brightening the stripes for its
+ * duration. It subscribes to the engine's `state<id>` event and restarts the
+ * spin whenever `locked` flips true, so the column no longer re-renders per
+ * animation frame.
  */
 const STRIPES = 4;
+
+// locked-column spin: random angle every STEP ms for ~DURATION ms, with the
+// stripes brightened by SPIN_BRIGHTNESS for the duration of the spin
+const SPIN_STEP = 70;
+const SPIN_DURATION = 500;
+const SPIN_BRIGHTNESS = 2;
 
 // resting stripe brightness; band magnitude normalisation
 const FLOOR = 0.65;
@@ -97,6 +109,42 @@ export default function GradientVisualizer({
 	const colorRgb = useMemo(() => parseRgb(color, [88, 0, 150]), [color]);
 	const colorLeftRgb = useMemo(() => parseRgb(colorLeft, [104, 0, 255]), [colorLeft]);
 
+	// current spin angle (null while resting); `paint` reads it directly so the
+	// animation never re-renders the component
+	const spinRef = useRef<number | null>(null);
+	const spinTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+	const startSpin = useCallback(() => {
+		if (spinTimer.current !== null) clearInterval(spinTimer.current);
+		let elapsed = 0;
+		spinTimer.current = setInterval(() => {
+			spinRef.current = Math.floor(Math.random() * 360);
+			elapsed += SPIN_STEP;
+			if (elapsed > SPIN_DURATION) {
+				if (spinTimer.current !== null) clearInterval(spinTimer.current);
+				spinTimer.current = null;
+				spinRef.current = null;
+			}
+		}, SPIN_STEP);
+	}, []);
+
+	// spin on mount (the visualizer is only rendered while locked) and again on
+	// every fresh `locked` update the engine reports for this column
+	useEffect(() => {
+		if (!Global.engine || !id) return;
+		startSpin();
+		const onState = (_state: unknown, updated: Record<string, any>) => {
+			if (updated && updated.locked) startSpin();
+		};
+		Global.engine.on('state' + id, onState);
+		return () => {
+			Global.engine.off('state' + id, onState);
+			if (spinTimer.current !== null) clearInterval(spinTimer.current);
+			spinTimer.current = null;
+			spinRef.current = null;
+		};
+	}, [id, startSpin]);
+
 	return (
 		<Visualizer
 			id={id}
@@ -131,8 +179,9 @@ export default function GradientVisualizer({
 					bands[b] += (target - bands[b]) * SMOOTH;
 				}
 
-				// gradient line through the box centre at the CSS angle
-				const rad = ((deg % 360) * Math.PI) / 180;
+				// gradient line through the box centre at the CSS angle; the
+				// locked spin overrides the resting angle while it's running
+				const rad = (((spinRef.current ?? deg) % 360) * Math.PI) / 180;
 				const dx = Math.sin(rad);
 				const dy = -Math.cos(rad);
 				const L = width * Math.abs(dx) + height * Math.abs(dy);
@@ -144,12 +193,14 @@ export default function GradientVisualizer({
 					cx + (dx * L) / 2,
 					cy + (dy * L) / 2,
 				);
-				// sawtooth stripes, each scaled by its own band brightness
+				// sawtooth stripes, each scaled by its own band brightness; the
+				// whole gradient is brightened while the lock spin is running
+				const bright = spinRef.current !== null ? SPIN_BRIGHTNESS : 1;
 				for (let i = 0; i < STRIPES; i++) {
-					grad.addColorStop(i / STRIPES, scaleRgb(colorRgb, bands[i]));
-					grad.addColorStop((i + 1) / STRIPES, scaleRgb(colorLeftRgb, bands[i]));
+					grad.addColorStop(i / STRIPES, scaleRgb(colorRgb, bands[i] * bright));
+					grad.addColorStop((i + 1) / STRIPES, scaleRgb(colorLeftRgb, bands[i] * bright));
 				}
-				grad.addColorStop(1, scaleRgb(colorLeftRgb, bands[STRIPES - 1]));
+				grad.addColorStop(1, scaleRgb(colorLeftRgb, bands[STRIPES - 1] * bright));
 
 				ctx.fillStyle = grad;
 				ctx.fillRect(0, 0, width, height);

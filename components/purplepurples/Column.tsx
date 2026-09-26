@@ -55,9 +55,8 @@ export default function Column(props: ColumnProps) {
 		const onState = (state: Record<string, any>, updated: Record<string, any>) => {
 			set({ ...state });
 			if (updated.playing) triggerClick();
-			if (updated.locked) lock();
 		};
-		const onSolo = (id, solo: boolean) => {
+		const onSolo = (id: string | number, solo: boolean) => {
 			//console.log(id, solo);
 			set({ soloId: id && solo ? id : null });
 		};
@@ -77,17 +76,6 @@ export default function Column(props: ColumnProps) {
 		const to = setTimeout(() => set({ hovering: false }), 2000);
 		return () => clearTimeout(to);
 	}, [st.hovering]);
-
-	const lock = () => {
-		const it = setInterval(() => {
-			setSt((prev) => ({ ...prev, randDeg: Math.floor(Math.random() * 360) + 0 }));
-		}, 40);
-		// setTimeout(() => {
-		// 	clearInterval(it);
-		// 	// fall back to the volume-derived angle, like the old CSS gradient
-		// 	set({ randDeg: 0 });
-		// }, 300);
-	};
 
 	const triggerClick = () => {
 		set({ click: true });
@@ -135,6 +123,9 @@ export default function Column(props: ColumnProps) {
 	const lastClickRef = useRef(0);
 
 	const onModify = (e: React.MouseEvent) => {
+		// while the automation take is playing back, live mouse-move writes are
+		// ignored so they don't fight the recording
+		if (Global.engine.automation.playing) return;
 		if (st.fullscreen) return;
 		const el = ref.current;
 		if (!el) return;
@@ -147,11 +138,11 @@ export default function Column(props: ColumnProps) {
 			return props.onLoop(st.loop, { start: loopStart, end: loopEnd });
 		} else if (!st.locked) {
 			const percX = Math.abs((e.pageX - el.offsetLeft) / el.clientWidth);
-			const nextRate = parseFloat((percX * 24).toFixed(1));
+			const nextPitch = parseFloat((percX * 24 * 2 - 24).toFixed(1));
 
-			if (lastPitchRef.current[id] !== nextRate) {
-				lastPitchRef.current[id] = nextRate;
-				Global.engine.pitch(id, nextRate);
+			if (lastPitchRef.current[id] !== nextPitch) {
+				lastPitchRef.current[id] = nextPitch;
+				Global.engine.pitch(id, nextPitch);
 			}
 		}
 	};
@@ -187,22 +178,19 @@ export default function Column(props: ColumnProps) {
 		locked,
 		loopEndTrigger,
 		fullscreen,
-		randDeg,
 		points,
 		soloId,
 	} = st;
 
 	const controls = props.controls;
-	const rgba =
-		'rgb(' + (playing ? '88' : '68') + ', 0, ' + (playing ? 150 : volume * 80 + 30) + ')';
-	const rgba2 = 'rgb(' + (playing ? '104' : '68') + ', 0, ' + volume * 100 + ')';
-	const rgba3 = 'rgb(104,158,205)';
-	// gradient stripe angle: spins during the lock animation (randDeg), then
-	// settles on the volume-derived angle like the old CSS gradient
-	const deg = randDeg || volume * 100 * 3.6;
-	//console.log(solo);
+	const rgba = [
+		'rgb(' + (playing ? '88' : '68') + ', 0, ' + (playing ? 150 : volume * 80 + 30) + ')',
+		'rgb(' + (playing ? '104' : '68') + ', 0, ' + volume * 100 + ')',
+		'rgb(104,158,205)',
+	];
+	const deg = volume * 100 * 3.6;
 	const style: React.CSSProperties = {
-		backgroundColor: click ? rgba3 : rgba,
+		backgroundColor: click ? rgba[2] : rgba[0],
 		boxSizing: 'border-box',
 		opacity: click || (soloId && soloId !== id) ? 0.4 : 0.7,
 	};
@@ -224,7 +212,8 @@ export default function Column(props: ColumnProps) {
 			style={style}
 			onMouseMove={(e) => {
 				onModify(e);
-				set({ hovering: true });
+				// only re-render on the first move of a hover
+				if (!st.hovering) set({ hovering: true });
 			}}
 			onMouseEnter={() => set({ hovering: true })}
 			onMouseLeave={() => set({ hovering: false })}
@@ -240,13 +229,13 @@ export default function Column(props: ColumnProps) {
 					<GradientVisualizer
 						id={id}
 						deg={deg}
-						color={rgba}
-						colorLeft={rgba2}
+						color={rgba[0]}
+						colorLeft={rgba[1]}
 						ready={ready && !props.hidden}
 					/>
 				</div>
 			)}
-			{(points || []).map((pt, i) => (
+			{(points || []).map((pt: { x: number; y: number }, i: number) => (
 				<div
 					key={`${i}:${pt.x}:${pt.y}`}
 					data-click-point

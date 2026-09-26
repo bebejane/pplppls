@@ -1,9 +1,87 @@
-// @ts-nocheck
 import AudioUtils from './utils';
 import { arrayMoveImmutable as arrayMove } from 'array-move';
 import { EventEmitter } from 'events';
+import type { Effect, EffectDefaults } from './effects/core';
+import type AudioEngine from './AudioEngine';
 
-const defaults = {
+/** Options accepted by Sound.play() (callers may pass extras via the index sig). */
+interface PlayOptions {
+	start?: number;
+	duration?: number;
+	enableElapsed?: boolean;
+	noStop?: boolean;
+	fadeIn?: number;
+	fadeOut?: number;
+	fadeType?: string;
+	volume?: number;
+	[key: string]: unknown;
+}
+
+/** Minimal shape of the Signalsmith Stretch node used by the pitch shifter. */
+interface StretchLike {
+	start?: () => void;
+	schedule?: (opt: { semitones: number; active: boolean }) => unknown;
+	disconnect?: () => void;
+}
+
+/** Sound settings defaults, mirrored as `_<key>` fields on the instance. */
+interface SoundDefaults {
+	url: string | null;
+	rate: number;
+	pitch: number;
+	volume: number;
+	gain: number;
+	duration: number;
+	pan: number;
+	panWidth: number;
+	panX: number;
+	panZ: number;
+	loop: boolean;
+	loopStart: number;
+	loopEnd: number;
+	sampling: boolean;
+	solo: boolean;
+	locked: boolean;
+	paused: boolean;
+	pausedAt: number;
+	loaded: boolean;
+	loading: boolean;
+	ready: boolean;
+	playing: boolean;
+	muted: boolean;
+	midiNote: number;
+	midiMapMode: boolean;
+	reversed: boolean;
+	effectsEnabled: boolean;
+	elapsed: number;
+	error: unknown;
+}
+
+/** One slot in a sound's effect chain (`Sound.effects`). */
+interface EffectSlot {
+	id: string;
+	type: string;
+	effect: Effect | null;
+	bypassed: boolean;
+	idx: number;
+	defaults: EffectDefaults;
+	/** Pending (not-yet-materialized) params for lazily-created effects. */
+	values?: Record<string, any>;
+	creating?: boolean;
+	connected?: boolean;
+}
+
+/** Serialized shape of one effect (effectParams()/state.effects entries). */
+interface EffectParamEntry {
+	idx: number;
+	id: string;
+	type: string;
+	bypassed: boolean;
+	params: Record<string, number | boolean>;
+	defaults: EffectDefaults;
+}
+
+const defaults: SoundDefaults = {
 	url: null,
 	rate: 1.0,
 	pitch: 0,
@@ -35,12 +113,116 @@ const defaults = {
 	error: null,
 };
 
+// State events that can change the effect chain. `effects` is only included in
+// the state payload for these, so the many scalar writes (volume/pan/mute/
+// elapsed/…) don't rebuild/carry the chain snapshot or force chain-UI re-renders.
+const EFFECT_STATE_EVENTS = new Set([
+	'addeffect',
+	'removeeffect',
+	'moveeffect',
+	'effectbypass',
+	'effectparams',
+	'effectsenabled',
+	'reset',
+	'add',
+	'load',
+]);
+
+/**
+ * Constructor options for a Sound. `Record<string, any>` intentionally allows
+ * the saved settings blob (SoundSettings) to be spread in on load.
+ */
+export interface SoundOptions extends Record<string, any> {
+	filename?: string | null;
+	local?: boolean;
+	enableLoops?: boolean;
+	enableMeter?: boolean;
+	enableElapsed?: boolean;
+}
+
 class Sound extends EventEmitter {
+	DEBUG: boolean;
+	id: string;
+	engine: AudioEngine;
+	context: AudioContext;
+	sampleRate: number;
+	node: GainNode;
+	buffer: AudioBuffer | null;
+	enableLoops: boolean;
+	enableMeter: boolean;
+	enableElapsed: boolean;
+	effects: EffectSlot[];
+	spillOver: boolean;
+	panner: PannerNode;
+	fadeNode: GainNode;
+	source: AudioBufferSourceNode | null;
+	effectsInputNode: GainNode;
+	effectsOutputNode: GainNode;
+	chain: AudioNode[];
+	elapseTimeout: NodeJS.Timeout | null;
+	fadeInTimeout: NodeJS.Timeout | null;
+	fadeOutTimeout: NodeJS.Timeout | null;
+	_buffer: ArrayBuffer | null;
+	_org_buffer: ArrayBuffer | null;
+	_filename: string;
+	_mimeType: string | null;
+	_url: string | null;
+	_connected: boolean;
+	_effectsCache: EffectParamEntry[] | null;
+	_effectsEnabled: boolean;
+	_pitchNode: AudioWorkletNode | null;
+	_pitchNodeFailed: boolean;
+	_pitchActive: boolean;
+	_stretch: StretchLike | null;
+	_pitchPending: boolean;
+	_loopFadeDur: number;
+	_loopTimer: ReturnType<typeof setInterval> | null;
+	_cycle: number;
+	_nextWrap: number;
+	_fadeScheduledUntil: number;
+	_fadeActive: boolean;
+	_bufferVersion: number;
+	_destroyed: boolean;
+	_offset: number;
+	_startedAt: number;
+	_elapsed: number;
+	_duration: number;
+	_loaded: boolean;
+	_loading: boolean;
+	_ready: boolean;
+	_error: unknown;
+	_playing: boolean;
+	_paused: boolean;
+	_pausedAt: number;
+	_muted: boolean;
+	_mutedVol: number;
+	_solo: boolean;
+	_soloOn: boolean;
+	_locked: boolean;
+	_loop: boolean;
+	_loopStart: number;
+	_loopEnd: number;
+	_rate: number;
+	_pitch: number;
+	_volume: number;
+	_gain: number;
+	_pan: number;
+	_panWidth: number;
+	_panX: number;
+	_panZ: number;
+	_sampling: boolean;
+	_midiNote: number;
+	_midiMapMode: boolean;
+	_reversed: boolean;
+	_reverse: boolean | undefined;
+	_id: string;
+	_clearElapsedEnded: () => void | null;
+
 	constructor(
-		id,
-		url,
-		engine,
-		opt = {
+		id: string,
+		url: string | null,
+		engine: AudioEngine,
+		opt: SoundOptions = {
 			filename: null,
 			local: false,
 			enableLoops: false,
@@ -51,7 +233,11 @@ class Sound extends EventEmitter {
 		super();
 		this.DEBUG = true;
 		Object.keys(defaults).forEach(
-			(k) => (this['_' + k] = opt[k] !== undefined ? opt[k] : defaults[k]),
+			(k) =>
+				((this as any)['_' + k] =
+					opt[k] !== undefined
+						? opt[k]
+						: (defaults as unknown as Record<string, unknown>)[k]),
 		);
 		this.id = id;
 		this.engine = engine;
@@ -61,6 +247,9 @@ class Sound extends EventEmitter {
 		this.buffer = null;
 		this._buffer = null;
 		this._org_buffer = null;
+		// bumped whenever the PCM changes (load/reverse/crop) so cached peaks
+		// (AudioEngine.extractPeaks) are invalidated
+		this._bufferVersion = 0;
 		this._filename = opt.filename
 			? opt.filename
 			: this._url
@@ -68,25 +257,32 @@ class Sound extends EventEmitter {
 				: opt.filename;
 		this._mimeType = this.urlToMimeType(this._filename);
 		this._url = url;
-		this.local = opt.local;
 		this.enableLoops = opt.enableLoops;
 		this.enableMeter = opt.enableMeter;
 		this.enableElapsed = opt.enableElapsed;
 		this.node.gain.setValueAtTime(this._volume, this.context.currentTime);
-		this.node.paused = true;
+		(this.node as any).paused = true; // legacy marker, not part of GainNode
 		this.effects = [];
+		// cached result of _currentEffectParams() — invalidated by every effect
+		// mutation so high-frequency param writes (mouse moves) don't re-map the
+		// whole chain and re-read every effect's params on each state emit
+		this._effectsCache = null;
 		this.spillOver = true;
-		this.panner = this.context.createPanner({
-			panningModel: 'equalpower',
-		});
+		// createPanner takes no options; 'equalpower' is already the default
+		this.panner = this.context.createPanner();
 		// dedicated gain for the loop-boundary fade envelope — kept separate
 		// from node.gain (volume/mute) so they never fight each other
 		this.fadeNode = this.context.createGain();
 		this.fadeNode.gain.value = 1;
 		this._loopFadeDur = 0.006;
-		this._loopFadeTimer = null;
-		this._boundary = 0;
+		// one interval drives both the look-ahead fade envelope and the loopend
+		// events (previously a setInterval + a separate setTimeout that had to be
+		// torn down and recreated on every rate change)
+		this._loopTimer = null;
 		this._cycle = 0;
+		this._nextWrap = 0;
+		this._fadeScheduledUntil = 0;
+		this._fadeActive = false;
 		this.source = null;
 		this.effectsInputNode = this.context.createGain();
 		this.effectsOutputNode = this.context.createGain();
@@ -101,8 +297,8 @@ class Sound extends EventEmitter {
 		this._pitchPending = false;
 		this.onEnded = this.onEnded.bind(this);
 	}
-	play(options = {}) {
-		const opt = {
+	play(options: Partial<PlayOptions> = {}) {
+		const opt: PlayOptions = {
 			start: 0,
 			duration: 0,
 			enableElapsed: false,
@@ -119,7 +315,7 @@ class Sound extends EventEmitter {
 
 		if (this.source) {
 			this.source.removeEventListener('ended', this.onEnded);
-			clearInterval(this.loopEndTimeout);
+			this._clearLoopScheduler();
 		}
 
 		if (this._playing && this.source) this.source.stop();
@@ -129,7 +325,7 @@ class Sound extends EventEmitter {
 		this.source = this.context.createBufferSource();
 		this.source.buffer = this.buffer;
 
-		if (!this._muted && (soloOn ? this._solo : true)) this._connectChain(this.source, this.node);
+		if (!this._muted && (soloOn ? this._solo : true)) this._connectChain();
 
 		const ct = this.context.currentTime;
 		this._offset = Math.max(0, opt.start || this._pausedAt || this._loopStart || 0);
@@ -152,7 +348,7 @@ class Sound extends EventEmitter {
 		this._startedAt = this.context.currentTime;
 		this._playing = true;
 		this._emit('playing', true);
-		this._startLoopFades();
+		this._startLoopScheduler();
 
 		if (this.enableElapsed || opt.enableElapsed) {
 			this._clearElapsed();
@@ -165,8 +361,6 @@ class Sound extends EventEmitter {
 			this.emit('elapsed', this._offset);
 			this._checkElapsed();
 		}
-
-		if (this.enableLoops || (opt.enableElapsed && this._loop)) this._checkLoopEnd();
 		//console.log('play', this._offset, 'muted', this._muted, 'loop', this._loopStart + ' > ' + this._loopEnd, 'dur=', opt.duration, opt.fadeIn, opt.fadeOut)
 	}
 	_connectChain() {
@@ -174,7 +368,9 @@ class Sound extends EventEmitter {
 
 		this._disconnectChain();
 		const effects = this.effects;
-		let lastOutput = this.source;
+		// source or effect — both expose `.connect()`
+		type ChainNode = { connect(node: AudioNode): unknown };
+		let lastOutput: ChainNode = this.source as unknown as ChainNode;
 		// pitch shifter first so the effects process the transposed signal
 		if (this._pitchActive && !this._pitchNode) this._ensurePitchNode();
 		if (this._pitchActive && this._pitchNode) {
@@ -182,10 +378,12 @@ class Sound extends EventEmitter {
 			lastOutput = this._pitchNode;
 		}
 		effects
-			.filter((e) => !e.bypassed)
-			.forEach((e, idx) => {
-				lastOutput.connect(e.effect.inputNode);
-				lastOutput = e.effect;
+			// `e.effect` is null while a lazily-added effect is still bypassed
+			.filter((e) => !e.bypassed && e.effect)
+			.forEach((e) => {
+				const effect = e.effect as Effect;
+				lastOutput.connect(effect.inputNode);
+				lastOutput = effect;
 			});
 		lastOutput.connect(this.node);
 		this.node.connect(this.fadeNode);
@@ -202,16 +400,18 @@ class Sound extends EventEmitter {
 					this._pitchNode.disconnect();
 				} catch (e) {}
 			}
-			effects.forEach((e) => e.effect.disconnect());
+			effects.forEach((e) => {
+				if (e.effect) e.effect.disconnect();
+			});
 			this.node.disconnect(this.fadeNode);
 			this.fadeNode.disconnect(this.panner);
-			this.panner.disconnect(this.masterGain);
+			this.panner.disconnect(this.engine.masterGain);
 		}
 		this._connected = false;
 	}
-	addEffect(type, eff, bypass) {
+	addEffect(type: string, eff: Effect, bypass?: boolean): EffectParamEntry {
 		const idx = this.effects.length;
-		const effect = {
+		const effect: EffectSlot = {
 			id: type,
 			type: type,
 			effect: eff,
@@ -220,32 +420,101 @@ class Sound extends EventEmitter {
 			defaults: eff.defaults,
 		};
 		this.effects.push(effect);
+		this._invalidateEffects();
 
 		this._emit('addeffect', type, idx);
 		this.effectBypass(idx, bypass);
-		return this._currentEffectParams(idx);
+		return this._currentEffectParams(idx) as EffectParamEntry;
 	}
-	effectBypass(idx, bypass) {
+	/**
+	 * Add a bypassed effect without building its AudioWorkletNode yet. The node
+	 * is created on first un-bypass (see _materialize), so models whose effects
+	 * are saved bypassed don't pay for idle processors. `values` holds the
+	 * params until then so getSaveState/presets stay correct.
+	 */
+	addPendingEffect(
+		type: string,
+		defaults: EffectDefaults,
+		params?: Record<string, any>,
+		bypass?: boolean,
+	): EffectParamEntry {
+		const idx = this.effects.length;
+		const values: Record<string, any> = {};
+		Object.keys(defaults).forEach((k) => {
+			values[k] =
+				params && params[k] !== undefined && params[k] !== null ? params[k] : defaults[k].value;
+		});
+		this.effects.push({
+			id: type,
+			type,
+			effect: null,
+			bypassed: true,
+			idx,
+			defaults,
+			values,
+		});
+		this._invalidateEffects();
+
+		this._emit('addeffect', type, idx);
+		this.effectBypass(idx, bypass);
+		return this._currentEffectParams(idx) as EffectParamEntry;
+	}
+	/** Build the real effect node for a pending entry, then re-apply its params. */
+	_materialize(idx: number): void {
+		const e = this.effects[idx];
+		if (!e || e.effect || e.creating) return;
+		e.creating = true;
+		this.engine
+			.createEffectInstance(e.type, { ...e.values })
+			.then((inst: Effect) => {
+				e.creating = false;
+				// the entry may have been removed/reordered (or the whole sound
+				// destroyed) while the node was building — match by identity,
+				// not the captured index
+				if (this._destroyed || !this.effects.includes(e)) {
+					if (inst && inst.disconnect) inst.disconnect();
+					return;
+				}
+				e.effect = inst;
+				// apply any param writes that landed while the node was building
+				if (e.values)
+					Object.keys(e.defaults).forEach((k) => {
+						if (e.values[k] !== undefined) inst[k] = e.values[k];
+					});
+				if (!e.bypassed) this._connectChain();
+				this._emit('effectparams', this._currentEffectParams(idx));
+			})
+			.catch((err: unknown) => {
+				e.creating = false;
+				console.error('failed to create effect', e.type, err);
+			});
+	}
+	effectBypass(idx: number, bypass?: boolean): EffectSlot {
 		if (idx < 0 || idx > this.effects.length - 1 || !this.effects[idx])
 			throw new Error('effect not found at idx=' + idx);
 		else if (bypass === undefined) return this.effects[idx];
 		const e = this.effects[idx];
 		e.bypassed = bypass;
+		this._invalidateEffects();
+		// lazily build the node the first time a pending effect is enabled
+		if (!bypass && !e.effect) this._materialize(idx);
 		this._connectChain();
 		this._emit('effectbypass', idx, bypass);
 		return e;
 	}
-	removeEffect(idx) {
+	removeEffect(idx: number): EffectParamEntry | EffectParamEntry[] {
 		const effects = this.effects.filter((e, i) => i !== idx);
 		effects.forEach((eff, idx) => (eff.idx = idx));
 		this.effects = effects || [];
+		this._invalidateEffects();
 		this._connectChain();
 		this._emit('removeeffect', idx);
 		return this._currentEffectParams();
 	}
-	moveEffect(id, idx, toIdx) {
+	moveEffect(id: string, idx: number, toIdx: number): EffectParamEntry | EffectParamEntry[] {
 		this.effects = arrayMove(this.effects, idx, toIdx);
 		this.effects.forEach((e, idx) => (e.idx = idx));
+		this._invalidateEffects();
 		this._connectChain();
 		// notify the app like add/remove/bypass do — without this the chain
 		// order change is invisible to the UI until some other state event fires
@@ -253,33 +522,49 @@ class Sound extends EventEmitter {
 		return this._currentEffectParams();
 	}
 
-	effectParams(idx, params) {
+	effectParams(
+		idx?: number,
+		params?: Record<string, any>,
+	): EffectParamEntry | EffectParamEntry[] {
 		if (params === undefined && idx === undefined) return this._currentEffectParams();
-		if (idx !== undefined && !this.effects[idx]) return {};
+		if (idx !== undefined && !this.effects[idx]) return {} as EffectParamEntry;
 		if (params === undefined && idx !== undefined) return this._currentEffectParams(idx);
 
-		const effect = this.effects[idx].effect;
-
-		Object.keys(effect.defaults).forEach((k) => {
-			if (params[k] !== undefined) effect[k] = params[k];
-		});
+		const e = this.effects[idx];
+		if (e.effect) {
+			Object.keys(e.effect.defaults).forEach((k) => {
+				if (params[k] !== undefined) e.effect[k] = params[k];
+			});
+		} else if (e.values) {
+			// pending (not yet materialized): store the values on the entry
+			Object.keys(e.defaults).forEach((k) => {
+				if (params[k] !== undefined) e.values[k] = params[k];
+			});
+		}
+		this._invalidateEffects();
 		const newParams = this._currentEffectParams(idx);
 		this._emit('effectparams', newParams);
 		return newParams;
 	}
 	disableEffects() {
 		this.effects.forEach((e, idx) => (e.bypassed = true));
+		this._invalidateEffects();
 		this._connectChain();
 		this._effectsEnabled = false;
 		this._emit('effectsenabled', false);
 	}
 	enableEffects() {
-		this.effects.forEach((e, idx) => (e.bypassed = false));
+		this.effects.forEach((e, idx) => {
+			e.bypassed = false;
+			// pending entries have no node yet — build them now that they're on
+			if (!e.effect) this._materialize(idx);
+		});
+		this._invalidateEffects();
 		this._effectsEnabled = true;
 		this._connectChain();
 		this._emit('effectsenabled', true);
 	}
-	fadeIn(time, type, fromVolume, toVolume) {
+	fadeIn(time: number, type: string, fromVolume: number, toVolume: number): void {
 		this.node.gain.setValueAtTime(fromVolume, this.context.currentTime);
 		const endTime = this.context.currentTime + time - 0.001;
 
@@ -290,7 +575,7 @@ class Sound extends EventEmitter {
 
 		//console.log('fadein', time, type, fromVolume, toVolume,this.context.currentTime,time)
 	}
-	fadeOut(time, type, toVolume, offset = 0) {
+	fadeOut(time: number, type: string, toVolume: number, offset = 0): void {
 		const delay = time > offset ? 0 : offset - time;
 		clearTimeout(this.fadeOutTimeout);
 		//console.log('fadeout', time, type, toVolume, offset, delay*1000)
@@ -304,27 +589,41 @@ class Sound extends EventEmitter {
 			//console.log('fade out', time, type, toVolume, offset, delay)
 		}, delay * 1000);
 	}
-	_currentEffectParams(idx) {
-		if (idx !== undefined && !this.effects[idx]) return {};
-		const effects = idx !== undefined ? [this.effects[idx]] : this.effects;
-		const params = effects.map((e, i) => {
-			return {
-				idx: idx !== undefined ? idx : i,
-				id: e.type,
-				type: e.type,
-				bypassed: e.bypassed,
-				params: e.effect.params(),
-				defaults: e.effect.defaults,
-			};
-		});
-		return idx !== undefined ? params[0] : params;
+	/** Drop the memoized chain snapshot (call from every effect mutation). */
+	_invalidateEffects() {
+		this._effectsCache = null;
+	}
+	_effectEntry(e: EffectSlot, idx: number): EffectParamEntry {
+		return {
+			idx,
+			id: e.type,
+			type: e.type,
+			bypassed: e.bypassed,
+			// pending entries have no node yet — report their stored values
+			params: e.effect ? e.effect.params() : { ...(e.values || {}) },
+			defaults: e.defaults,
+		};
+	}
+	_currentEffectParams(): EffectParamEntry[];
+	_currentEffectParams(idx: number): EffectParamEntry;
+	_currentEffectParams(idx?: number): EffectParamEntry | EffectParamEntry[] {
+		if (idx !== undefined) {
+			const e = this.effects[idx];
+			return e ? this._effectEntry(e, idx) : ({} as EffectParamEntry);
+		}
+		// whole-chain reads are the high-frequency path (every state emit) — the
+		// memoized array is reused until an effect mutation invalidates it, so
+		// scalar writes (volume/pan/…) don't re-map the chain each time
+		if (!this._effectsCache)
+			this._effectsCache = this.effects.map((e, i) => this._effectEntry(e, i));
+		return this._effectsCache;
 	}
 	_checkElapsed() {
 		if (!this._playing || this._paused) return;
 		let el = this.context.currentTime - this._startedAt + this._offset;
 		// keep the playhead inside the loop region: the native loop wraps at the
-		// exact boundary, but _loopEndReached (a laggy main-thread timer) resets
-		// _startedAt late, which previously pushed the marker past loopEnd
+		// exact boundary while our ticker can lag, so wrap the marker in-modulo
+		// rather than trusting _startedAt to have been reset exactly on time
 		if (this._loop && this._loopEnd > this._loopStart) {
 			const len = this._loopEnd - this._loopStart;
 			const v = (((el - this._loopStart) % len) + len) % len;
@@ -339,64 +638,83 @@ class Sound extends EventEmitter {
 		this._elapsed = 0;
 		this.emit('elapsed', 0);
 	}
-	_checkLoopEnd() {
-		clearTimeout(this.loopEndTimeout);
-		// Web Audio already loops the buffer natively (source.loop +
-		// loopStart/loopEnd); this timer only mirrors it for UI events
-		// (loopend flashes, elapsed reset). Only arm it while actually
-		// playing, otherwise a stopped looping sound would reschedule
-		// this timeout forever (and it fired even while paused).
-		if (!this._loop || !this._playing || this._paused || !this.source) return;
-		const len = this._loopEnd - this._loopStart;
-		if (len <= 0 || this._rate <= 0) return;
-		// loop length in seconds at the current playback rate
-		const ms = (len / this._rate) * 1000;
-		this.loopEndTimeout = setTimeout(() => this._loopEndReached(), ms);
-	}
-	_clearLoopEnd() {
-		clearTimeout(this.loopEndTimeout);
-	}
-
 	/**
-	 * Loop-boundary anti-click fades. Native looping jumps from loopEnd to
-	 * loopStart at a non-zero sample, which clicks every cycle. We schedule a
-	 * short gain envelope on `fadeNode` in *audio time* (look-ahead scheduling)
-	 * so the gain is ~0 exactly at each wrap, with a ~6ms fade back in:
+	 * Loop-boundary anti-click fades + loopend events, driven by one interval.
+	 * Native looping jumps from loopEnd to loopStart at a non-zero sample, which
+	 * clicks every cycle. We schedule a short gain envelope on `fadeNode` in
+	 * *audio time* (look-ahead scheduling) so the gain is ~0 exactly at each
+	 * wrap, with a ~6ms fade back in:
 	 *
 	 *   ...—silence—fadeBackIn→loopStart→...→loopEnd→silence—✓wrap—...
 	 *
-	 * A low-frequency interval keeps enough cycles pre-scheduled, and rate()
-	 * re-aligns the envelope when the loop period changes.
+	 * The same tick advances `_nextWrap` and fires `loopend` at the exact wrap
+	 * time (not the tick time), so no separate setTimeout is needed. rate()
+	 * re-anchors an already-running scheduler instead of recreating it.
 	 */
-	_startLoopFades() {
-		this._clearLoopFades();
-		if (!this._loop || this._paused || this._rate <= 0) return;
+	_startLoopScheduler() {
+		this._clearLoopScheduler();
+		this._armLoopScheduler(true);
+	}
+
+	/** Re-align a running scheduler after a rate/loop change (keeps the timer). */
+	_reanchorLoopScheduler() {
+		this._armLoopScheduler(true);
+	}
+
+	/** (Re)compute the wrap anchor + schedule the fade envelope. */
+	_armLoopScheduler(scheduleFades: boolean): void {
+		if (!this._loop || this._paused || this._rate <= 0 || !this.source) return;
 		const len = this._loopEnd - this._loopStart;
 		if (len <= 0) return;
 		const cycle = len / this._rate;
-		if (cycle < this._loopFadeDur * 3) return; // too tiny to fade meaningfully
+		this._cycle = cycle;
+		this._nextWrap = this._computeNextWrap(len);
+		this._fadeActive = cycle >= this._loopFadeDur * 3; // too tiny to fade
+		this._fadeScheduledUntil = this._nextWrap;
+		if (scheduleFades && this._fadeActive) this._scheduleLoopFades(this._nextWrap, true);
+		if (!this._loopTimer) this._loopTimer = setInterval(() => this._loopTick(), 100);
+	}
 
-		// where are we inside the current loop cycle (buffer-seconds)?
+	/** Next loop boundary in audio time, from the current playback position. */
+	_computeNextWrap(len: number): number {
 		const now = this.context.currentTime;
 		const pos = ((now - this._startedAt) * this._rate + this._offset - this._loopStart) % len || 0;
 		const into = pos < 0 ? pos + len : pos;
-		const nextWrap = now + (len - into) / this._rate;
-
-		this._cycle = cycle;
-		this._boundary = nextWrap;
-		this._scheduleLoopFades(true);
-		this._loopFadeTimer = setInterval(() => {
-			if (!this._playing || this._paused) return this._clearLoopFades();
-			if (this._boundary - this.context.currentTime < 0.7) this._scheduleLoopFades(false);
-		}, 150);
+		return now + (len - into) / this._rate;
 	}
 
-	_scheduleLoopFades(startNow) {
+	_loopTick() {
+		if (!this._playing || this._paused || this._cycle <= 0) return this._clearLoopScheduler();
+		const now = this.context.currentTime;
+
+		// fire loopend at the wrap time for every wrap the tick may have skipped
+		// (background tabs throttle timers), then resync if still far behind
+		let wraps = 0;
+		while (now >= this._nextWrap && wraps < 8) {
+			const wrap = this._nextWrap;
+			this._nextWrap += this._cycle;
+			this._elapsed = 0;
+			this._startedAt = wrap;
+			this.emit('loopend', true);
+			wraps++;
+		}
+		if (now >= this._nextWrap) {
+			const skipped = Math.floor((now - this._nextWrap) / this._cycle) + 1;
+			this._nextWrap += skipped * this._cycle;
+			// keep pausedAt/bounded position sane after a long background gap
+			this._startedAt = now;
+		}
+
+		if (this._fadeActive && this._fadeScheduledUntil - now < 0.7)
+			this._scheduleLoopFades(this._fadeScheduledUntil, false);
+	}
+
+	_scheduleLoopFades(from: number, startNow: boolean): void {
 		if (!this.fadeNode) return;
 		const g = this.fadeNode.gain;
 		const dur = this._loopFadeDur;
 		const cycle = this._cycle;
-		let t = this._boundary;
+		let t = from;
 
 		if (startNow) {
 			// cover the click at the moment playback begins (offset = loopStart)
@@ -420,13 +738,14 @@ class Sound extends EventEmitter {
 			g.linearRampToValueAtTime(1, t + dur);
 			t += cycle;
 		}
-		this._boundary = t;
+		this._fadeScheduledUntil = t;
 		g.setValueAtTime(1, t);
 	}
 
-	_clearLoopFades() {
-		clearInterval(this._loopFadeTimer);
-		this._loopFadeTimer = null;
+	_clearLoopScheduler() {
+		clearInterval(this._loopTimer);
+		this._loopTimer = null;
+		this._fadeActive = false;
 		if (!this.fadeNode) return;
 		try {
 			const g = this.fadeNode.gain;
@@ -434,22 +753,11 @@ class Sound extends EventEmitter {
 			g.setTargetAtTime(1, this.context.currentTime, 0.01);
 		} catch (e) {}
 	}
-	_loopEndReached() {
-		// never reschedule while paused/stopped — the guard in _checkLoopEnd
-		// (re)arms only on play/rate changes
-		if (!this._playing || this._paused) return this._clearLoopEnd();
-		this._clearLoopEnd();
-		this._elapsed = 0;
-		this._startedAt = this.context.currentTime;
-		this._checkLoopEnd();
-		this.emit('loopend', true);
-	}
 	stop() {
 		if (!this.source) return;
 
 		this._clearElapsed();
-		this._clearLoopEnd();
-		this._clearLoopFades();
+		this._clearLoopScheduler();
 		clearTimeout(this.fadeOutTimeout);
 		clearTimeout(this.fadeInTimeout);
 
@@ -464,16 +772,17 @@ class Sound extends EventEmitter {
 		this._emit('stop');
 		this._emit('playing', false);
 	}
-	_emit(event, val, val2) {
+	_emit(event: string, val?: unknown, val2?: unknown): void {
 		this.emitState(event, val);
 		this.emit(event, this.id, val, val2);
 	}
-	emitState(event, val) {
-		const updated = {};
+	emitState(event: string, val?: unknown): void {
+		const updated: Record<string, unknown> = {};
 		if (typeof val === 'object') {
-			Object.keys(val).forEach((k) => {
-				this['_' + k] = val[k];
-				updated[k] = val[k];
+			const obj = val as Record<string, unknown>;
+			Object.keys(obj).forEach((k) => {
+				(this as any)['_' + k] = obj[k];
+				updated[k] = obj[k];
 			});
 		} else updated[event] = val;
 
@@ -509,7 +818,10 @@ class Sound extends EventEmitter {
 				midiMapMode: this._midiMapMode,
 				reversed: this._reversed,
 				effectsEnabled: this._effectsEnabled,
-				effects: this._currentEffectParams(),
+				// event-gated: listeners keep their previous `effects` reference
+				// on scalar updates (they merge the payload), and refresh it on
+				// any real chain change
+				...(EFFECT_STATE_EVENTS.has(event) ? { effects: this._currentEffectParams() } : {}),
 				error: this._error,
 				_event: event,
 			},
@@ -531,7 +843,7 @@ class Sound extends EventEmitter {
 			solo: this._solo,
 			locked: this._locked,
 			muted: this._muted,
-			pause: this._paused,
+			paused: this._paused,
 			pausedAt: this._pausedAt,
 			reversed: this._reversed,
 			effectsEnabled: this._effectsEnabled,
@@ -543,11 +855,19 @@ class Sound extends EventEmitter {
 
 		this.stop();
 		this.effects.forEach((e) => {
-			e.effect.disconnect();
-			e.effect.reset();
+			if (e.effect) {
+				e.effect.disconnect();
+				e.effect.reset();
+			} else if (e.values) {
+				// pending entry: reset the stored values
+				Object.keys(e.defaults).forEach((k) => (e.values[k] = e.defaults[k].value));
+			}
 			e.connected = false;
 		});
-		Object.keys(defaults).forEach((k) => (this['_' + k] = defaults[k]));
+		this._invalidateEffects();
+		Object.keys(defaults).forEach(
+			(k) => ((this as any)['_' + k] = (defaults as unknown as Record<string, unknown>)[k]),
+		);
 		this._loaded = _loaded;
 		this._duration = _duration;
 		this._loopEnd = _duration;
@@ -572,16 +892,15 @@ class Sound extends EventEmitter {
 		}
 		this.emit('ended');
 	}
-	pause(on) {
+	pause(on?: boolean): boolean {
 		if (on) {
-			this._clearLoopFades();
+			// stop fades/loopend while paused; resume (play) re-arms them
+			this._clearLoopScheduler();
 			if (this.source) {
 				this._pausedAt = this._startedAt ? this.context.currentTime - this._startedAt : 0;
 				this.source.stop();
 			}
 			this._paused = true;
-			// don't fire loopend/elapsed resets while paused; resume re-arms
-			this._clearLoopEnd();
 		} else {
 			this._paused = false;
 			if (this._pausedAt) {
@@ -596,14 +915,14 @@ class Sound extends EventEmitter {
 		return this._paused;
 	}
 
-	jump(sec) {
+	jump(sec: number): void {
 		const nextTime = this.context.currentTime - this._startedAt + sec * 1;
 		this.pause();
 		this.play({
 			start: nextTime >= 0 ? nextTime : 0,
 		});
 	}
-	mute(on) {
+	mute(on?: boolean): boolean | void {
 		if (on === undefined) return this._muted;
 		if (this._muted === on) return;
 		this._muted = on;
@@ -625,29 +944,32 @@ class Sound extends EventEmitter {
 		this.node.gain.setTargetAtTime(this._targetGain(), this.context.currentTime, 0.02);
 	}
 
-	volume(vol) {
+	volume(vol?: number): number {
 		if (vol !== undefined) this._volume = vol;
 		this._applyGain();
 		this._emit('volume', this._volume);
 		return this._volume;
 	}
-	gain(gain) {
+	gain(gain?: number): number {
 		if (gain !== undefined) this._gain = gain;
 		this._applyGain();
 		this._emit('gain', this._gain);
 		return this._gain;
 	}
-	rate(rate) {
+	rate(rate?: number): number {
 		if (rate !== undefined && this.source && this._rate !== rate) {
 			this.source.playbackRate.cancelScheduledValues(this.context.currentTime);
 			this.source.playbackRate.setValueAtTime(this._rate, this.context.currentTime + 0.01);
 			this.source.playbackRate.linearRampToValueAtTime(rate, this.context.currentTime + 0.05);
 		}
 
-		this._rate = rate !== undefined ? parseFloat(rate) : this._rate;
+		this._rate = rate !== undefined ? Number(rate) : this._rate;
 		this._emit('rate', this._rate);
-		this._checkLoopEnd();
-		this._startLoopFades();
+		// re-anchor an already-running scheduler in place (no interval churn
+		// while dragging the rate); (re)start it when it isn't running
+		if (this._loop && this._playing && !this._paused && this._rate > 0 && this._loopTimer)
+			this._reanchorLoopScheduler();
+		else this._startLoopScheduler();
 		return this._rate;
 	}
 
@@ -658,9 +980,9 @@ class Sound extends EventEmitter {
 	 * and rate are untouched. The node is only connected while pitch ≠ 0 and
 	 * is created lazily.
 	 */
-	pitch(semitones) {
+	pitch(semitones?: number): number {
 		if (semitones !== undefined) {
-			const next = Math.max(-24, Math.min(24, parseFloat(semitones)));
+			const next = Math.max(-24, Math.min(24, Number(semitones)));
 			const wasActive = this._pitchActive;
 			this._pitch = isNaN(next) ? 0 : next;
 			this._pitchActive = Math.abs(this._pitch) > 0.01;
@@ -727,8 +1049,8 @@ class Sound extends EventEmitter {
 		return this._pitchNode;
 	}
 
-	pan(deg) {
-		var xDeg = parseInt(deg);
+	pan(deg: number): { x: number; z: number } {
+		var xDeg = parseInt(String(deg));
 		var zDeg = xDeg + 90;
 		if (zDeg > 90) zDeg = 180 - zDeg;
 
@@ -751,7 +1073,7 @@ class Sound extends EventEmitter {
 		const panWidth =
 			deg <= 0 ? (((-90 + Math.abs(-deg)) / -90) * 100) / 2 : 50 + ((deg / 90) * 100) / 2;
 		this._pan = deg;
-		this._panWidth = parseInt(panWidth);
+		this._panWidth = Math.floor(panWidth);
 		this._panX = x;
 		this._panZ = z;
 		this._emit('pan', this._pan);
@@ -760,7 +1082,7 @@ class Sound extends EventEmitter {
 			z: z,
 		};
 	}
-	loop(on, offset = {}) {
+	loop(on?: boolean, offset: { start?: number; end?: number } = {}): boolean {
 		if (on === undefined) return this._loop;
 		this._loopStart =
 			offset.start !== undefined ? Math.max(0, offset.start) : Math.max(0, this._loopStart || 0);
@@ -778,28 +1100,27 @@ class Sound extends EventEmitter {
 			this.source.loop = on;
 		}
 		if (!this._loop) {
-			this._clearLoopEnd();
-			this._clearLoopFades();
-		} else if (this._playing) {
-			this._checkLoopEnd();
-			this._startLoopFades();
+			this._clearLoopScheduler();
+		} else if (this._playing && !this._paused) {
+			this._startLoopScheduler();
 		}
 		this._emit('loop', on);
 		return this._loop;
 	}
 
-	reverse(on) {
+	reverse(on?: boolean): unknown {
 		if (on === undefined) return this._reverse;
 		if (!this.buffer) return;
 		if (on && !this._reversed) AudioUtils.reverse(this.buffer);
 		if (!on && this._reversed) AudioUtils.reverse(this.buffer);
+		this._bufferVersion++;
 		this._reversed = on;
 		this._emit('reversed', on);
 		this.emit('change');
 	}
-	crop(start, end) {
-		const s = parseInt(start * this.sampleRate);
-		const e = parseInt(end * this.sampleRate);
+	crop(start: number, end: number): void {
+		const s = Math.floor(start * this.sampleRate);
+		const e = Math.floor(end * this.sampleRate);
 		const data = this.buffer.getChannelData(0);
 		const cropped = AudioUtils.slice([data], s, e > data.length - 1 ? data.length - 1 : e);
 		const newBuff = new AudioBuffer({
@@ -807,21 +1128,22 @@ class Sound extends EventEmitter {
 			numberOfChannels: 1,
 			sampleRate: this.sampleRate,
 		});
-		newBuff.copyToChannel(cropped[0], 0);
+		newBuff.copyToChannel(cropped[0] as never, 0);
 		this.buffer = newBuff;
+		this._bufferVersion++;
 		this._duration = this.buffer.duration; ///this.buffer.numberOfChannels;
 		this._emit('duration', this._duration);
 		this.emit('change');
 	}
 
-	solo(on, mute) {
+	solo(on?: boolean, mute?: boolean): boolean | void {
 		if (on === undefined) return this._solo;
 		this.mute(mute);
 		this._solo = on;
 		this._emit('solo', on);
 		return this._solo;
 	}
-	lock(on) {
+	lock(on?: boolean): boolean | void {
 		if (on === undefined) return this._locked;
 		this._locked = on;
 		this._emit('locked', on);
@@ -839,14 +1161,14 @@ class Sound extends EventEmitter {
 				: this._duration;
 		return len / this._rate;
 	}
-	sampling(on) {
+	sampling(on: boolean): void {
 		this._sampling = on;
 		this._emit('sampling', on);
 	}
 
-	load(url) {
+	load(url?: string): void {
 		this._clearElapsed();
-		this._clearLoopEnd();
+		this._clearLoopScheduler();
 		this._loaded = false;
 		this._error = null;
 		this._url = url !== undefined ? url : this._url;
@@ -859,8 +1181,6 @@ class Sound extends EventEmitter {
 		this._loading = true;
 		this._emit('loading', true);
 		this._url = this._url.includes('blob:') ? this._url : encodeURIComponent(this._url);
-
-		if (this.local && !this._url.includes('blob:')) return this._loadLocal();
 
 		if (/^data:[^;]+;base64,/.test(url)) {
 			let data = atob(url.split(',')[1]);
@@ -875,7 +1195,9 @@ class Sound extends EventEmitter {
 			xhr.addEventListener('load', () => {
 				let code = parseInt((xhr.status + '')[0]);
 				if (code !== 0 && code !== 2 && code !== 3)
-					return xhr.onerror('Failed loading audio file with status: ' + xhr.status + '.');
+					return (xhr.onerror as unknown as (msg: string) => void)(
+						'Failed loading audio file with status: ' + xhr.status + '.',
+					);
 				this.decodeAudioData(xhr.response);
 			});
 			xhr.addEventListener('error', (err) => {
@@ -890,31 +1212,12 @@ class Sound extends EventEmitter {
 			try {
 				xhr.send();
 			} catch (e) {
-				xhr.onerror(e);
+				(xhr.onerror as unknown as (e: unknown) => void)(e);
 			}
 		}
 	}
-	_loadLocal() {
-		let url = this._url;
-		// legacy Electron path (unreachable in the web build)
-		const fs = (window as any).require('fs');
-		const root = (window as any).require('electron').remote.app.getAppPath();
-		const filePath = root + '/build' + url;
-		if (fs.existsSync(filePath)) {
-			const data = fs.readFileSync(filePath, {
-				binary: true,
-			});
-			this.decodeAudioData(Uint8Array.from(data).buffer);
-		} else {
-			this._loading = false;
-			this._ready = true;
-			this._error = 'File doesnt exist';
-			this._emit('ready', true);
-			this._emit('loaderror', 'File doesnt exist');
-		}
-	}
-	decodeAudioData(arrayBuffer) {
-		const error = (err) => {
+	decodeAudioData(arrayBuffer: ArrayBuffer): void {
+		const error = (err?: unknown) => {
 			console.error('ERRROR decoding audio data', this._id, err);
 			this._url = null;
 			this._loading = false;
@@ -929,12 +1232,13 @@ class Sound extends EventEmitter {
 		let _buffer = new ArrayBuffer(arrayBuffer.byteLength);
 		new Uint8Array(_buffer).set(new Uint8Array(arrayBuffer));
 
-		const success = (buffer) => {
+		const success = (buffer: AudioBuffer) => {
 			if (buffer) {
 				//console.log('decoded data', this.id, buffer.duration)
 
 				this.buffer = this._reversed ? AudioUtils.reverse(buffer) : buffer;
 				this._buffer = _buffer;
+				this._bufferVersion++;
 				this._duration = buffer.duration; ///buffer.numberOfChannels;
 				//this._loopEnd = this._duration;
 				this._loaded = true;
@@ -966,7 +1270,7 @@ class Sound extends EventEmitter {
 		);
 		if (p && p.catch) p.catch((err) => error(err));
 	}
-	urlToMimeType(url) {
+	urlToMimeType(url?: string | null): string | null {
 		if (!url) return 'audio/mpeg';
 		const src = url.toLowerCase();
 		if (src.endsWith('.mp3')) return 'audio/mpeg';
@@ -974,22 +1278,26 @@ class Sound extends EventEmitter {
 		else if (src.endsWith('.m4a')) return 'audio/mp4';
 		else return null;
 	}
-	midiNote(number) {
+	midiNote(number: number): void {
 		this._midiNote = number;
 		this._emit('midinote', number);
 	}
-	midiMapMode(on) {
+	midiMapMode(on: boolean): void {
 		this._midiMapMode = on;
 		this._emit('midimapmode', on);
 	}
 	destroy() {
-		this.emit = () => {};
+		(this as any).emit = () => {};
+		// stop a late _materialize promise from wiring a node into a dead sound
+		this._destroyed = true;
 
 		if (this.source && this._playing) {
 			this.source.removeEventListener('ended', this.onEnded);
 			this.source.stop();
 		}
-		this.effects.forEach((e) => e.effect.disconnect());
+		this.effects.forEach((e) => {
+			if (e.effect) e.effect.disconnect();
+		});
 		if (this._pitchNode) {
 			try {
 				this._pitchNode.disconnect();
@@ -1001,11 +1309,10 @@ class Sound extends EventEmitter {
 		this.buffer = null;
 		this._buffer = null;
 		this._clearElapsed();
-		this._clearLoopFades();
+		this._clearLoopScheduler();
 		try {
 			if (this.fadeNode && this.fadeNode.disconnect) this.fadeNode.disconnect();
 		} catch (e) {}
-		clearTimeout(this.loopEndTimeout);
 		clearTimeout(this.fadeOutTimeout);
 	}
 	log() {
@@ -1013,7 +1320,9 @@ class Sound extends EventEmitter {
 		//let caller_line = (new Error).stack.split("\n")[4]
 		console.log('Sound.js', this.id, Array.prototype.slice.call(arguments).join(' '));
 	}
-	error(err) {}
+	error(err: unknown): void {
+		void err;
+	}
 }
 
 export default Sound;

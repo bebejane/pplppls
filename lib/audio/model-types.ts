@@ -32,8 +32,10 @@ export interface SoundSettings {
 	solo?: boolean;
 	locked?: boolean;
 	muted?: boolean;
-	pause?: boolean;
+	paused?: boolean;
 	pausedAt?: number;
+	/** @deprecated legacy key from before the `paused` rename; read for compat only. */
+	pause?: boolean;
 	reversed?: boolean;
 	effectsEnabled?: boolean;
 	effects?: EffectSnapshot[];

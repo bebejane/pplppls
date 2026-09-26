@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ModelManager — owns all model and preset I/O for the audio engine.
  *
@@ -9,14 +8,32 @@
  */
 import JSZip from 'jszip';
 import Global from '../Global';
-import type { Model, ModelMeta, Preset, PresetSlot, PresetSound } from './model-types';
+import type AudioEngine from './AudioEngine';
+import type Sound from './Sound';
+import type {
+	EffectSnapshot,
+	Model,
+	ModelMeta,
+	Preset,
+	PresetSlot,
+	PresetSound,
+	SoundSettings,
+} from './model-types';
 
 const MODEL_VERSION = 2;
 /** One preset slot per number key (1-9, then 0). */
 const PRESET_SLOTS = 10;
 
+/** A live sound as the engine stores it (engine.sounds / engine.get()). */
+interface SoundItem {
+	id: string;
+	url?: string | null;
+	filename?: string | null;
+	sound: Sound;
+}
+
 export default class ModelManager {
-	engine;
+	engine: AudioEngine;
 	/** Entries from /models/index.json (plus in-session "new" models). */
 	models: ModelMeta[] = [];
 	/** The currently loaded model (or null before the first load). */
@@ -26,13 +43,13 @@ export default class ModelManager {
 	/** Full models already unzipped (files carry buffers), keyed by name. */
 	_cache: Record<string, Model> = {};
 
-	constructor(engine) {
+	constructor(engine: AudioEngine) {
 		this.engine = engine;
 	}
 
 	// ---- fetch helpers ---------------------------------------------------
 
-	async loadFile(file) {
+	async loadFile(file: string): Promise<unknown> {
 		const binary = !file.toLowerCase().endsWith('.json');
 		const res = await fetch(file);
 		if (!res.ok) throw new Error(`Failed to load ${file}: ${res.status} ${res.statusText}`);
@@ -45,7 +62,7 @@ export default class ModelManager {
 
 		// stream the body so we can report download progress (like axios's
 		// onDownloadProgress used to)
-		const report = (loaded, total) => {
+		const report = (loaded: number, total: number): void => {
 			const perc = total ? ((loaded / total) * 100).toFixed(0) : '0';
 			this.emit('notification', { message: '', description: perc + '%' });
 		};
@@ -78,7 +95,7 @@ export default class ModelManager {
 		return buffer;
 	}
 
-	emit(event, ...args) {
+	emit(event: string, ...args: unknown[]): void {
 		this.engine.emit(event, ...args);
 	}
 
@@ -137,7 +154,10 @@ export default class ModelManager {
 	}
 
 	/** Read a File (from the hidden file input) with progress, then load it. */
-	loadModelFromFile(file: File, onProgress?: (e: ProgressEvent<FileReader>) => void): Promise<Model> {
+	loadModelFromFile(
+		file: File,
+		onProgress?: (e: ProgressEvent<FileReader>) => void,
+	): Promise<Model> {
 		return new Promise((resolve, reject) => {
 			if (!file.name.toLowerCase().endsWith('.zip')) return reject('Format not supported');
 			const name = file.name.replace(/(\.zip)/gi, '');
@@ -183,15 +203,13 @@ export default class ModelManager {
 			const col = model.cols ? idx % model.cols : idx;
 			const id = row + '-' + col;
 			const filename = file ? file.filename : null;
-			const params = file && file.params ? file.params : {};
-			const effectParams =
-				file && file.params && file.params.effects && file.params.effects.length
-					? file.params.effects[0].params
-					: undefined;
-			const effectBypass =
-				file && file.params && file.params.effects && file.params.effects.length
-					? file.params.effects[0].bypassed
-					: undefined;
+			const params = this._normalizeParams(file && file.params ? file.params : {});
+			// v2 files persist their effect chain (possibly empty); legacy v1
+			// files have no `effects` key at all and always got one delay — the
+			// grid's hover interaction writes params to effect index 0, so keep
+			// that default for them instead of loading them with no effect
+			const hasSavedEffects = Array.isArray(file && file.params && file.params.effects);
+			const effects = hasSavedEffects ? file.params.effects : [];
 			const url =
 				file && file.buffer
 					? URL.createObjectURL(new Blob([file.buffer], { type: file.mimeType }))
@@ -200,15 +218,39 @@ export default class ModelManager {
 						: null;
 			if (url) {
 				this.engine.add(id, url, filename, { ...params, enableAnalyser: false });
-				await this.engine.addEffect(
-					id,
-					'delay',
-					effectBypass !== undefined ? effectBypass : false,
-					effectParams,
-				);
+				if (!hasSavedEffects) {
+					// legacy default: an active delay at index 0
+					await this.engine.addEffect(id, 'delay', false);
+				} else {
+					// restore the whole saved chain in order — this used to
+					// hardcode a single 'delay' built from effects[0], silently
+					// dropping every other effect (and any non-delay type)
+					await Promise.all(
+						effects.map((fx) =>
+							this.engine.addEffect(
+								id,
+								fx && fx.type ? fx.type : 'delay',
+								fx && fx.bypassed !== undefined ? fx.bypassed : false,
+								fx && fx.params,
+							),
+						),
+					);
+				}
 			}
 		}
 		this.emit('model', model);
+	}
+
+	/**
+	 * Legacy model files stored the paused flag as `pause`, but Sound reads
+	 * `paused` (its defaults key). Translate on the way in so pausing survives
+	 * a save/load round-trip.
+	 */
+	_normalizeParams(params: SoundSettings): SoundSettings {
+		if (params && params.pause !== undefined && params.paused === undefined) {
+			return { ...params, paused: params.pause };
+		}
+		return params;
 	}
 
 	/** Create an empty in-memory model (no files) and show its grid. */
@@ -253,7 +295,7 @@ export default class ModelManager {
 		for (let i = 0; i < sounds.length; i++) {
 			const sound = sounds[i].sound;
 			if (sound._loaded) {
-				const blob = new Blob([sound._buffer], { type: sound.mimeType || sound._mimeType });
+				const blob = new Blob([sound._buffer], { type: sound._mimeType });
 				zip.file(sound._filename, blob, { binary: false, base64: true });
 				model.contentLength += blob.size;
 			}
@@ -265,7 +307,10 @@ export default class ModelManager {
 		}
 		zip.file('index.json', JSON.stringify(model, null, 4));
 		Object.keys(zip.files).forEach(
-			(n) => (model.contentLength += (zip.files[n] as any)._data.length),
+			(n) =>
+				(model.contentLength += (
+					zip.files[n] as unknown as { _data: { length: number } }
+				)._data.length),
 		);
 		const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
 		return { blob, model };
@@ -284,7 +329,7 @@ export default class ModelManager {
 		const item = this.engine.get(id);
 		if (!item) return;
 		const sound = item.sound;
-		const blob = new Blob([sound._buffer], { type: sound.mimeType || sound._mimeType });
+		const blob = new Blob([sound._buffer], { type: sound._mimeType });
 		this.download(blob, sound._filename);
 	}
 
@@ -310,7 +355,7 @@ export default class ModelManager {
 
 	/** Snapshot every sound's current settings and store it as a preset. */
 	savePreset(name?: string): Preset {
-		const sounds: PresetSound[] = this.engine.sounds.map((item) => this._snapshot(item));
+		const sounds: PresetSound[] = this.engine.sounds.map((item: SoundItem) => this._snapshot(item));
 		return this._setPreset(this._freeSlot(), { at: Date.now(), name, sounds });
 	}
 
@@ -324,18 +369,16 @@ export default class ModelManager {
 		this.engine.master.stop();
 		const sounds = this.engine.sounds;
 
-		sounds.forEach((item) => {
+		sounds.forEach((item: SoundItem) => {
 			const id = item.id;
 			if (!this.engine.exist(id)) return;
-			this.engine.rate(id, Math.random());
 			this.engine.pitch(id, Math.round(Math.random() * 24 - 12));
-			this.engine.mute(id, Math.random() > 0.5);
 			this.engine.volume(id, Math.random());
 			this.engine.pan(id, Math.random() * 180 - 90);
 		});
 
 		const snapshots: PresetSound[] = [];
-		sounds.forEach((item, idx) => {
+		sounds.forEach((item: SoundItem, idx: number) => {
 			const sound = item.sound;
 			const start = Math.random() * sound._duration;
 			const end = Math.random() * (sound._duration - start);
@@ -365,7 +408,7 @@ export default class ModelManager {
 	restorePreset(index: number) {
 		const preset = this.presets[index];
 		if (!preset) return;
-		preset.sounds.forEach((cfg) => {
+		preset.sounds.forEach((cfg: PresetSound) => {
 			if (!this.engine.exist(cfg.id)) return;
 			const item = this.engine.get(cfg.id);
 			const sound = item.sound;
@@ -383,7 +426,7 @@ export default class ModelManager {
 			if (cfg.effectsEnabled !== undefined && sound.effects && sound.effects.length)
 				cfg.effectsEnabled ? sound.enableEffects() : sound.disableEffects();
 			if (cfg.effects && cfg.effects.length) {
-				cfg.effects.forEach((e) => {
+				cfg.effects.forEach((e: EffectSnapshot) => {
 					if (!sound.effects || !sound.effects[e.idx]) return;
 					sound.effectBypass(e.idx, !!e.bypassed);
 					if (e.params) sound.effectParams(e.idx, e.params);
@@ -418,10 +461,10 @@ export default class ModelManager {
 		return slots;
 	}
 
-	_snapshot(item, overrides = {}): PresetSound {
-		const state = item.sound.getSaveState();
+	_snapshot(item: SoundItem, overrides: Partial<PresetSound> = {}): PresetSound {
+		const state: SoundSettings = item.sound.getSaveState();
 		if (state.effects)
-			state.effects = state.effects.map((e) => ({
+			state.effects = state.effects.map((e: EffectSnapshot) => ({
 				idx: e.idx,
 				type: e.type,
 				bypassed: e.bypassed,

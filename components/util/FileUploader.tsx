@@ -109,12 +109,43 @@ export default function FileUploader({
 	const delegateEvent = (e: React.MouseEvent) => {
 		const el = ref.current;
 		if (!el || !e.target) return;
-		el.style.display = 'none';
-		const target = e.target as HTMLElement;
-		if (target.parentNode) {
-			target.parentNode.dispatchEvent(new MouseEvent(e.type, e as unknown as MouseEventInit));
+		// The uploader covers the whole column, so its mouse events are
+		// re-dispatched on the parent to keep the column's own hover/click
+		// handling working. The forwarded event is built from the *native*
+		// event (React's synthetic event isn't a valid MouseEventInit and used
+		// to throw here) and the whole dispatch is guarded: it re-enters
+		// document-level handlers (tooltips etc.) that may touch detached
+		// nodes, which must not take the app down.
+		const parent = (e.target as HTMLElement).parentElement;
+		if (parent) {
+			const src = e.nativeEvent;
+			// hide the overlay from hit-testing for the duration of the dispatch
+			el.style.pointerEvents = 'none';
+			try {
+				parent.dispatchEvent(
+					new MouseEvent(e.type, {
+						bubbles: true,
+						cancelable: true,
+						composed: true,
+						view: src.view ?? window,
+						screenX: src.screenX,
+						screenY: src.screenY,
+						clientX: src.clientX,
+						clientY: src.clientY,
+						ctrlKey: src.ctrlKey,
+						shiftKey: src.shiftKey,
+						altKey: src.altKey,
+						metaKey: src.metaKey,
+						button: src.button,
+						buttons: src.buttons,
+					}),
+				);
+			} catch (err) {
+				// a downstream handler failed while re-routing; not fatal
+			} finally {
+				el.style.pointerEvents = '';
+			}
 		}
-		el.style.display = 'flex';
 		if (e.type !== 'mouseleave') e.stopPropagation();
 	};
 

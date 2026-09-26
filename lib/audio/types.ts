@@ -54,6 +54,29 @@ export interface EffectEntry {
 	defaults: Record<string, EffectParamDef>;
 }
 
+/** Per-sample processing applied to recordings (trim/normalize/fade). */
+export interface ProcessSampleOptions {
+	trim?: boolean;
+	normalize?: boolean;
+	fade?: boolean;
+}
+
+/** Options accepted by the AudioEngine constructor (see Studio). */
+export interface AudioEngineOptions {
+	/** AudioContext sample rate; omit to use the device default. */
+	sampleRate?: number;
+	channels?: number;
+	/** Initial master volume (0–1). */
+	volume?: number;
+	/** Legacy Electron flag (unused in the web build). */
+	electron?: boolean;
+	enableAnalysers?: boolean;
+	enableLoops?: boolean;
+	enableElapsed?: boolean;
+	/** Trim/normalize recorded samples; `false` disables processing. */
+	processSample?: boolean | ProcessSampleOptions;
+}
+
 export interface MediaDeviceInfoLike {
 	deviceId: string;
 	label: string;
@@ -94,6 +117,22 @@ export interface MasterLike {
 	reset(): void;
 }
 
+/** Engine automation recorder (record every state change, loop it back). */
+export interface AutomationLike {
+	/** Currently recording? */
+	readonly recording: boolean;
+	/** Currently looping playback? */
+	readonly playing: boolean;
+	/** Number of captured changes. */
+	readonly count: number;
+	/** Toggle/arm recording (R). */
+	record(on?: boolean): boolean;
+	/** Toggle/arm looped playback (L). */
+	play(on?: boolean): boolean;
+	/** Stop everything and drop the take. */
+	clear(): void;
+}
+
 /** A Sound wrapper as seen by the app (engine.sounds / playSound results). */
 export interface SoundLike {
 	id: string;
@@ -104,7 +143,7 @@ export interface SoundLike {
 	_buffer?: ArrayBuffer | null;
 	sound: {
 		[key: string]: Any;
-		load(): void;
+		load(url?: string): void;
 		play(opt?: Record<string, unknown>): void;
 		stop(): void;
 		volume(v?: number): Any;
@@ -117,6 +156,8 @@ export interface SoundLike {
 export interface AudioEngine
 	extends AudioEngineEvents {
 	master: MasterLike;
+	/** Records engine state changes and loops them back (R / L shortcuts). */
+	automation: AutomationLike;
 	context: AudioContext;
 	sounds: SoundLike[];
 	soundMap: Record<string, SoundLike>;
@@ -167,7 +208,6 @@ export interface AudioEngine
 	record(start: boolean): Promise<Any> | Any;
 	sample(id: string, start: boolean): Promise<Any> | Any;
 	cancelSample(id: string): void;
-	metronome(tap?: boolean): void;
 	playSound(url: string, opt?: Record<string, unknown>): RawSound;
 	analyse(id: string, type: string, opt?: Record<string, Any>): Any;
 	removeAnalyser(analyser: Any): void;
@@ -196,7 +236,7 @@ export interface AudioEngine
 
 export interface RawSound {
 	id?: string;
-	load(): void;
+	load(url?: string): void;
 	play(opt?: Record<string, unknown>): void;
 	stop(): void;
 	volume(v?: number): Any;
