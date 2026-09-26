@@ -6,7 +6,7 @@ import { EventEmitter } from 'events';
 const defaults = {
 	url: null,
 	rate: 1.0,
-	pitch: 1.0,
+	pitch: 0,
 	volume: 0.5,
 	gain: 0.0,
 	duration: 0,
@@ -91,6 +91,14 @@ class Sound extends EventEmitter {
 		this.effectsInputNode = this.context.createGain();
 		this.effectsOutputNode = this.context.createGain();
 		this.chain = [];
+		// tempo-preserving pitch shifter (Signalsmith Stretch) inserted between
+		// the source and the effects; created lazily and bypassed at 0
+		// semitones so it costs nothing when unused
+		this._pitchNode = null;
+		this._pitchNodeFailed = false;
+		this._pitchActive = Math.abs(this._pitch || 0) > 0.01;
+		this._stretch = null;
+		this._pitchPending = false;
 		this.onEnded = this.onEnded.bind(this);
 	}
 	play(options = {}) {
@@ -167,6 +175,12 @@ class Sound extends EventEmitter {
 		this._disconnectChain();
 		const effects = this.effects;
 		let lastOutput = this.source;
+		// pitch shifter first so the effects process the transposed signal
+		if (this._pitchActive && !this._pitchNode) this._ensurePitchNode();
+		if (this._pitchActive && this._pitchNode) {
+			lastOutput.connect(this._pitchNode);
+			lastOutput = this._pitchNode;
+		}
 		effects
 			.filter((e) => !e.bypassed)
 			.forEach((e, idx) => {
@@ -183,6 +197,11 @@ class Sound extends EventEmitter {
 		if (this._connected) {
 			const effects = this.effects;
 			this.source.disconnect();
+			if (this._pitchNode) {
+				try {
+					this._pitchNode.disconnect();
+				} catch (e) {}
+			}
 			effects.forEach((e) => e.effect.disconnect());
 			this.node.disconnect(this.fadeNode);
 			this.fadeNode.disconnect(this.panner);
@@ -501,6 +520,7 @@ class Sound extends EventEmitter {
 		return {
 			volume: this._volume,
 			rate: this._rate,
+			pitch: this._pitch,
 			pan: this._pan,
 			panZ: this._panZ,
 			panX: this._panX,
@@ -537,6 +557,7 @@ class Sound extends EventEmitter {
 		this.solo(defaults.solo);
 		this.volume(defaults.volume);
 		this.rate(defaults.rate);
+		this.pitch(defaults.pitch);
 		this.pan(defaults.pan);
 		this.reverse(defaults.reversed);
 		this.lock(defaults.locked);
@@ -626,9 +647,84 @@ class Sound extends EventEmitter {
 		this._rate = rate !== undefined ? parseFloat(rate) : this._rate;
 		this._emit('rate', this._rate);
 		this._checkLoopEnd();
-		this._startLoopFades(); // re-align the loop envelope with the new period
-		//if(this._playing) this.play()
+		this._startLoopFades();
 		return this._rate;
+	}
+
+	/**
+	 * Tempo-preserving pitch shift, in semitones (0 = original, ±24 = ±2
+	 * octaves). Runs the source through the Signalsmith Stretch worklet
+	 * inserted between the source and the effects, so duration, loop points
+	 * and rate are untouched. The node is only connected while pitch ≠ 0 and
+	 * is created lazily.
+	 */
+	pitch(semitones) {
+		if (semitones !== undefined) {
+			const next = Math.max(-24, Math.min(24, parseFloat(semitones)));
+			const wasActive = this._pitchActive;
+			this._pitch = isNaN(next) ? 0 : next;
+			this._pitchActive = Math.abs(this._pitch) > 0.01;
+
+			if (this._pitchActive) this._ensurePitchNode();
+			this._applyPitch();
+			// (re)plug the chain only when the shifter enters/leaves the path
+			if (this.source && wasActive !== this._pitchActive) this._connectChain();
+		}
+		this._emit('pitch', this._pitch);
+		return this._pitch;
+	}
+
+	/** Push the current pitch to the Signalsmith Stretch node. */
+	_applyPitch() {
+		if (this._stretch) this._scheduleStretch();
+	}
+
+	/** Schedule the current pitch (semitones) on the Signalsmith Stretch node. */
+	_scheduleStretch() {
+		if (!this._stretch || !this._stretch.schedule) return;
+		// NB: remote methods (including latency()) return Promises, so they
+		// can't be used in time arithmetic. Live input ignores rate/loop*, and
+		// omitting `output`/`outputTime` schedules the change immediately.
+		this._stretch.schedule({
+			semitones: this._pitch,
+			active: true,
+		});
+	}
+
+	/**
+	 * Create the Signalsmith Stretch pitch node on demand (loaded at runtime
+	 * from /public — see lib/audio/pitch/stretch.ts). Async; the chain is
+	 * rebuilt once the node exists.
+	 */
+	_ensurePitchNode() {
+		if (this._pitchNode || this._pitchNodeFailed || this._pitchPending) return this._pitchNode;
+		this._pitchPending = true;
+		import('./pitch/stretch')
+			.then(({ default: loadSignalsmithStretch }) => loadSignalsmithStretch())
+			.then((SignalsmithStretch) =>
+				SignalsmithStretch(this.context, {
+					// these REPLACE the library defaults, so outputChannelCount
+					// (used for `this.channels`) must be included or the
+					// processor throws in its worklet constructor
+					numberOfInputs: 1,
+					numberOfOutputs: 1,
+					outputChannelCount: [2],
+				}),
+			)
+			.then((stretch) => {
+				this._stretch = stretch;
+				this._pitchNode = stretch;
+				this._pitchPending = false;
+				if (stretch.start) stretch.start();
+				this._scheduleStretch();
+				if (this.source && this._pitchActive) this._connectChain();
+			})
+			.catch((err) => {
+				console.error('signalsmith-stretch unavailable', err);
+				this._pitchPending = false;
+				this._pitchNodeFailed = true;
+			});
+		return this._pitchNode;
 	}
 
 	pan(deg) {
@@ -717,45 +813,7 @@ class Sound extends EventEmitter {
 		this._emit('duration', this._duration);
 		this.emit('change');
 	}
-	async pitch(pitch, opt) {
-		if (pitch !== undefined && this.buffer && pitch !== 1.0) {
-			const dir = pitch > 1.0 ? 'up' : 'down';
-			const step = pitch > 1.0 ? parseInt((pitch - 1.0) * 10) : parseInt((1.0 - pitch) * 10);
-			if (!this._org_buffer) {
-				this._org_buffer = new AudioBuffer(this.buffer);
-				for (var i = 0; i < this._org_buffer.numberOfChannels; i++)
-					this._org_buffer.copyToChannel(this.buffer.getChannelData(i), i);
-			}
 
-			const stretched = AudioUtils.stretch(this._org_buffer, {
-				pitch: pitch,
-				sampleRate: this.sampleRate,
-			});
-			if (stretched.length) {
-				const newBuff = new AudioBuffer({
-					length: stretched.length,
-					numberOfChannels: 1,
-					sampleRate: this.sampleRate,
-				});
-				newBuff.copyToChannel(stretched, 0);
-				this.buffer = newBuff;
-			}
-
-			/*
-				const stretched = AudioUtils.pitch2(this.buffer, {direction:dir, steps:step, sampleRate:this.sampeRate})
-			*/
-			//const stretched = AudioUtils.pitch(this.buffer, {direction:dir, steps:step, sampleRate:this.sampeRate})
-			/*
-				
-			//this.buffer = await this.context.decodeAudioData(pitched)
-			*/
-		} else this.buffer = this._org_buffer || this.buffer;
-
-		this._pitch = pitch !== undefined ? parseFloat(pitch) : this._pitch;
-		this._emit('pitch', this._pitch);
-		this.emit('change');
-		return this._pitch;
-	}
 	solo(on, mute) {
 		if (on === undefined) return this._solo;
 		this.mute(mute);
@@ -932,6 +990,13 @@ class Sound extends EventEmitter {
 			this.source.stop();
 		}
 		this.effects.forEach((e) => e.effect.disconnect());
+		if (this._pitchNode) {
+			try {
+				this._pitchNode.disconnect();
+			} catch (e) {}
+			this._pitchNode = null;
+		}
+		this._stretch = null;
 		this.source = null;
 		this.buffer = null;
 		this._buffer = null;

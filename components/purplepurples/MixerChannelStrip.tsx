@@ -38,6 +38,7 @@ export default function MixerChannelStrip({
 	onSampleRecord,
 	onPan,
 	onRate,
+	onPitch,
 	onReverse,
 	onLoop,
 	onEffects,
@@ -54,6 +55,7 @@ export default function MixerChannelStrip({
 		volume: typeof params?.volume === 'number' ? params.volume : 0.5,
 		pan: typeof params?.pan === 'number' ? params.pan : 0,
 		rate: typeof params?.rate === 'number' ? params.rate : 1,
+		pitch: typeof params?.pitch === 'number' ? params.pitch : 0,
 		filename: params?.filename || filename || '',
 	}));
 	const [samplingProgress, setSamplingProgress] = useState<Record<string, any>>({});
@@ -84,7 +86,7 @@ export default function MixerChannelStrip({
 	// said so — the mixer can open long after the last `state` event, so we
 	// can't wait for one to enable the strip
 	const ready = init || !!st.ready;
-	const { volume = 0, pan = 0, rate = 1, muted, solo, loop, reversed, playing } = st;
+	const { volume = 0, pan = 0, rate = 1, pitch = 0, muted, solo, loop, reversed, playing } = st;
 	const processing = sampling && samplingProgress.processing && !samplingProgress.recording;
 	const fxCount = Array.isArray(st.effects) ? st.effects.length : 0;
 
@@ -239,6 +241,23 @@ export default function MixerChannelStrip({
 				<span className={s.panMark}>2</span>
 			</div>
 
+			{/* pitch: tempo-preserving, in semitones (-2 … +2 octaves) */}
+			<div className={s.panRow} data-tip data-for={'tt-mixer-pitch'}>
+				<span className={s.panMark}>-</span>
+				<div className={s.panSlider}>
+					<Slider
+						axis='x'
+						x={Math.round(Math.min(24, Math.max(-24, pitch)))}
+						xmin={-24}
+						xmax={24}
+						xstep={1}
+						onChange={({ x }) => onPitch(x)}
+						styles={panStyle}
+					/>
+				</div>
+				<span className={s.panMark}>+</span>
+			</div>
+
 			<button
 				type='button'
 				className={cn(s.btn, s.play, playing && s.on)}
@@ -273,6 +292,8 @@ export interface MixerChannelStripProps {
 	onPan: (deg: number) => void;
 	/** Playback rate, 0x…2x (1x = original). */
 	onRate: (rate: number) => void;
+	/** Tempo-preserving pitch shift in semitones (0 = original). */
+	onPitch: (semitones: number) => void;
 	onReverse: (on: boolean) => void;
 	onLoop: (on: boolean) => void;
 	/** Open the effect-chain editor for this channel. */

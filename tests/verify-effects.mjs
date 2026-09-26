@@ -422,33 +422,6 @@ console.log('\npp-reverb / pp-convolver');
 	check('delta IR => passthrough', corr);
 }
 
-// -- pp-pitchshift ---------------------------------------------------------
-console.log('\npp-pitchshift');
-{
-	const up = makeProc('pp-pitchshift', { pitchShift: 1 });
-	const n = SR * 2;
-	const s = sine(440, 0.9, n);
-	const out = new Float32Array(Math.ceil(n / BLOCK) * BLOCK);
-	for (let b = 0; b < Math.ceil(n / BLOCK); b++) {
-		const [oL] = up.run(s.subarray(b * BLOCK, (b + 1) * BLOCK));
-		out.set(oL, b * BLOCK);
-	}
-	const start = Math.floor(BLOCK * 20); // skip latency
-	const a440 = dftBin(out, 440, start, 32768);
-	const a880 = dftBin(out, 880, start, 32768);
-	check('unity shift keeps 440 dominant', a440 > a880 * 3, `|440|=${a440.toFixed(0)} |880|=${a880.toFixed(0)}`);
-
-	const up2 = makeProc('pp-pitchshift', { pitchShift: 2 });
-	const out2 = new Float32Array(Math.ceil(n / BLOCK) * BLOCK);
-	for (let b = 0; b < Math.ceil(n / BLOCK); b++) {
-		const [oL] = up2.run(s.subarray(b * BLOCK, (b + 1) * BLOCK));
-		out2.set(oL, b * BLOCK);
-	}
-	const b440 = dftBin(out2, 440, start, 32768);
-	const b880 = dftBin(out2, 880, start, 32768);
-	check('shift=2 => 880 dominant', b880 > b440 * 3, `|440|=${b440.toFixed(0)} |880|=${b880.toFixed(0)}`);
-}
-
 // -- all processors: silence + noise smoke, no NaN/crash -------------------
 console.log('\nsmoke (all processors)');
 {

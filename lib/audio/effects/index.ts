@@ -122,12 +122,6 @@ const EFFECTS = [
 			depth: {value:0.5, max:1, min:0, type:'float'},
 			mix: {value:0.5, max:1, min:0, type:'float'}
 		},
-	},{
-		id: 'pitchshift',
-		name: 'Pitch Shift',
-		defaults:{
-			pitchShift: {value:1.0, max:2, min:0.5, type:'float'}
-		},
 	},
 ]
 
@@ -145,7 +139,6 @@ import RingModulator from './RingModulator'
 import StereoPanner from './StereoPanner'
 import StonePhaser from './StonePhaser'
 import Tremolo from './Tremolo'
-import PitchShift from './PitchShift'
 import { Utils, baseEffect, createEffectBase } from './core'
 import { ensureEffectsWorklet } from './worklet'
 
@@ -165,7 +158,6 @@ const EFFECT_CLASSES: Record<string, any> = {
 	ringmodulator: RingModulator,
 	highpassfilter: HighPassFilter,
 	lowpassfilter: LowPassFilter,
-	pitchshift: PitchShift,
 }
 
 const createEffect = async (id: string, context: AudioContext, opt: Record<string, any> = {}): Promise<any> => {

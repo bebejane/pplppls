@@ -68,6 +68,7 @@ export default function Mixer({
 						onSampleRecord={(on) => onSampleRecord(id, on)}
 						onPan={(deg) => Global.engine.pan(id, deg)}
 						onRate={(rate) => Global.engine.rate(id, rate)}
+						onPitch={(semitones) => Global.engine.pitch(id, semitones)}
 						onReverse={(on) => Global.engine.reverse(id, on)}
 						onLoop={(on) => Global.engine.loop(id, on)}
 						onEffects={() => setFxId(id)}
@@ -91,6 +92,9 @@ export default function Mixer({
 			</ReactTooltip>
 			<ReactTooltip id='tt-mixer-rate' type='dark' place='top' effect='float' delayShow={600}>
 				Rate
+			</ReactTooltip>
+			<ReactTooltip id='tt-mixer-pitch' type='dark' place='top' effect='float' delayShow={600}>
+				Pitch (semitones)
 			</ReactTooltip>
 			<ReactTooltip id='tt-mixer-reverse' type='dark' place='top' effect='float' delayShow={600}>
 				Reverse

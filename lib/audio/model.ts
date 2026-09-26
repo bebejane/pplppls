@@ -298,6 +298,7 @@ export default class ModelManager {
 			const id = item.id;
 			if (!this.engine.exist(id)) return;
 			this.engine.rate(id, Math.random());
+			this.engine.pitch(id, Math.round(Math.random() * 24 - 12));
 			this.engine.mute(id, Math.random() > 0.5);
 			this.engine.volume(id, Math.random());
 			this.engine.pan(id, Math.random() * 180 - 90);
@@ -343,6 +344,7 @@ export default class ModelManager {
 			this.engine.mute(cfg.id, false);
 			if (cfg.volume !== undefined) this.engine.volume(cfg.id, cfg.volume);
 			if (cfg.rate !== undefined) this.engine.rate(cfg.id, cfg.rate);
+			if (cfg.pitch !== undefined) this.engine.pitch(cfg.id, cfg.pitch);
 			if (cfg.pan !== undefined) this.engine.pan(cfg.id, cfg.pan);
 			this.engine.loop(cfg.id, !!cfg.loop, { start: cfg.loopStart, end: cfg.loopEnd });
 			if (cfg.reversed !== undefined) this.engine.reverse(cfg.id, !!cfg.reversed);

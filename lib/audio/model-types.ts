@@ -20,6 +20,8 @@ export interface EffectSnapshot {
 export interface SoundSettings {
 	volume?: number;
 	rate?: number;
+	/** Tempo-preserving pitch shift in semitones (0 = original). */
+	pitch?: number;
 	pan?: number;
 	panX?: number;
 	panZ?: number;

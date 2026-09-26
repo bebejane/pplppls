@@ -90,11 +90,11 @@ class Recorder extends EventEmitter{
      */
     async initProcessor(){
         try{
-            // deliver the worklet via a Blob URL: addModule requires a JS MIME
-            // type, which a hashed raw-.ts asset does not provide
-            const source = (await import('./record/worklet')).default;
-            const url = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
-            await this.context.audioWorklet.addModule(url);
+            // register the worklet once per AudioContext: the engine owns two
+            // Recorder instances (master + sampler) on the same context, and a
+            // second addModule would re-register 'purplepurples-recorder'
+            const { ensureRecorderWorklet } = await import('./record/worklet');
+            await ensureRecorderWorklet(this.context);
             this._processor = new AudioWorkletNode(this.context, 'purplepurples-recorder', {
                 numberOfInputs: 1,
                 numberOfOutputs: 1,

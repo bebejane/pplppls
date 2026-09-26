@@ -44,3 +44,35 @@ registerProcessor('purplepurples-recorder', PurplePurplesRecorderProcessor);
 `;
 
 export default RECORDER_WORKLET_SOURCE;
+
+const workletPromises = new WeakMap<AudioContext, Promise<void>>();
+
+const loadRecorderWorklet = async (context: AudioContext): Promise<void> => {
+	const blob = new Blob([RECORDER_WORKLET_SOURCE], { type: 'text/javascript' });
+	const url = URL.createObjectURL(blob);
+	try {
+		await context.audioWorklet.addModule(url);
+	} finally {
+		URL.revokeObjectURL(url);
+	}
+};
+
+/**
+ * Register the recorder worklet on `context` (idempotent per context).
+ *
+ * The engine owns two Recorder instances (master + sampler) on the same
+ * AudioContext; each one calls `audioWorklet.addModule`, so without this guard
+ * the second load re-runs `registerProcessor('purplepurples-recorder')` in the
+ * same worklet scope and throws "purplepurples-recorder is already registered".
+ */
+export const ensureRecorderWorklet = (context: AudioContext): Promise<void> => {
+	let promise = workletPromises.get(context);
+	if (!promise) {
+		promise = loadRecorderWorklet(context).catch((err) => {
+			workletPromises.delete(context);
+			throw err;
+		});
+		workletPromises.set(context, promise);
+	}
+	return promise;
+};

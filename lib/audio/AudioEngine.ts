@@ -29,6 +29,10 @@ class AudioEngine extends EventEmitter {
 		},
 	) {
 		super(opt);
+		// the grid adds one listener per column (e.g. 'solo'), which exceeds
+		// the EventEmitter default of 10 — the "possible memory leak" warning
+		// is a false positive here, so lift the cap
+		this.setMaxListeners(0);
 		this.context = new AudioContext();
 		this.sampleRate = this.context.sampleRate;
 		this.enableAnalysers = opt.enableAnalysers;
@@ -525,13 +529,13 @@ class AudioEngine extends EventEmitter {
 	rate(id, rate) {
 		this.soundForEach(id, (sound) => sound.rate(rate));
 	}
+	/** Tempo-preserving pitch shift, in semitones (0 = original). */
 	pitch(id, pitch) {
 		this.soundForEach(id, (sound) => sound.pitch(pitch));
 	}
 	mute(id, on = true) {
 		this.soundForEach(id, (sound) => sound.mute(on));
 	}
-
 	unmute(id) {
 		this.soundForEach(id, (sound) => sound.unmute(false));
 	}

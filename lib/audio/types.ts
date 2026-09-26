@@ -154,6 +154,8 @@ export interface AudioEngine
 	volume(id: string, vol?: number): Any;
 	pan(id: string, deg: number): Any;
 	rate(id: string, rate: number): void;
+	/** Tempo-preserving pitch shift, in semitones (0 = original, ±24 = ±2 octaves). */
+	pitch(id: string, pitch: number): void;
 	loop(id: string, on: boolean, offset?: Record<string, number>): Any;
 	effectBypass(id: string, idx: number | string, on: boolean): Any;
 	/** With no `idx` returns the whole chain (Sound._currentEffectParams()). */

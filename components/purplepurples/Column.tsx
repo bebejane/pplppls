@@ -14,7 +14,7 @@ import type { UploadedFile as ImportedUploadedFile } from '@/components/util/Fil
 export default function Column(props: ColumnProps) {
 	const { id } = props;
 	const ref = useRef<HTMLDivElement>(null);
-	const lastRateRef = useRef<Record<string, number>>({});
+	const lastPitchRef = useRef<Record<string, number>>({});
 
 	// merged audio state: props are the base, engine 'state'+id events update live
 	const [st, setSt] = useState<Record<string, any>>(() => ({
@@ -147,11 +147,11 @@ export default function Column(props: ColumnProps) {
 			return props.onLoop(st.loop, { start: loopStart, end: loopEnd });
 		} else if (!st.locked) {
 			const percX = Math.abs((e.pageX - el.offsetLeft) / el.clientWidth);
-			const nextRate = parseFloat((percX * 2.0).toFixed(1));
-			// only ship to the engine when the (0.1-step) value actually changes
-			if (lastRateRef.current[id] !== nextRate) {
-				lastRateRef.current[id] = nextRate;
-				Global.engine.rate(id, nextRate);
+			const nextRate = parseFloat((percX * 24).toFixed(1));
+
+			if (lastPitchRef.current[id] !== nextRate) {
+				lastPitchRef.current[id] = nextRate;
+				Global.engine.pitch(id, nextRate);
 			}
 		}
 	};
