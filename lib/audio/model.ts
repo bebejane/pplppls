@@ -5,9 +5,8 @@
  * Loads/saves/downloads .purple.zip models (fetch, JSZip, sound population),
  * and keeps the per-model preset list (snapshots of every sound's settings)
  * that is persisted inside index.json. The React layer only renders the grid
- * and calls these methods; it no longer touches JSZip/axios/sound internals.
+ * and calls these methods; it no longer touches JSZip/sound internals.
  */
-import axios from 'axios';
 import JSZip from 'jszip';
 import Global from '../Global';
 import type { Model, ModelMeta, Preset, PresetSlot, PresetSound } from './model-types';
@@ -35,17 +34,48 @@ export default class ModelManager {
 
 	async loadFile(file) {
 		const binary = !file.toLowerCase().endsWith('.json');
-		const res = await axios.get(file, {
-			responseType: binary ? 'arraybuffer' : 'json',
-			onDownloadProgress: (prog) => {
-				if (!binary) return;
-				const total = prog.total || 0;
-				const perc = total ? ((prog.loaded / total) * 100).toFixed(0) : '0';
-				this.emit('notification', { message: '', description: perc + '%' });
-			},
-		});
+		const res = await fetch(file);
+		if (!res.ok) throw new Error(`Failed to load ${file}: ${res.status} ${res.statusText}`);
+
+		if (!binary) {
+			const data = await res.json();
+			this.emit('notification', null);
+			return data;
+		}
+
+		// stream the body so we can report download progress (like axios's
+		// onDownloadProgress used to)
+		const report = (loaded, total) => {
+			const perc = total ? ((loaded / total) * 100).toFixed(0) : '0';
+			this.emit('notification', { message: '', description: perc + '%' });
+		};
+		const total = Number(res.headers.get('content-length')) || 0;
+
+		if (res.body && res.body.getReader) {
+			const reader = res.body.getReader();
+			const chunks = [];
+			let loaded = 0;
+			for (;;) {
+				const { done, value } = await reader.read();
+				if (done) break;
+				chunks.push(value);
+				loaded += value.length;
+				report(loaded, total);
+			}
+			const out = new Uint8Array(loaded);
+			let offset = 0;
+			for (const chunk of chunks) {
+				out.set(chunk, offset);
+				offset += chunk.length;
+			}
+			this.emit('notification', null);
+			return out.buffer;
+		}
+
+		const buffer = await res.arrayBuffer();
+		report(buffer.byteLength, total || buffer.byteLength);
 		this.emit('notification', null);
-		return res.data;
+		return buffer;
 	}
 
 	emit(event, ...args) {

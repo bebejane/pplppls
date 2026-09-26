@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "array-move": "^4.0.0",
-    "axios": "^1.20.0",
     "bpm": "^0.0.2",
     "clamp": "^1.0.1",
     "classnames": "^2.5.1",

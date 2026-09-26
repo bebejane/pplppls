@@ -21,10 +21,3 @@ export function createRecordWorker(): AudioWorker {
 		name: 'record-worker',
 	});
 }
-
-export function createMeterWorker(): AudioWorker {
-	return new Worker(new URL('./meter/worker', import.meta.url), {
-		type: 'module',
-		name: 'meter-worker',
-	});
-}
