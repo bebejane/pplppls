@@ -51,7 +51,7 @@ export default function HelpDialog({ onClose }: { onClose: () => void }) {
 							</tr>
 							<tr>
 								<td>M</td>
-								<td>Toggle Mute</td>
+								<td>Toggle Mixer</td>
 							</tr>
 							<tr>
 								<td>0 - 9</td>

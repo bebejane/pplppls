@@ -7,13 +7,14 @@ import MobileDetect from 'mobile-detect';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import cn from 'classnames';
 import Column from './Column';
-import SavesBar, { keyToSlot } from './SavesBar';
+import PresetBar, { keyToSlot } from './PresetBar';
 import Controls from './Controls';
 import Home from './Home';
 import SaveDialog from './SaveDialog';
 import NewDialog from './NewDialog';
 import HelpDialog from './HelpDialog';
 import RecordingsDialog, { type Recording } from './RecordingsDialog';
+import Mixer from './Mixer';
 import NotSupported from './NotSupported';
 import { useKeyboardShortcuts, type KeyboardHandlers } from './useKeyboardShortcuts';
 import { useEngineListeners } from './useEngineListeners';
@@ -38,6 +39,7 @@ interface PurplePurplesState {
 	midiSupported: boolean;
 	loading: boolean;
 	loaded: number;
+	modelVersion: number;
 	progress: { loaded: number; total: number } | null;
 	deviceId: string | null;
 	midiDeviceId: string | null;
@@ -46,6 +48,7 @@ interface PurplePurplesState {
 	hud: boolean;
 	controls: boolean;
 	fullscreen: boolean;
+	view: 'grid' | 'mixer';
 	saveDialog: boolean;
 	helpDialog: boolean;
 	newDialog: boolean;
@@ -81,6 +84,7 @@ const initialState: PurplePurplesState = {
 	midiSupported: false,
 	loading: true,
 	loaded: 0,
+	modelVersion: 0,
 	progress: null,
 	deviceId: null,
 	midiDeviceId: null,
@@ -89,6 +93,7 @@ const initialState: PurplePurplesState = {
 	hud: true,
 	controls: true,
 	fullscreen: false,
+	view: 'grid',
 	saveDialog: false,
 	helpDialog: false,
 	newDialog: false,
@@ -146,6 +151,7 @@ export default function PurplePurples() {
 					id,
 					row,
 					col,
+					filename: file ? file.filename : undefined,
 					subactive: false,
 					active: false,
 					fullscreen: false,
@@ -190,6 +196,7 @@ export default function PurplePurples() {
 			numRows: model.rows,
 			loaded: 0,
 			loading: true,
+			modelVersion: prev.modelVersion + 1,
 			notification: { message: 'Loading', description: '0/' + model.files.length },
 		}));
 
@@ -343,6 +350,7 @@ export default function PurplePurples() {
 		toggleSave: () => {},
 		toggleControls: () => {},
 		toggleFullscreen: () => {},
+		toggleMixer: () => {},
 		randomValues: () => {},
 		pressSlot: () => {},
 		closeDialogs: () => {},
@@ -357,6 +365,7 @@ export default function PurplePurples() {
 		toggleSave: () => set({ saveDialog: !stateRef.current.saveDialog }),
 		toggleControls: () => set({ controls: !stateRef.current.controls }),
 		toggleFullscreen: () => onFullscreen(!stateRef.current.fullscreen),
+		toggleMixer: () => set({ view: stateRef.current.view === 'mixer' ? 'grid' : 'mixer' }),
 		randomValues: () => randomValues(),
 		stop: () => Global.engine.master.stop(),
 		pressSlot: (key) => pressSlot(key),
@@ -370,8 +379,11 @@ export default function PurplePurples() {
 
 	// ---- transport / record ---------------------------------------------
 	const onRecord = useCallback((start: boolean) => {
-		if (stateRef.current.loading || stateRef.current.masterstate.recording) return;
+		if (stateRef.current.loading) return;
+		// stopping must always work — only a *new* start is blocked while a
+		// recording is already running (the old guard swallowed the stop call)
 		if (!start) return Global.engine.record(false);
+		if (stateRef.current.masterstate.recording) return;
 		set({ recording: true });
 		Global.engine
 			.record(true)
@@ -656,25 +668,26 @@ export default function PurplePurples() {
 	// array[9] = key '0'. A slot stays empty until its key is pressed the
 	// first time — nothing is generated up front.
 
-	// saved-slots bar: visible until 5s idle, hides, reappears on a number key
-	const [saves, setSaves] = useState<{ visible: boolean; lit: number }>({
+	// preset bar: visible until 5s idle, hides, reappears on a number key or
+	// when a model that has saved presets is loaded
+	const [presetBar, setPresetBar] = useState<{ visible: boolean; lit: number }>({
 		visible: true,
 		lit: -1,
 	});
-	const savesHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const presetBarHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	const hideSavesBar = () => setSaves({ visible: false, lit: -1 });
-	const revealSavesBar = () => {
-		if (savesHideTimer.current) clearTimeout(savesHideTimer.current);
-		savesHideTimer.current = setTimeout(hideSavesBar, 5000);
+	const hidePresetBar = () => setPresetBar({ visible: false, lit: -1 });
+	const revealPresetBar = () => {
+		if (presetBarHideTimer.current) clearTimeout(presetBarHideTimer.current);
+		presetBarHideTimer.current = setTimeout(hidePresetBar, 5000);
 	};
 
 	// 'b': randomize into the next free slot (live only when all 10 are taken)
 	const randomValues = () => {
 		Global.engine.randomizePreset();
-		// reveal the slots bar so the new preset is visible (state follows engine)
-		setSaves((prev) => ({ ...prev, visible: true }));
-		revealSavesBar();
+		// reveal the bar so the new preset is visible (state follows engine)
+		setPresetBar((prev) => ({ ...prev, visible: true }));
+		revealPresetBar();
 	};
 
 	/**
@@ -686,16 +699,27 @@ export default function PurplePurples() {
 		const idx = keyToSlot(key);
 		if (Global.engine.hasPreset(idx)) Global.engine.restorePreset(idx);
 		else Global.engine.randomizePreset(idx);
-		setSaves({ visible: true, lit: key });
-		setTimeout(() => setSaves((prev) => (prev.lit === key ? { ...prev, lit: -1 } : prev)), 350);
-		revealSavesBar();
+		setPresetBar({ visible: true, lit: key });
+		setTimeout(
+			() => setPresetBar((prev) => (prev.lit === key ? { ...prev, lit: -1 } : prev)),
+			350,
+		);
+		revealPresetBar();
 	};
 
-	// hide the slots bar after 5s idle from mount (it reappears on key presses)
+	// show the bar when a model with saved presets is loaded
 	useEffect(() => {
-		savesHideTimer.current = setTimeout(hideSavesBar, 5000);
+		if (!state.presets.some(Boolean)) return;
+		setPresetBar((prev) => ({ ...prev, visible: true }));
+		if (presetBarHideTimer.current) clearTimeout(presetBarHideTimer.current);
+		presetBarHideTimer.current = setTimeout(hidePresetBar, 5000);
+	}, [state.presets]);
+
+	// hide the bar after 5s idle from mount (it reappears on key presses)
+	useEffect(() => {
+		presetBarHideTimer.current = setTimeout(hidePresetBar, 5000);
 		return () => {
-			if (savesHideTimer.current) clearTimeout(savesHideTimer.current);
+			if (presetBarHideTimer.current) clearTimeout(presetBarHideTimer.current);
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
@@ -729,6 +753,7 @@ export default function PurplePurples() {
 		recording,
 		hud,
 		controls,
+		view,
 		model,
 		models,
 		presets,
@@ -749,6 +774,8 @@ export default function PurplePurples() {
 		sampling,
 	} = state;
 
+	const channelIds = rows.flat().map((c) => c.id);
+
 	const points = rows.map((row, rowidx) => {
 		const columns = row.map((c) => {
 			const col = cols[c.id];
@@ -758,6 +785,7 @@ export default function PurplePurples() {
 					key={c.id}
 					id={c.id}
 					controls={controls}
+					hidden={view === 'mixer'}
 					midiSupported={midiSupported}
 					fullscreen={col.fullscreen}
 					locked={col.locked}
@@ -837,7 +865,12 @@ export default function PurplePurples() {
 				</div>
 			)}
 
-			<SavesBar visible={saves.visible} lit={saves.lit} presets={presets} onPress={pressSlot} />
+			<PresetBar
+				visible={presetBar.visible}
+				lit={presetBar.lit}
+				presets={presets}
+				onPress={pressSlot}
+			/>
 
 			<div
 				ref={canvasRef}
@@ -849,6 +882,20 @@ export default function PurplePurples() {
 				}}
 			>
 				{points}
+				{view === 'mixer' && (
+					<Mixer
+						init={initialized}
+						model={model}
+						version={state.modelVersion}
+						ids={channelIds}
+						cols={cols}
+						sampling={sampling}
+						masterstate={masterstate}
+						onSampleRecord={(id, on) => onSampleRecord(id, on)}
+						onRecord={(on) => onRecord(on)}
+						onClose={() => set({ view: 'grid' })}
+					/>
+				)}
 				{recording && <div className={s.rec}>{recording ? '[REC]' : ''}</div>}
 				{saveDialog && (
 					<SaveDialog

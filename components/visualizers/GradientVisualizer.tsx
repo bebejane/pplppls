@@ -2,7 +2,7 @@
 
 import Visualizer from './Visualizer';
 import Global from '@/lib/Global';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 /**
  * Draws the locked-column gradient on a canvas along the CSS gradient line
@@ -57,11 +57,18 @@ function randomBands(): Array<[number, number]> {
 }
 
 // scale an rgb()/rgba() colour toward black by k (hue-preserving brightness)
-function scaleRgb(value: string, k: number): string {
-	if (!value) return value;
+// parse a css rgb()/rgba() colour once (the props are stable) so the per-frame
+// stripe scaling never runs a regex in the paint loop
+type Rgb = [number, number, number];
+function parseRgb(value: string | undefined, fallback: Rgb): Rgb {
+	if (!value) return fallback;
 	const nums = value.match(/-?\d+(\.\d+)?/g);
-	if (!nums || nums.length < 3) return value;
-	const c = (i: number) => Math.max(0, Math.min(255, Math.round(Number(nums[i]) * k)));
+	if (!nums || nums.length < 3) return fallback;
+	return [Number(nums[0]), Number(nums[1]), Number(nums[2])];
+}
+// scale an rgb tuple toward black by k (hue-preserving brightness)
+function scaleRgb(rgb: Rgb, k: number): string {
+	const c = (i: number) => Math.max(0, Math.min(255, Math.round(rgb[i] * k)));
 	return `rgb(${c(0)},${c(1)},${c(2)})`;
 }
 
@@ -86,22 +93,22 @@ export default function GradientVisualizer({
 	const bandsRef = useRef<number[]>(new Array(STRIPES).fill(floor));
 	// this instance's random band split — generated once per locked column
 	const [freqBands] = useState<Array<[number, number]>>(() => randomBands());
+	// colours parsed once per prop change (not per frame)
+	const colorRgb = useMemo(() => parseRgb(color, [88, 0, 150]), [color]);
+	const colorLeftRgb = useMemo(() => parseRgb(colorLeft, [104, 0, 255]), [colorLeft]);
 
 	return (
 		<Visualizer
 			id={id}
 			type='frequency'
-			options={{ fftSize: 2048 }}
+			// 1024 bins (~43Hz resolution) is plenty for the 4 band peaks and
+			// roughly halves the FFT cost of the 2048 default
+			options={{ fftSize: 1024 }}
 			color={color}
 			colorLeft={colorLeft}
 			colorRight={colorRight}
 			ready={ready}
-			paint={(
-				ctx,
-				data,
-				_opt,
-				{ width, height, color: c = 'rgb(88,0,150)', colorLeft: cl = 'rgb(104,0,255)' },
-			) => {
+			paint={(ctx, data, _opt, { width, height }) => {
 				if (!width || !height) return;
 				const bins = data as unknown as ArrayLike<number>;
 				const n = bins && bins.length ? bins.length : 0;
@@ -139,10 +146,10 @@ export default function GradientVisualizer({
 				);
 				// sawtooth stripes, each scaled by its own band brightness
 				for (let i = 0; i < STRIPES; i++) {
-					grad.addColorStop(i / STRIPES, scaleRgb(c, bands[i]));
-					grad.addColorStop((i + 1) / STRIPES, scaleRgb(cl, bands[i]));
+					grad.addColorStop(i / STRIPES, scaleRgb(colorRgb, bands[i]));
+					grad.addColorStop((i + 1) / STRIPES, scaleRgb(colorLeftRgb, bands[i]));
 				}
-				grad.addColorStop(1, scaleRgb(cl, bands[STRIPES - 1]));
+				grad.addColorStop(1, scaleRgb(colorLeftRgb, bands[STRIPES - 1]));
 
 				ctx.fillStyle = grad;
 				ctx.fillRect(0, 0, width, height);

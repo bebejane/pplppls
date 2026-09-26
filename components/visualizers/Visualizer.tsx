@@ -83,6 +83,9 @@ export default function Visualizer({
 		analyser.addEventListener(type, optionsRef.current, listener);
 		return () => {
 			analyser.removeEventListener(type, listener);
+			// release the per-sound analyser the engine created for this
+			// subscription (shared input/output analysers are left alone)
+			Global.engine.removeAnalyser(analyser);
 			analyserRef.current = null;
 		};
 	}, [id, type, ready]);

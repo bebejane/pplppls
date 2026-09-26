@@ -223,6 +223,117 @@ console.log('\npp-flanger');
 	check('swirling envelope (varies)', envMax > envMin * 1.5, `envMax=${envMax.toFixed(2)} envMin=${envMin.toFixed(2)}`);
 }
 
+// -- pp-stonephaser --------------------------------------------------------
+console.log('\npp-stonephaser');
+{
+	// all six params must be supplied: the harness has no descriptor defaults
+	const base = { speed: 2, feedback: 0.9, feedbackBassCut: 500, mix: 0.5, color: 1, phase: 0 };
+	const SEC = Math.ceil(SR / BLOCK); // blocks per second
+	const blocks = SEC * 2;
+	const s = sine(1000, 0.8, blocks * BLOCK);
+
+	const run = (params, stereo = false) => {
+		const d = makeProc('pp-stonephaser', params);
+		const L = new Float32Array(blocks * BLOCK);
+		const R = new Float32Array(blocks * BLOCK);
+		for (let b = 0; b < blocks; b++) {
+			const inb = s.subarray(b * BLOCK, (b + 1) * BLOCK);
+			const [oL, oR] = d.run(inb, inb);
+			L.set(oL, b * BLOCK);
+			if (stereo) R.set(oR, b * BLOCK);
+		}
+		return { L, R };
+	};
+
+	// default settings (not "dry" in the no-wet sense): the reference run the
+	// color comparison below is measured against
+	const ref = run(base);
+	check('no NaN', ref.L.every((v) => Number.isFinite(v)));
+	check('produces output', maxIdx(ref.L).m > 0.1, `peak=${maxIdx(ref.L).m.toFixed(3)}`);
+
+	// the moving notch makes a steady tone swing in magnitude between windows
+	// (windows are measured after the 100 ms parameter smoothers have settled)
+	const mags = [];
+	for (let w = SEC; w + Math.ceil(2048 / BLOCK) < blocks; w += 20) {
+		mags.push(dftBin(ref.L, 1000, w * BLOCK, 2048));
+	}
+	const lo = Math.min(...mags);
+	const hi = Math.max(...mags);
+	check('notch sweeps a steady tone', hi > lo * 2, `max=${hi.toFixed(2)} min=${lo.toFixed(2)}`);
+
+	// Faust mixes with an equal-power sin/cos crossfade, so mix=0 is pure dry
+	const dm = run({ ...base, mix: 0 }).L;
+	let worst = 0;
+	for (let i = SEC * BLOCK; i < dm.length; i += 13) worst = Math.max(worst, Math.abs(dm[i] - s[i]));
+	check('mix=0 => dry passthrough', worst < 0.01, `maxErr=${worst.toFixed(4)}`);
+
+	// stereo phase offsets the right channel's LFO
+	const dp = run({ ...base, phase: 180 }, true);
+	const diff = new Float32Array(blocks * BLOCK);
+	for (let i = 0; i < diff.length; i++) diff[i] = dp.L[i] - dp.R[i];
+	const stereoDiff = maxIdx(diff.subarray(SEC * BLOCK)).m;
+	check('phase=180 => L/R differ', stereoDiff > 0.05, `maxDiff=${stereoDiff.toFixed(3)}`);
+
+	// color off = lighter feedback + a higher sweep range
+	const dc = run({ ...base, color: 0 }).L;
+	let dsum = 0;
+	let nsum = 0;
+	for (let i = SEC * BLOCK; i < dc.length; i++) {
+		dsum += (dc[i] - ref.L[i]) ** 2;
+		nsum += ref.L[i] ** 2;
+	}
+	const rel = Math.sqrt(dsum) / Math.sqrt(nsum);
+	check('color off changes voicing', rel > 0.1, `rel=${rel.toFixed(3)}`);
+
+	// topology, part 1: the wet path must be a true allpass cascade. With
+	// mix=1 and no feedback its magnitude response is flat -- this is what the
+	// dry/wet nulls are made of, and it is the check that catches a broken
+	// allpass recursion (a resonant one-pole cascade gives a big hump instead).
+	const capture = (params) => {
+		const d = makeProc('pp-stonephaser', params);
+		for (let b = 0; b < SEC * 2; b++) d.run(new Float32Array(BLOCK)); // frozen LFO
+		const out = new Float32Array(N);
+		for (let b = 0; b < N / BLOCK; b++) {
+			const buf = new Float32Array(BLOCK);
+			if (b === 0) buf[0] = 1;
+			const [oL] = d.run(buf);
+			out.set(oL, b * BLOCK);
+		}
+		return out;
+	};
+	const N = 4096;
+	const wet = capture({ ...base, speed: 0, feedback: 0, mix: 1 });
+	let flatLo = Infinity;
+	let flatHi = 0;
+	for (let f = 500; f <= 16000; f += 250) {
+		const m = dftBin(wet, f, 0, N);
+		flatLo = Math.min(flatLo, m);
+		flatHi = Math.max(flatHi, m);
+	}
+	check('wet path is allpass (flat)', flatHi / flatLo < 1.03, `flatness=${(flatHi / flatLo).toFixed(4)}`);
+
+	// topology, part 2: summing 4 identical first-order allpasses with the dry
+	// signal gives exactly 2 nulls (6 stages would give 3, 2 stages 1).
+	const ir = capture({ ...base, speed: 0, feedback: 0 });
+	const NF = 2048;
+	const mag = new Float64Array(NF);
+	for (let k = 1; k < NF; k++) mag[k] = dftBin(ir, (k * SR) / (2 * NF), 0, N);
+	// count contiguous deep groups, so the several bins inside one null count once
+	let notches = 0;
+	let inNull = false;
+	let gap = 0;
+	for (let k = 3; k < NF - 3; k++) {
+		if (mag[k] < 0.2) {
+			if (!inNull) notches++;
+			inNull = true;
+			gap = 0;
+		} else if (inNull && ++gap > 6) {
+			inNull = false;
+		}
+	}
+	check('4-stage allpass => 2 nulls', notches === 2, `notches=${notches}`);
+}
+
 // -- pp-pingpongdelay ------------------------------------------------------
 console.log('\npp-pingpongdelay');
 {
@@ -353,6 +464,49 @@ console.log('\nsmoke (all processors)');
 			check(name + ' runs clean', false, 'THREW: ' + e.message);
 		}
 	}
+}
+
+// -- stopped source => tails must ring out (empty worklet input) -----------
+// Safari reports an EMPTY input array once a source stops; the effect must keep
+// processing so delay/reverb tails ring out instead of being cut.
+console.log('\nstopped source (empty input) => tails ring');
+{
+	const paramsFor = (p) => {
+		const o = {};
+		for (const k of Object.keys(p)) o[k] = p[k] instanceof Float32Array ? p[k] : Float32Array.from([p[k]]);
+		return o;
+	};
+	const runEmpty = (proc, p, blocks) => {
+		const out = [];
+		for (let b = 0; b < blocks; b++) {
+			const outL = new Float32Array(BLOCK);
+			const outR = new Float32Array(BLOCK);
+			proc.process([[], []], [[outL, outR], []], paramsFor(p));
+			out.push(...outL);
+		}
+		return Float32Array.from(out);
+	};
+
+	const p = { feedback: 0.8, time: 0.1, mix: 0.5 };
+	const d = makeProc('pp-delay', p);
+	const tone = sine(220, 0.9, BLOCK * 120);
+	for (let b = 0; b < 120; b++) d.run(tone.subarray(b * BLOCK, (b + 1) * BLOCK));
+	const tail = runEmpty(d.proc, p, 80);
+	check('delay tail keeps sounding after input stops', maxIdx(tail).m > 0.05, `peak=${maxIdx(tail).m.toFixed(4)}`);
+	const head = maxIdx(tail.subarray(0, 10 * BLOCK)).m;
+	const end = maxIdx(tail.subarray(70 * BLOCK)).m;
+	check('delay tail decays', end < head * 0.9, `head=${head.toFixed(3)} end=${end.toFixed(3)}`);
+
+	const ir = new Float32Array(8192);
+	ir[0] = 1;
+	ir[4000] = 0.8;
+	const rp = { mix: 1 };
+	const r = makeProc('pp-reverb', rp);
+	r.proc.port.onmessage({ data: { type: 'ir', channels: [ir, ir] } });
+	const imp = impulse(BLOCK * 2);
+	for (let b = 0; b < 2; b++) r.run(imp.subarray(b * BLOCK, (b + 1) * BLOCK));
+	const rtail = runEmpty(r.proc, rp, 60);
+	check('conv reverb tail keeps sounding after input stops', maxIdx(rtail).m > 0.2, `peak=${maxIdx(rtail).m.toFixed(4)}`);
 }
 
 console.log('\n' + (failures === 0 ? 'ALL DSP CHECKS PASSED' : failures + ' CHECKS FAILED'));

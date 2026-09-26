@@ -191,7 +191,6 @@ class Sound extends EventEmitter {
 		this._connected = false;
 	}
 	addEffect(type, eff, bypass) {
-		console.log('adding effect', type);
 		const idx = this.effects.length;
 		const effect = {
 			id: type,
@@ -229,6 +228,9 @@ class Sound extends EventEmitter {
 		this.effects = arrayMove(this.effects, idx, toIdx);
 		this.effects.forEach((e, idx) => (e.idx = idx));
 		this._connectChain();
+		// notify the app like add/remove/bypass do — without this the chain
+		// order change is invisible to the UI until some other state event fires
+		this._emit('moveeffect', idx, toIdx);
 		return this._currentEffectParams();
 	}
 
@@ -250,14 +252,12 @@ class Sound extends EventEmitter {
 		this.effects.forEach((e, idx) => (e.bypassed = true));
 		this._connectChain();
 		this._effectsEnabled = false;
-		console.log('disable all effects');
 		this._emit('effectsenabled', false);
 	}
 	enableEffects() {
 		this.effects.forEach((e, idx) => (e.bypassed = false));
 		this._effectsEnabled = true;
 		this._connectChain();
-		console.log('enable all effects');
 		this._emit('effectsenabled', true);
 	}
 	fadeIn(time, type, fromVolume, toVolume) {
@@ -426,7 +426,6 @@ class Sound extends EventEmitter {
 		this.emit('loopend', true);
 	}
 	stop() {
-		console.log('stop');
 		if (!this.source) return;
 
 		this._clearElapsed();
@@ -640,11 +639,16 @@ class Sound extends EventEmitter {
 		var x = Math.sin(xDeg * (Math.PI / 180));
 		var z = Math.sin(zDeg * (Math.PI / 180));
 
-		if (this.source && this.panner) {
-			if (this._panX !== x && this.panner.positionX) {
-				this.panner.positionX.setTargetAtTime(x, this.context.currentTime, 0.05);
-			} else if (this._panZ !== z && this.panner.positionZ) {
-				this.panner.positionZ.setTargetAtTime(z, this.context.currentTime, 0.05);
+		// both position axes must move together: writing only positionX leaves the
+		// source on the z=0 side plane, which the equal-power panner collapses to
+		// hard-left / hard-right (the sound only centres exactly at deg 0)
+		if (this.panner) {
+			const now = this.context.currentTime;
+			if (this.panner.positionX) {
+				if (this._panX !== x) this.panner.positionX.setTargetAtTime(x, now, 0.05);
+				if (this._panZ !== z) this.panner.positionZ.setTargetAtTime(z, now, 0.05);
+			} else {
+				this.panner.setPosition(x, 0, z);
 			}
 		}
 
@@ -763,7 +767,6 @@ class Sound extends EventEmitter {
 		if (on === undefined) return this._locked;
 		this._locked = on;
 		this._emit('locked', on);
-		console.log('lock', on);
 	}
 	duration() {
 		return this._duration;
@@ -784,7 +787,6 @@ class Sound extends EventEmitter {
 	}
 
 	load(url) {
-		console.log('load sound', this.id);
 		this._clearElapsed();
 		this._clearLoopEnd();
 		this._loaded = false;

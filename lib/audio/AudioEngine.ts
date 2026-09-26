@@ -30,7 +30,6 @@ class AudioEngine extends EventEmitter {
 	) {
 		super(opt);
 		this.context = new AudioContext();
-		//this.clock = new WAAClock(this.context)
 		this.sampleRate = this.context.sampleRate;
 		this.enableAnalysers = opt.enableAnalysers;
 		this.enableLoops = opt.enableLoops;
@@ -42,6 +41,7 @@ class AudioEngine extends EventEmitter {
 		this.midiMap = {};
 		this.meters = {};
 		this.analysers = [];
+		this.analyserMap = {};
 		this._volume = opt.volume;
 
 		this.channels = opt.channels;
@@ -111,7 +111,6 @@ class AudioEngine extends EventEmitter {
 		ensureEffectsWorklet(this.context);
 
 		navigator.mediaDevices.addEventListener('devicechange', (event) => {
-			console.log('DEVICECHNAGE', event);
 			this.listDevices().then((devices) => {
 				this.emit('inputdevices', devices);
 			});
@@ -212,7 +211,7 @@ class AudioEngine extends EventEmitter {
 								label: d.label,
 							};
 						});
-					console.log('AVAILABLE INPUT DEVICES', this.inputDevices);
+
 					this.emit('inputdevices', this.inputDevices);
 					resolve(this.inputDevices);
 				})
@@ -250,7 +249,6 @@ class AudioEngine extends EventEmitter {
 		else this.inputAnalyser.setNode(this.inputStreamSource);
 		this.inputDeviceId = deviceId;
 		localStorage.setItem('lastInputDevice', deviceId);
-		console.log('INIT INPUT SOURCE', device.label);
 	}
 	closeInputStream() {
 		if (this.inputStream) this.inputStream.getAudioTracks().forEach((t) => t.stop());
@@ -280,12 +278,10 @@ class AudioEngine extends EventEmitter {
 			this.emit('effectparams', id, type, opt);
 		});
 		sound.on('load', () => {
-			console.log('loaded sound', id);
 			this.onLoad(id);
 			this.master._updateDuration();
 		});
 		sound.on('change', () => {
-			console.log('sound updated', id);
 			this.emit('change' + id, sound.duration());
 			this.emit('change', id, sound.duration());
 			this.master._updateDuration();
@@ -301,19 +297,23 @@ class AudioEngine extends EventEmitter {
 		sound.on('rate', () => {
 			if (this.enableElapsedd) this.master._updateDuration();
 		});
-		sound.on('playing', () => {
+		sound.on('playing', (sid, on) => {
 			const isPlaying = this.master.isPlaying();
 			this.emitMasterState({
 				playing: isPlaying,
 			});
-			isPlaying ? this.outputAnalyser.unpause() : this.outputAnalyser.pause();
+			// let the master meter settle rather than hard-pausing it, so a
+			// delay/reverb tail still shows after the last sound stops
+			this.outputAnalyser.setActive(isPlaying);
+			this.setAnalysersActive(sid, on === true);
 		});
 		sound.on('stop', () => {
 			const isPlaying = this.master.isPlaying();
 			this.emitMasterState({
 				playing: this.master.isPlaying(),
 			});
-			isPlaying ? this.outputAnalyser.unpause() : this.outputAnalyser.pause();
+			this.outputAnalyser.setActive(isPlaying);
+			this.setAnalysersActive(id, false);
 		});
 		sound.on('elapsed', (elapsed) => {
 			this.emit('elapsed' + id, elapsed);
@@ -342,7 +342,7 @@ class AudioEngine extends EventEmitter {
 			this.emitMasterState({
 				playing: isPlaying,
 			});
-			isPlaying ? this.outputAnalyser.unpause() : this.outputAnalyser.pause();
+			this.outputAnalyser.setActive(isPlaying);
 		});
 		sound.on('solo', (on) => {
 			this.emit('solo', sound.id, on);
@@ -367,11 +367,10 @@ class AudioEngine extends EventEmitter {
 		this.soundMap[id] = item;
 		this.emit('add', item.sound.id, item.sound);
 		sound.emitState('add', id);
-		console.log('add sound', id);
+
 		return item;
 	}
 	remove(id) {
-		console.log('remove sound', id);
 		const item = this.soundMap[id];
 		if (!item) return;
 		item.sound.destroy();
@@ -392,10 +391,13 @@ class AudioEngine extends EventEmitter {
 		}
 		const sounds = this.sounds.map((i, idx) => {
 			if (i.id === id) {
-				console.log('replace sound', id, idx);
 				const effectParams = i.sound._currentEffectParams();
 				i.sound = this.createSound(id, url, filename, i.sound.getSaveState());
 				i.sound.load();
+				// the sound now owns a brand-new audio node — re-point its
+				// analysers, otherwise the meters keep reading the discarded one
+				// (e.g. after sampling or uploading into a channel)
+				this.setAnalysersNode(id, i.sound.node);
 				if (effectParams && effectParams.length)
 					effectParams.forEach((e) => this.addEffect(id, e.type, !e.bypassed, e.params));
 			}
@@ -502,13 +504,15 @@ class AudioEngine extends EventEmitter {
 		}
 		if (!Number.isFinite(vol)) return;
 
+		// No muted guard here: Sound.volume() is mute-safe (its gain target is
+		// 0 while muted), so writing the level while muted is inaudible but
+		// leaves the stored volume ready for the next unmute. The old guard
+		// silently dropped fader moves on muted channels, so they snapped back.
 		if (id) {
 			const s = this._sound(id);
-			if (s && !s._muted) s.volume(vol);
+			if (s) s.volume(vol);
 		} else {
-			this.get().forEach((s) => {
-				if (!s.sound._muted) s.sound.volume(vol);
-			});
+			this.get().forEach((s) => s.sound.volume(vol));
 		}
 	}
 	gain(id, gain) {
@@ -622,10 +626,7 @@ class AudioEngine extends EventEmitter {
 		return this.soundMap[id];
 	}
 	destroy(force) {
-		console.log('DESTROY ENGINE');
-
 		this.sounds.forEach((s) => s.sound.destroy());
-
 		this.get().forEach((s) => {
 			this.unload(s.id);
 		});
@@ -745,51 +746,8 @@ class AudioEngine extends EventEmitter {
 		return sound;
 	}
 
-	metronome(tap) {
-		if (!tap) return this.metronomeSound.play();
-
-		this.taps = !this.taps ? 1 : ++this.taps;
-		let bpm = this.bpmCounter.tap();
-		this.lastTap = Date.now();
-		this.bpm = bpm.avg;
-		Global.bpm = bpm.avg;
-
-		if (this.taps > 7) {
-			this.taps = null;
-			this.bpmCounter.reset();
-		}
-		this.metronomeSound.play();
-
-		// = this.setTimeout(() => this.stopMetronome(), 1000);
-	}
-
-	playMetronome() {
-		if (this.metronomeSoundPlaying === undefined) {
-		}
-		this.metronomeSoundPlaying = true;
-		let time = parseInt(((Global.bpm / 60) * 1000) / 2) + Date.now();
-		let ms = parseInt(((Global.bpm / 60) * 1000) / 2);
-
-		this.metronomeTo = setInterval(() => {
-			if (!this.metronomeSoundPlaying) return;
-			setTimeout(() => {
-				console.log(Date.now() - time);
-				this.metronomeSound.play(time);
-				this.metronomeSoundPlaying = true;
-			}, time - Date.now());
-		}, ms);
-	}
-	toggleMetronome() {
-		this.metronomeSoundPlaying = !this.metronomeSoundPlaying;
-		if (!this.metronomeSoundPlaying) {
-			clearTimeout(this.metronomeTo);
-			this.metronomeSound.stop();
-		}
-	}
-
 	record(start) {
 		if (start) {
-			console.log('START RECORDER ------');
 			return this.masterRecorder
 				.record(this.masterGain)
 				.then((recording) => {
@@ -799,7 +757,6 @@ class AudioEngine extends EventEmitter {
 					this.emit('error', err);
 				});
 		} else {
-			console.log('STOP RECORDER ------');
 			this.masterRecorder.stop();
 		}
 		return;
@@ -816,12 +773,10 @@ class AudioEngine extends EventEmitter {
 		if (!this.inputStreamSource) return Promise.reject('No audio input source selected');
 
 		if (start) {
-			console.log('START SAMPLER -----');
 			this.stop(id);
 			return this.sampleRecorder
 				.record(this.inputStreamSource, id)
 				.then((recording) => {
-					console.log('SAMPLER DONE -----');
 					const sound = this.get(id) ? this.get(id).sound : null;
 					if (!sound) return console.error('NO SOUND there anymore', id);
 
@@ -833,7 +788,6 @@ class AudioEngine extends EventEmitter {
 					throw err;
 				});
 		} else {
-			console.log('SAMPLER STOP ----');
 			this.sampleRecorder.stop();
 		}
 		return;
@@ -912,7 +866,6 @@ class AudioEngine extends EventEmitter {
 				});
 			});
 		}).then((data) => {
-			//this.emit('sampleprocess', id, false)
 			console.timeEnd('processsample');
 			return data;
 		});
@@ -922,7 +875,6 @@ class AudioEngine extends EventEmitter {
 		return this.initMidiDevices();
 	}
 	async initMidiDevices() {
-		console.log('init midi');
 		try {
 			// WebMidi v3: enable() is a promise; the old callback form no longer
 			// receives an error (failures reject instead)
@@ -968,31 +920,27 @@ class AudioEngine extends EventEmitter {
 			this.midiDevices = this.midiDevices.filter((d) => d.deviceId !== device.deviceId);
 			this.emit('mididevices', this.midiDevices);
 		});
-		console.log('AVAILABLE MIDI DEVICES', this.midiDevices);
+
 		this.emit('mididevices', this.midiDevices);
 		return this.midiDevices;
 	}
 	initMidiSource(midiDeviceId) {
 		try {
 			if (this.midiDevice) {
-				//console.log(this.midiDevice.hasListener(this.onMidiNoteOn))
 				this.midiDevice.removeListener('noteon');
 				this.midiDevice.removeListener('noteoff');
-				console.log('removed listeners');
 			}
 			this.midiDevice = WebMidi.inputs.filter((d) => d.id === midiDeviceId)[0];
-
 			this.midiDevice.addListener('noteon', 'all', this.onMidiNoteOn.bind(this));
 			this.midiDevice.addListener('noteoff', 'all', this.onMidiNoteOff.bind(this));
 		} catch (err) {
 			return Promise.reject(err);
 		}
-		console.log('INIT MIDI SOURCE', this.midiDevice.name, this.midiDevice);
+
 		return Promise.resolve();
 	}
 	onMidiNoteOn(e) {
-		console.log(e);
-		console.log(e.target.name, e.note.number);
+		console.log('midi', e.target.name, e.note.number);
 		if (this.master.state.midiMapMode) {
 			const sound = this.get().filter((s) => s.sound._midiMapMode)[0];
 			if (sound) this.mapMidiNote(sound.id, e.note.number);
@@ -1017,7 +965,6 @@ class AudioEngine extends EventEmitter {
 		this.get().forEach((s) => s.sound.midiMapMode(false));
 		sound.midiNote(note);
 		sound.midiMapMode(false);
-		console.log('mapped midi note', note, id);
 	}
 	unmapMidiNote(id, note) {
 		if (this.midiMap[note]) {
@@ -1047,7 +994,6 @@ class AudioEngine extends EventEmitter {
 				sound.play({
 					volume: vol,
 				});
-				console.log('play midi', id, velocity, vol);
 			});
 		}
 	}
@@ -1055,15 +1001,65 @@ class AudioEngine extends EventEmitter {
 		if (id === 'input') return this.inputAnalyser;
 		if (id === 'master') return this.outputAnalyser;
 
-		const node = this.get(id).sound.node;
-		const analyser = new Analyser(id, this.context, node, opt);
-		this.analysers.push(analyser);
+		// a grid column can exist with no sound (a model whose cell count is
+		// larger than its file list) — nothing to analyse then, and a visual
+		// must not crash the app over it
+		const sound = this._sound(id);
+		if (!sound) return undefined;
+
+		// one analyser per sound+type, reused across mounts (a sound can have a
+		// frequency gradient and a volume meter without building two chains)
+		const key = id + ':' + type;
+		let analyser = this.analyserMap[key];
+		if (analyser) {
+			analyser.setNode(sound.node);
+		} else {
+			analyser = new Analyser(id, this.context, sound.node, opt);
+			this.analyserMap[key] = analyser;
+			this.analysers.push(analyser);
+		}
+		// meters/gradients of a stopped sound only need to settle, not run
+		analyser.setActive(!!sound._playing);
 		return analyser;
+	}
+	/** Idle/resume the analysers of one sound (called on play/stop). */
+	setAnalysersActive(id, on) {
+		if (!id) return;
+		Object.keys(this.analyserMap).forEach((key) => {
+			if (key.slice(0, key.lastIndexOf(':')) === id) this.analyserMap[key].setActive(on);
+		});
+	}
+	/** Re-point a sound's analysers after its audio node was replaced. */
+	setAnalysersNode(id, node) {
+		if (!id || !node) return;
+		Object.keys(this.analyserMap).forEach((key) => {
+			if (key.slice(0, key.lastIndexOf(':')) === id) this.analyserMap[key].setNode(node);
+		});
+	}
+	/**
+	 * Release a per-sound analyser created by analyse(). Called from the
+	 * Visualizer's unmount so meters/gradients don't accumulate in
+	 * `this.analysers` every time a view mounts (the mixer, hovered locked
+	 * columns, …). Shared input/output analysers are never touched here, and an
+	 * analyser still used by another subscriber is left connected.
+	 */
+	removeAnalyser(analyser) {
+		if (!analyser) return;
+		if (analyser === this.outputAnalyser || analyser === this.inputAnalyser) return;
+		if (analyser.hasListeners && analyser.hasListeners()) return;
+		analyser.destroy();
+		this.analysers = this.analysers.filter((a) => a !== analyser);
+		Object.keys(this.analyserMap).forEach((key) => {
+			if (this.analyserMap[key] === analyser) delete this.analyserMap[key];
+		});
 	}
 	destroyAnalysers() {
 		this.analysers.forEach((analyser) => {
 			analyser.destroy();
 		});
+		// drop the destroyed references so the arrays can't grow across reloads
+		this.analysers = [];
+		this.analyserMap = {};
 		if (this.inputAnalyser) this.inputAnalyser.destroy();
 		if (this.outputAnalyser) this.outputAnalyser.destroy();
 	}

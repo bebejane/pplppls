@@ -1,20 +1,24 @@
 // @ts-nocheck
 import { EventEmitter } from 'events';
+
 const defaults = {
 	fftSize: 32,
 	minDecibels: -60,
 	maxDecibels: 0,
 	smoothingTimeConstant: 0.9,
 	bits: 8,
-	interval: 10,
+	interval: 0,
 	lowcut: undefined,
 	hicut: undefined,
 };
+// `interval` is the minimum ms between reads. volume wants every frame (0);
+// FFT/time-domain only need ~30Hz, which is plenty for a meter/gradient and
+// cuts the analysis work by ~3x.
 const typeDefaults = {
 	volume: {
 		...defaults,
 		fftSize: 32,
-		interval: 10,
+		interval: 0,
 		tweenIn: 1.618,
 		tweenOut: 1.618 * 3,
 	},
@@ -29,6 +33,74 @@ const typeDefaults = {
 		interval: 30,
 	},
 };
+
+// A sound that isn't playing only needs its visuals to settle. Meters keep
+// ticking until their level has actually reached silence (so an effect tail —
+// delay/reverb — stays visible after the source stops); other visuals settle on
+// this grace alone.
+const IDLE_GRACE = 500;
+
+// ---- one shared rAF pump for every listener ------------------------------
+// Previously each listener owned a setInterval that scheduled its own rAF, so
+// N visuals produced N separate callbacks (often several per frame for the same
+// analyser). A single loop now reads each listener at most once per frame and
+// only when its own interval is due, and it shuts down when nothing is active.
+const active = new Set();
+let pumping = false;
+
+function unschedule(listener) {
+	active.delete(listener);
+}
+
+function schedule(listener) {
+	listener.last = 0;
+	active.add(listener);
+	if (!pumping) {
+		pumping = true;
+		requestAnimationFrame(pump);
+	}
+}
+
+function pump() {
+	const now = performance.now();
+	try {
+		active.forEach((listener) => {
+			if (listener.idle && now - listener.idleAt > IDLE_GRACE) {
+				// A meter keeps running while its level is still above silence so
+				// an effect tail stays visible; everything else settles on the
+				// grace alone. Then drop it from the loop until reactivated.
+				const settled = listener.type === 'volume' ? listener.level < 0.5 : true;
+				if (settled) {
+					unschedule(listener);
+					listener.paused = true;
+					return;
+				}
+			}
+			if (now - listener.last < listener.options.interval) return;
+			listener.last = now;
+			listener.tick();
+		});
+	} finally {
+		if (active.size) requestAnimationFrame(pump);
+		else pumping = false;
+	}
+}
+
+// One silent gain, shared by every analyser, keeps their output part of the
+// rendering graph (so they update in every browser) without a
+// MediaStreamDestination + gain node per listener.
+const sinks = new WeakMap();
+function sinkFor(context) {
+	let sink = sinks.get(context);
+	if (!sink) {
+		sink = context.createGain();
+		sink.gain.value = 0;
+		sink.connect(context.destination);
+		sinks.set(context, sink);
+	}
+	return sink;
+}
+
 class Analyser extends EventEmitter {
 	constructor(id, context, node, opt = {}) {
 		super();
@@ -36,25 +108,31 @@ class Analyser extends EventEmitter {
 		this.context = context;
 		this.node = node;
 		this.sampleRate = context.sampleRate;
-		this.options = { ...defaults, ...opt };
+		// caller-provided options only — seeding the global defaults here used
+		// to leak the default interval (10ms) into _setup and silently override
+		// each type's own interval, so frequency ran at 100Hz instead of 30Hz
+		this.options = { ...opt };
 		Object.keys(this.options).forEach((k) => (this['_' + k] = this.options[k]));
 		this._listeners = {};
+		this.idle = false;
 	}
 	addEventListener(type, opt, cb) {
 		cb = typeof opt === 'function' ? opt : cb;
 		opt = typeof opt === 'function' ? { ...this.options } : { ...this.options, ...opt };
-		//console.log('add analyser listener', this.id, type)
 		const listener = this._setup(type, opt, cb);
 		this._connect(listener);
 		this._analyse(listener);
 	}
 	removeEventListener(type, cb) {
-		//console.log('remove event listener')
 		const listener = this._listeners[type];
 		if (!listener) return;
-		this._stopAnalyse(listener);
-		this._disconnect(listener, cb);
+		// notify only the leaving callback; other subscribers must keep running
+		this._end(listener, cb);
 		listener.callbacks = listener.callbacks.filter((c) => c !== cb);
+		if (!listener.callbacks.length) {
+			this._stopAnalyse(listener);
+			this._disconnect(listener);
+		}
 	}
 	on(type, opt, cb) {
 		return this.addEventListener(type, opt, cb);
@@ -62,20 +140,38 @@ class Analyser extends EventEmitter {
 	off(type, cb) {
 		return this.removeEventListener(type, cb);
 	}
-	setNode(node) {
-		console.log('set node new node');
+	/** True while any subscriber is still attached (used to refcount reuse). */
+	hasListeners() {
+		return Object.keys(this._listeners).some((t) => this._listeners[t].callbacks.length > 0);
+	}
+	/** Idle analysers stop reading until the sound plays again (see pump). */
+	setActive(on) {
+		on = !!on;
+		if (this._activeSet === on) return;
+		this._activeSet = on;
+		this.idle = !on;
+		const now = performance.now();
 		Object.keys(this._listeners).forEach((type) => {
 			const listener = this._listeners[type];
-			listener.callbacks.forEach((cb) => {
-				this._end(listener, cb);
-			});
+			listener.idle = !on;
+			listener.idleAt = now;
+			if (on && listener.paused && listener.analysing) {
+				listener.paused = false;
+				schedule(listener);
+			}
+		});
+	}
+	setNode(node) {
+		if (node === this.node) return;
+		Object.keys(this._listeners).forEach((type) => {
+			const listener = this._listeners[type];
 			this._disconnect(listener);
 		});
 		this.node = node;
 		Object.keys(this._listeners).forEach((type) => {
 			const listener = this._listeners[type];
 			this._connect(listener);
-			if (listener.analysing) this._analyse(listener);
+			if (listener.analysing) schedule(listener);
 		});
 	}
 	setOptions(type, opt) {
@@ -90,11 +186,13 @@ class Analyser extends EventEmitter {
 		if (listener.analysing) this._restartAnalyse(listener);
 	}
 	pause() {
-		//console.log('pause analyser')
-		Object.keys(this._listeners).forEach((type) => this._stopAnalyse(this._listeners[type]));
+		Object.keys(this._listeners).forEach((type) => {
+			const listener = this._listeners[type];
+			this._end(listener);
+			this._stopAnalyse(listener);
+		});
 	}
 	unpause() {
-		//console.log('unpause analyser', this._listeners)
 		Object.keys(this._listeners).forEach((type) => this._restartAnalyse(this._listeners[type]));
 	}
 	close(type, cb) {
@@ -103,58 +201,46 @@ class Analyser extends EventEmitter {
 	destroy() {
 		Object.keys(this._listeners).forEach((type) => {
 			const listener = this._listeners[type];
-			listener.callbacks.forEach((cb) => {
-				this._end(listener, cb);
-			});
-		});
-		Object.keys(typeDefaults).forEach((type) => {
-			this._disconnect(this._listeners[type]);
+			this._end(listener);
+			this._stopAnalyse(listener);
+			this._disconnect(listener);
 		});
 	}
 	_connect(listener) {
 		if (listener.connected) return;
-		this.node.connect(listener.gain);
-		listener.gain.connect(listener.analyser);
-		listener.analyser.connect(listener.destination);
+		this.node.connect(listener.analyser);
+		listener.analyser.connect(sinkFor(this.context));
 		listener.connected = true;
-		console.log(
-			'connected analyser',
-			this.id,
-			listener.type,
-			'inputs=',
-			this.node.numberOfInputs,
-			'outputs=',
-			this.node.numberOfOutputs,
-		);
 	}
 	_disconnect(listener, cb) {
-		console.log('disconnect', this.id);
-		if (!listener) return; //console.error('analyser not connected')
-		if (listener.connected) {
-			this._end(listener, cb);
-			//this._stopAnalyse(listener)
-			this.node.disconnect(listener.gain);
-			listener.gain.disconnect(listener.analyser);
-			listener.analyser.disconnect(listener.destination);
-			listener.connected = false;
-			console.log('disconnected analyser', this.id, listener.type);
-		}
+		if (!listener || !listener.connected) return;
+		this._end(listener, cb);
+		try {
+			this.node.disconnect(listener.analyser);
+		} catch (e) {}
+		try {
+			listener.analyser.disconnect();
+		} catch (e) {}
+		listener.connected = false;
 	}
 	_setup(type, opt = {}, cb) {
-		const options = { ...typeDefaults[type], ...opt };
+		const options = { ...(typeDefaults[type] || defaults), ...opt };
 		if (!this._listeners[type]) {
-			const analyser = this.context.createAnalyser();
-			const destination = this.context.createMediaStreamDestination();
-			const gain = this.context.createGain();
 			this._listeners[type] = {
 				type,
-				analyser,
-				gain,
-				destination,
+				analyser: this.context.createAnalyser(),
 				options,
 				analysing: false,
 				connected: false,
+				idle: this.idle,
+				idleAt: 0,
+				paused: false,
+				last: 0,
+				lastValue: 0,
+				level: 0,
 				callbacks: [],
+				tick: null,
+				dataArray: null,
 			};
 		}
 		const listener = this._listeners[type];
@@ -170,7 +256,7 @@ class Analyser extends EventEmitter {
 				: listener.options.bits === 32
 					? new Float32Array(listener.analyser.frequencyBinCount)
 					: new Uint8Array(listener.analyser.frequencyBinCount);
-		this.emit(listener.type, end, { ...listener.options, ended: true });
+		if (this.listenerCount(listener.type)) this.emit(listener.type, end, { ...listener.options, ended: true });
 		if (cb) cb(end, listener.options);
 		else listener.callbacks.forEach((c) => c(end, listener.options));
 	}
@@ -179,65 +265,65 @@ class Analyser extends EventEmitter {
 
 		const { options, analyser, type } = listener;
 		const length = type === 'volume' ? options.fftSize : analyser.frequencyBinCount;
-		const dataArray = options.bits === 32 ? new Float32Array(length) : new Uint8Array(length);
-		let result,
-			range,
-			next,
-			tween,
-			handle,
-			last = 0;
+		listener.dataArray =
+			options.bits === 32 ? new Float32Array(length) : new Uint8Array(length);
+		listener.analysing = true;
+		listener.paused = false;
+		listener.idle = this.idle;
+		listener.idleAt = performance.now();
+		listener.tick = () => this._read(listener);
+		schedule(listener);
+	}
+	_read(listener) {
+		const { options, analyser, type, dataArray } = listener;
 
-		//console.log('analysing', this.id, type, options.interval);
-		listener.analysing = setInterval(() => {
-			requestAnimationFrame(() => {
-				if (type === 'frequency')
-					options.bits === 32
-						? analyser.getFloatFrequencyData(dataArray)
-						: analyser.getByteFrequencyData(dataArray);
-				else if (type === 'timedomain' || type === 'volume')
-					options.bits === 32
-						? analyser.getFloatTimeDomainData(dataArray)
-						: analyser.getByteTimeDomainData(dataArray);
+		if (type === 'frequency')
+			options.bits === 32
+				? analyser.getFloatFrequencyData(dataArray)
+				: analyser.getByteFrequencyData(dataArray);
+		else if (type === 'timedomain' || type === 'volume')
+			options.bits === 32
+				? analyser.getFloatTimeDomainData(dataArray)
+				: analyser.getByteTimeDomainData(dataArray);
 
-				if (options.lowcut !== undefined || options.hicut !== undefined) {
-					const freqsPerBand = this.sampleRate / 2 / dataArray.length;
-					const start = options.lowcut <= 0 ? 0 : parseInt(options.lowcut / freqsPerBand);
-					const end =
-						options.hicut >= this.sampleRate / 2
-							? dataArray.length - 1
-							: dataArray.length -
-								parseInt((this.sampleRate / 2 - options.hicut) / freqsPerBand) -
-								1;
-					result = dataArray.slice(start, end);
-				}
-				if (type === 'volume') {
-					range = this._getDynamicRange(dataArray) * (Math.E - 1);
-					next = Math.floor(Math.log1p(range) * 100);
-					tween = next > last ? options.tweenIn : options.tweenOut;
-					next = last = (last + (next - last) / tween) / this.node.numberOfOutputs;
-					result = next;
-				} else result = dataArray;
+		let result;
+		if (options.lowcut !== undefined || options.hicut !== undefined) {
+			const freqsPerBand = this.sampleRate / 2 / dataArray.length;
+			const start = options.lowcut <= 0 ? 0 : parseInt(options.lowcut / freqsPerBand);
+			const end =
+				options.hicut >= this.sampleRate / 2
+					? dataArray.length - 1
+					: dataArray.length -
+						parseInt((this.sampleRate / 2 - options.hicut) / freqsPerBand) -
+						1;
+			result = dataArray.slice(start, end);
+		}
+		if (type === 'volume') {
+			const range = this._getDynamicRange(dataArray) * (Math.E - 1);
+			const next = Math.floor(Math.log1p(range) * 100);
+			const tween = next > listener.lastValue ? options.tweenIn : options.tweenOut;
+			listener.lastValue =
+				(listener.lastValue + (next - listener.lastValue) / tween) /
+				this.node.numberOfOutputs;
+			// remembered so an idle meter can tell a ringing tail from silence
+			listener.level = listener.lastValue;
+			result = listener.lastValue;
+		} else result = dataArray;
 
-				this.emit(type, result, options);
-				listener.callbacks.forEach((cb) => (cb ? cb(result, options) : null));
-				//console.log('.', listener.type, this.id)
-			});
-		}, options.interval);
+		if (this.listenerCount(type)) this.emit(type, result, options);
+		listener.callbacks.forEach((cb) => (cb ? cb(result, options) : null));
 	}
 	_stopAnalyse(listener) {
-		if (listener) {
-			//console.log('stop analyser', this.id, listener.type);
-			clearInterval(listener.analysing);
-			listener.analysing = false;
-			this._end(listener);
-		}
+		if (!listener || !listener.analysing) return;
+		unschedule(listener);
+		listener.analysing = false;
+		listener.paused = false;
+		listener.tick = null;
 	}
 	_restartAnalyse(listener) {
-		if (listener) {
-			//console.log('restart analyser', this.id, listener.type);
-			this._stopAnalyse(listener);
-			this._analyse(listener);
-		}
+		if (!listener) return;
+		this._stopAnalyse(listener);
+		this._analyse(listener);
 	}
 	_getDynamicRange(buffer) {
 		let len = buffer.length;

@@ -29,6 +29,31 @@ export type {
 	EffectSnapshot,
 };
 
+/** One editable parameter of an effect, as declared in the engine catalog. */
+export interface EffectParamDef {
+	value: number | boolean;
+	max: number | boolean;
+	min: number | boolean;
+	type: 'integer' | 'float' | 'boolean' | string;
+}
+
+/** A catalog entry (engine.effects → EFFECTS): what can be added to a chain. */
+export interface EffectDef {
+	id: string;
+	name: string;
+	defaults: Record<string, EffectParamDef>;
+}
+
+/** One effect in a sound's chain (engine `state<id>` → `effects[]`). */
+export interface EffectEntry {
+	idx: number;
+	id: string;
+	type: string;
+	bypassed: boolean;
+	params: Record<string, number | boolean>;
+	defaults: Record<string, EffectParamDef>;
+}
+
 export interface MediaDeviceInfoLike {
 	deviceId: string;
 	label: string;
@@ -97,7 +122,7 @@ export interface AudioEngine
 	soundMap: Record<string, SoundLike>;
 	sampleRate: number;
 	utils: Record<string, Any>;
-	effects: Any[];
+	effects: EffectDef[];
 	encodeAudio(buffer: Float32Array[] | AudioBuffer, format: 'wav' | 'mp3', opt?: Record<string, unknown>): Promise<Blob>;
 	cancelEncodeAudio(): void;
 	init(lastInputDevice?: string | null, lastMidiDevice?: string | null): Promise<{ devices?: MediaDeviceInfoLike[]; selected?: string }>;
@@ -109,6 +134,8 @@ export interface AudioEngine
 	createInputSource(stream: MediaStream, deviceId: string): void;
 	add(id: string, url: string | null, filename?: string | null, opt?: Record<string, unknown>): SoundLike;
 	addEffect(id: string, type: string, bypass?: boolean, opt?: Record<string, unknown>): Promise<Any>;
+	removeEffect(id: string, idx: number): Any;
+	moveEffect(id: string, idx: number, toIdx: number): Any;
 	remove(id: string): void;
 	replace(id: string, url: string, filename: string): void;
 	load(id?: string): void;
@@ -129,7 +156,8 @@ export interface AudioEngine
 	rate(id: string, rate: number): void;
 	loop(id: string, on: boolean, offset?: Record<string, number>): Any;
 	effectBypass(id: string, idx: number | string, on: boolean): Any;
-	effectParams(id: string, idx: number | string, params: Record<string, Any>): Any;
+	/** With no `idx` returns the whole chain (Sound._currentEffectParams()). */
+	effectParams(id: string, idx?: number | string, params?: Record<string, Any>): Any;
 	enableEffects(id: string): void;
 	disableEffects(id: string): void;
 	midiMapMode(id: string, on: boolean): void;
@@ -140,6 +168,7 @@ export interface AudioEngine
 	metronome(tap?: boolean): void;
 	playSound(url: string, opt?: Record<string, unknown>): RawSound;
 	analyse(id: string, type: string, opt?: Record<string, Any>): Any;
+	removeAnalyser(analyser: Any): void;
 	extractPeaks(id: string, spp?: number, opt?: Record<string, Any>): Any;
 	reset(id: string): void;
 	destroy(force?: boolean): void;

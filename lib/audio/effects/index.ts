@@ -104,6 +104,17 @@ const EFFECTS = [
 			pan: {value:0, max:1, min:-1, type:'integer'}
 		},
 	},{
+		id: 'stonephaser',
+		name: 'Stone Phaser',
+		defaults:{
+			speed: {value:0.2, max:5, min:0.01, type:'float'},
+			feedback: {value:0.75, max:0.99, min:0, type:'float'},
+			feedbackBassCut: {value:500, max:5000, min:10, type:'integer'},
+			mix: {value:0.5, max:1, min:0, type:'float'},
+			color: {value:true, max:true, min:false, type:'boolean'},
+			phase: {value:0, max:180, min:-180, type:'integer'}
+		},
+	},{
 		id: 'tremolo',
 		name: 'Tremolo',
 		defaults:{
@@ -132,6 +143,7 @@ import Quadrafuzz from './Quadrafuzz'
 import Reverb from './Reverb'
 import RingModulator from './RingModulator'
 import StereoPanner from './StereoPanner'
+import StonePhaser from './StonePhaser'
 import Tremolo from './Tremolo'
 import PitchShift from './PitchShift'
 import { Utils, baseEffect, createEffectBase } from './core'
@@ -149,6 +161,7 @@ const EFFECT_CLASSES: Record<string, any> = {
 	tremolo: Tremolo,
 	quadrafuzz: Quadrafuzz,
 	stereopanner: StereoPanner,
+	stonephaser: StonePhaser,
 	ringmodulator: RingModulator,
 	highpassfilter: HighPassFilter,
 	lowpassfilter: LowPassFilter,

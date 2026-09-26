@@ -9,6 +9,8 @@ export type {
 	EffectSnapshot,
 } from '@/lib/audio/model-types';
 
+export type { EffectDef, EffectParamDef, EffectEntry } from '@/lib/audio/types';
+
 export interface ColData {
 	x: number;
 	y: number;

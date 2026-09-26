@@ -18,10 +18,12 @@
 	--color-error-dark: #8c317a;
 
 	/* type */
-	--font-regular: 'Lekton-Regular', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-		Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+	--font-regular:
+		'Lekton-Regular', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+		Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 	--font-bold: 'Lekton-Bold', var(--font-regular);
-	--font-hk: 'noto-sans-hk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+	--font-hk:
+		'noto-sans-hk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
 		Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 
 	/* rhythm */
@@ -33,9 +35,12 @@
 
 	/* z-index ladder */
 	--z-canvas: 99;
+	--z-presets: 100;
+	--z-mixer: 150;
 	--z-loading: 1000;
 	--z-notification: 1001;
-	--z-error: 2000;
+	--z-home: 2000;
+	--z-error: 3000;
 }
 
 @font-face {

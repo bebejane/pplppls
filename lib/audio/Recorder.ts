@@ -23,6 +23,7 @@ class Recorder extends EventEmitter{
         this._numChannels = opt.numChannels;
         this._sampler = opt.sampler;
         this._node = null;
+        this._silentSink = null;
         this._recording = false;
         this._processing = false;
         this._rectime = 0;
@@ -154,7 +155,16 @@ class Recorder extends EventEmitter{
         
         this._rectime = Date.now()
         this._recording = true
-        this._processor.connect(this.context.destination)
+        // The worklet passes its input through to its output, so connecting it
+        // to the speakers would play the recorded signal a second time (the
+        // master mix got louder) and monitor the mic while sampling. A muted
+        // sink keeps the node pulled/processed without any audible output.
+        if(!this._silentSink){
+            this._silentSink = this.context.createGain();
+            this._silentSink.gain.value = 0;
+            this._silentSink.connect(this.context.destination);
+        }
+        this._processor.connect(this._silentSink)
         this.worker.postMessage({numChannels:this._numChannels, start:true})
         this.recordingProgress = setInterval(()=>this._emitProgress(), 100)
 
@@ -210,7 +220,6 @@ class Recorder extends EventEmitter{
             else 
                 this._node.disconnect(this._processor)
 
-            this._processor.disconnect(this.context.destination)
             this._processor.disconnect()
             this._outputStream.disconnect()
             console.log('disconnected input stream')

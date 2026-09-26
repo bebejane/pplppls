@@ -1,0 +1,78 @@
+/* Mixer view: a full-canvas overlay holding the channel strips + master strip.
+   It sits above the grid (which stays mounted, so audio and the grid's DOM map
+   keep working) and swallows mouse events so the grid's heat writes don't fire
+   through it. */
+.overlay {
+	position: absolute;
+	inset: 0;
+	z-index: var(--z-mixer);
+	display: flex;
+	flex-direction: column;
+	background-color: rgba(24, 0, 22, 0.96);
+	color: var(--color-ink);
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex: 0 0 auto;
+	padding: 10px 16px;
+	font-size: 14px;
+	letter-spacing: 1px;
+	text-transform: uppercase;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.title {
+	color: var(--color-ink);
+}
+
+.model {
+	margin-left: 8px;
+	color: var(--color-ink-dim);
+	text-transform: none;
+}
+
+.close {
+	appearance: none;
+	padding: 6px 10px;
+	font-family: var(--font-regular);
+	font-size: 11px;
+	letter-spacing: 1px;
+	text-transform: uppercase;
+	color: var(--color-ink-dim);
+	background-color: transparent;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	cursor: pointer;
+}
+
+.close:hover {
+	color: var(--color-ink);
+	background-color: rgba(255, 255, 255, 0.12);
+}
+
+.channels {
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	flex: 1 1 auto;
+	gap: 6px;
+	padding: 14px 16px;
+	min-height: 0;
+	overflow-x: auto;
+	overflow-y: hidden;
+}
+
+.spacer {
+	flex: 0 0 auto;
+	width: 28px;
+}
+
+/* compound selectors so the master overrides win over the shared .strip rules
+   regardless of the CSS import order between the two modules */
+.channels .master {
+	width: 108px;
+	background-color: rgba(255, 255, 255, 0.07);
+	border-color: rgba(255, 255, 255, 0.28);
+}

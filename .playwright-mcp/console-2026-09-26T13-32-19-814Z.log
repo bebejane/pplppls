@@ -1,0 +1,257 @@
+[     606ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[     669ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[     903ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[    1278ms] [LOG] [Fast Refresh] done in 474ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[    3191ms] [LOG] init midi @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   27981ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/hmr?id=-CZojYaIjUJwjT3dryehY' failed:  @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_client_0qt746r._.js:18890
+[   28990ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   38432ms] [LOG] AVAILABLE INPUT DEVICES [Object, Object, Object] @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   38433ms] [LOG] INIT INPUT SOURCE Bjorn’s iPhone Microphone @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   39708ms] [LOG] AVAILABLE MIDI DEVICES [] @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54277ms] [LOG] init midi @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54277ms] [LOG] AVAILABLE MIDI DEVICES [] @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54456ms] [LOG] AVAILABLE INPUT DEVICES [Object, Object, Object] @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54457ms] [LOG] set node new node @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54457ms] [LOG] INIT INPUT SOURCE Bjorn’s iPhone Microphone @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54582ms] [LOG] DESTROY ENGINE @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54583ms] [LOG] disconnect input @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54583ms] [LOG] disconnect input @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54583ms] [LOG] disconnect input @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54583ms] [LOG] disconnect output @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54583ms] [LOG] disconnect output @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54584ms] [LOG] disconnect output @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54585ms] [LOG] add sound 0-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54585ms] [LOG] adding effect delay @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54586ms] [LOG] add sound 0-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54587ms] [LOG] adding effect delay @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54588ms] [LOG] add sound 0-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54589ms] [LOG] adding effect delay @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54590ms] [LOG] add sound 1-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54590ms] [LOG] adding effect delay @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54591ms] [LOG] add sound 1-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54591ms] [LOG] adding effect delay @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54592ms] [LOG] add sound 1-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54592ms] [LOG] adding effect delay @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54593ms] [LOG] add sound 2-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54593ms] [LOG] adding effect delay @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54594ms] [LOG] add sound 2-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54594ms] [LOG] adding effect delay @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54595ms] [LOG] add sound 2-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54595ms] [LOG] adding effect delay @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54597ms] [LOG] add sound 3-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54597ms] [LOG] adding effect delay @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54598ms] [LOG] add sound 3-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54598ms] [LOG] adding effect delay @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54599ms] [LOG] add sound 3-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54599ms] [LOG] adding effect delay @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54631ms] [LOG] load sound 0-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54632ms] [LOG] load sound 0-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54633ms] [LOG] load sound 0-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54633ms] [LOG] load sound 1-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54633ms] [LOG] load sound 1-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54633ms] [LOG] load sound 1-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54634ms] [LOG] load sound 2-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54634ms] [LOG] load sound 2-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54634ms] [LOG] load sound 2-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54634ms] [LOG] load sound 3-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54634ms] [LOG] load sound 3-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54634ms] [LOG] load sound 3-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54636ms] [WARNING] MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 solo listeners added. Use emitter.setMaxListeners() to increase limit
+    at _addListener (http://localhost:3000/_next/static/chunks/node_modules_0m-l8oj._.js:8940:21)
+    at AudioEngine.addListener (http://localhost:3000/_next/static/chunks/node_modules_0m-l8oj._.js:8951:12)
+    at Column.useEffect (http://localhost:3000/_next/static/chunks/%5Broot-of-the-server%5D__17gej6m._.js:467:144)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:14946:22)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:763:74)
+    at commitHookEffectListMount (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:7084:167)
+    at commitHookPassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:7119:60)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8521:33)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8582:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8582:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8582:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8582:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8520:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8520:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8520:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8582:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8582:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8520:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8525:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8520:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8525:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8520:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8520:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8520:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8582:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8520:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8520:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8520:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8508:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0_qm_next_dist_compiled_react-dom_cjs_react-dom-client_development_0vd3pe8.js:8582:17) @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54684ms] [LOG] loaded sound 0-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54685ms] [LOG] sound updated 0-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54685ms] [LOG] loaded sound 0-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54685ms] [LOG] sound updated 0-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54685ms] [LOG] loaded sound 1-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54685ms] [LOG] sound updated 1-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54685ms] [LOG] loaded sound 1-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54686ms] [LOG] sound updated 1-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54686ms] [LOG] loaded sound 2-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54686ms] [LOG] sound updated 2-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54687ms] [LOG] loaded sound 3-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54687ms] [LOG] sound updated 3-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54688ms] [LOG] loaded sound 2-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54688ms] [LOG] sound updated 2-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54689ms] [LOG] loaded sound 2-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54690ms] [LOG] sound updated 2-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54691ms] [LOG] loaded sound 3-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54691ms] [LOG] sound updated 3-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54711ms] [LOG] loaded sound 3-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54711ms] [LOG] sound updated 3-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54716ms] [LOG] loaded sound 0-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54717ms] [LOG] sound updated 0-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54717ms] [LOG] loaded sound 1-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54717ms] [LOG] sound updated 1-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54719ms] [LOG] connected analyser 0-0 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54719ms] [LOG] connected analyser 0-1 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54721ms] [LOG] connected analyser 1-0 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54723ms] [LOG] connected analyser 2-0 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54724ms] [LOG] connected analyser 2-1 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54725ms] [LOG] connected analyser 2-2 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54726ms] [LOG] connected analyser 3-0 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54727ms] [LOG] connected analyser 3-1 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54728ms] [LOG] disconnect 0-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54729ms] [LOG] disconnected analyser 0-0 frequency @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54730ms] [LOG] connected analyser 0-0 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54731ms] [LOG] disconnect 0-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54732ms] [LOG] disconnected analyser 0-1 frequency @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54732ms] [LOG] connected analyser 0-1 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54732ms] [LOG] disconnect 1-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54733ms] [LOG] disconnected analyser 1-0 frequency @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54734ms] [LOG] connected analyser 1-0 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54734ms] [LOG] disconnect 2-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54734ms] [LOG] disconnected analyser 2-0 frequency @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54735ms] [LOG] connected analyser 2-0 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54735ms] [LOG] disconnect 2-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54735ms] [LOG] disconnected analyser 2-1 frequency @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54735ms] [LOG] connected analyser 2-1 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54735ms] [LOG] disconnect 2-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54736ms] [LOG] disconnected analyser 2-2 frequency @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54736ms] [LOG] connected analyser 2-2 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54736ms] [LOG] disconnect 3-0 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54737ms] [LOG] disconnected analyser 3-0 frequency @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54738ms] [LOG] connected analyser 3-0 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54740ms] [LOG] disconnect 3-1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54741ms] [LOG] disconnected analyser 3-1 frequency @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54741ms] [LOG] connected analyser 3-1 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54768ms] [LOG] connected analyser 0-2 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54769ms] [LOG] connected analyser 1-2 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54771ms] [LOG] connected analyser 3-2 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54773ms] [LOG] connected analyser output volume inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54774ms] [LOG] disconnect 0-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54774ms] [LOG] disconnected analyser 0-2 frequency @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54775ms] [LOG] connected analyser 0-2 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54775ms] [LOG] disconnect 1-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54775ms] [LOG] disconnected analyser 1-2 frequency @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54776ms] [LOG] connected analyser 1-2 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54776ms] [LOG] disconnect 3-2 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54776ms] [LOG] disconnected analyser 3-2 frequency @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[   54777ms] [LOG] connected analyser 3-2 frequency inputs= 1 outputs= 1 @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  423329ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  423443ms] [LOG] [Fast Refresh] done in 194ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  423577ms] [LOG] [Fast Refresh] done in 194ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  423822ms] [LOG] [Fast Refresh] done in 194ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  429600ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  429737ms] [LOG] [Fast Refresh] done in 35ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  429816ms] [LOG] [Fast Refresh] done in 35ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  434247ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  434319ms] [LOG] [Fast Refresh] done in 31ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  434427ms] [LOG] [Fast Refresh] done in 31ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  440025ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  440078ms] [LOG] [Fast Refresh] done in 94ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  440155ms] [LOG] [Fast Refresh] done in 94ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  440283ms] [LOG] [Fast Refresh] done in 94ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  444348ms] [LOG] [Fast Refresh] done in 94ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  448875ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  448954ms] [LOG] [Fast Refresh] done in 73ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  449012ms] [LOG] [Fast Refresh] done in 73ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  449094ms] [LOG] [Fast Refresh] done in 73ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  453589ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  453600ms] [LOG] [Fast Refresh] done in 35ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  453744ms] [LOG] [Fast Refresh] done in 35ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  453801ms] [LOG] [Fast Refresh] done in 35ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  458426ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  458509ms] [LOG] [Fast Refresh] done in 28ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  458594ms] [LOG] [Fast Refresh] done in 28ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  462563ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  462600ms] [LOG] [Fast Refresh] done in 57ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  462684ms] [LOG] [Fast Refresh] done in 57ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  462828ms] [LOG] [Fast Refresh] done in 57ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  469835ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  470026ms] [LOG] [Fast Refresh] done in 102ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  470136ms] [LOG] [Fast Refresh] done in 102ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  475226ms] [LOG] [Fast Refresh] done in 102ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  478956ms] [LOG] [Fast Refresh] done in 102ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  492189ms] [LOG] [Fast Refresh] done in 102ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  545263ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  545308ms] [LOG] [Fast Refresh] done in 58ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  545488ms] [LOG] [Fast Refresh] done in 58ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  545528ms] [LOG] [Fast Refresh] done in 58ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  545575ms] [LOG] [Fast Refresh] done in 58ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  551944ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  551961ms] [LOG] [Fast Refresh] done in 32ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  552065ms] [LOG] [Fast Refresh] done in 32ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  552203ms] [LOG] [Fast Refresh] done in 32ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  556379ms] [LOG] [Fast Refresh] done in 32ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  561260ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  561314ms] [LOG] [Fast Refresh] done in 144ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  561410ms] [LOG] [Fast Refresh] done in 144ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  561527ms] [LOG] [Fast Refresh] done in 144ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  570546ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  570664ms] [LOG] [Fast Refresh] done in 172ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  570747ms] [LOG] [Fast Refresh] done in 235ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  570822ms] [LOG] [Fast Refresh] done in 235ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  575069ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  575112ms] [LOG] [Fast Refresh] done in 90ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  575262ms] [LOG] [Fast Refresh] done in 90ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  575351ms] [LOG] [Fast Refresh] done in 90ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  579773ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  579943ms] [LOG] [Fast Refresh] done in 138ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  579952ms] [LOG] [Fast Refresh] done in 138ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  580081ms] [LOG] [Fast Refresh] done in 138ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  584425ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  584593ms] [LOG] [Fast Refresh] done in 204ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  584608ms] [LOG] [Fast Refresh] done in 204ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  584799ms] [LOG] [Fast Refresh] done in 204ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  589635ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  589648ms] [LOG] [Fast Refresh] done in 81ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  589725ms] [LOG] [Fast Refresh] done in 81ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  589878ms] [LOG] [Fast Refresh] done in 81ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  594017ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  594030ms] [LOG] [Fast Refresh] done in 41ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  594112ms] [LOG] [Fast Refresh] done in 41ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  594280ms] [LOG] [Fast Refresh] done in 41ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  598771ms] [LOG] [Fast Refresh] done in 41ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  602850ms] [LOG] [Fast Refresh] done in 41ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  605393ms] [LOG] [Fast Refresh] done in 41ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  618401ms] [LOG] [Fast Refresh] done in 41ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791
+[  618837ms] [LOG] [Fast Refresh] done in 41ms @ http://localhost:3000/_next/static/chunks/0_qm_next_dist_0dvcoeb._.js:791

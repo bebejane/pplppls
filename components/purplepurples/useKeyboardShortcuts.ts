@@ -8,6 +8,7 @@ export interface KeyboardHandlers {
 	toggleSave: () => void;
 	toggleControls: () => void;
 	toggleFullscreen: () => void;
+	toggleMixer: () => void;
 	randomValues: () => void;
 	pressSlot: (key: number) => void;
 	closeDialogs: () => void;
@@ -45,7 +46,7 @@ export function useKeyboardShortcuts(handlersRef: React.MutableRefObject<Keyboar
 					H.toggleHud();
 					break;
 				case 'm':
-					Global.engine.master.mute(!Global.engine.master.muted());
+					H.toggleMixer();
 					break;
 				case 'p':
 					Global.engine.pause();

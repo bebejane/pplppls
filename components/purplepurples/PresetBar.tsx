@@ -2,7 +2,7 @@
 
 import cn from 'classnames';
 import type { PresetSlot } from './types';
-import s from './SavesBar.module.scss';
+import s from './PresetBar.module.scss';
 
 /** The 10 number keys, in the order the engine stores their slots. */
 export const PRESET_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
@@ -18,7 +18,7 @@ export const keyToSlot = (key: number) => PRESET_KEYS.indexOf(key);
  * keyboard handler lights the same key when pressed. The bar hides itself
  * after 5s without a key press and reappears on the next one.
  */
-export default function SavesBar({
+export default function PresetBar({
 	visible,
 	lit,
 	presets,

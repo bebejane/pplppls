@@ -4,7 +4,6 @@ import s from './Column.module.scss';
 import Global from '@/lib/Global';
 import { useEffect, useRef, useState } from 'react';
 import { AiOutlineLoading } from 'react-icons/ai';
-import moment from 'moment';
 import cn from 'classnames';
 import ColumnRecord from './ColumnRecord';
 import ColumnTools from './ColumnTools';
@@ -238,7 +237,13 @@ export default function Column(props: ColumnProps) {
 		>
 			{locked && (
 				<div className={s.gradientVisualizer} data-gradient-visualizer>
-					<GradientVisualizer id={id} deg={deg} color={rgba} colorLeft={rgba2} ready={ready} />
+					<GradientVisualizer
+						id={id}
+						deg={deg}
+						color={rgba}
+						colorLeft={rgba2}
+						ready={ready && !props.hidden}
+					/>
 				</div>
 			)}
 			{(points || []).map((pt, i) => (
@@ -332,6 +337,9 @@ export default function Column(props: ColumnProps) {
 export interface ColumnProps {
 	id: string;
 	controls: boolean;
+	/** True while another view (the mixer) fully covers the grid — its audio
+	 *  visuals don't need to keep analysing. */
+	hidden?: boolean;
 	midiSupported?: boolean;
 	fullscreen?: boolean;
 	locked?: boolean;
