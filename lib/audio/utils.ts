@@ -1,16 +1,3 @@
-export const clamp = (value: number, min: number, max: number): number =>
-	min < max
-		? value < min
-			? min
-			: value > max
-				? max
-				: value
-		: value < max
-			? max
-			: value > min
-				? min
-				: value;
-
 export const isString = (arg: unknown): boolean => toString.call(arg) === '[object String]';
 
 export const isObject = (arg: unknown): boolean => toString.call(arg) === '[object Object]';
@@ -48,6 +35,19 @@ export const getWetLevel = (mix: number): number => {
 	if (mix >= 0.5) return 1;
 	return 1 - (0.5 - mix) * 2;
 };
+
+export const clamp = (value: number, min: number, max: number): number =>
+	min < max
+		? value < min
+			? min
+			: value > max
+				? max
+				: value
+		: value < max
+			? max
+			: value > min
+				? min
+				: value;
 
 export const fileToMimeType = (filename?: string) => {
 	if (!filename) return filename ?? null;
