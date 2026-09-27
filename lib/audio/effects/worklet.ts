@@ -6,7 +6,7 @@
  * delivery trick the recorder worklet uses (audioWorklet.addModule requires a
  * JS MIME type). Effect classes then get an AudioWorkletNode per instance.
  */
-import { EFFECTS_WORKLET_SOURCE } from './workletsource'
+import { EFFECTS_WORKLET_SOURCE } from './workletsource.generated'
 
 const workletPromises = new WeakMap<AudioContext, Promise<void>>();
 
