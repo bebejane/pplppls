@@ -1,4 +1,4 @@
-import { Korg35FilterEffect } from '../bases'
+import { Korg35FilterEffect } from '../core'
 
 // Korg 35 24 dB high pass: below the cutoff is attenuated, above passes.
 export default class Korg35HighPassFilter extends Korg35FilterEffect {

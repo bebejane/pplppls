@@ -1,4 +1,4 @@
-import { FilterEffect } from '../bases'
+import { FilterEffect } from '../core'
 
 // Frequencies below the cutoff are attenuated; above pass through.
 export default class HighPassFilter extends FilterEffect {
