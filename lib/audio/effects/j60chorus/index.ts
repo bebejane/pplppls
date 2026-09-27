@@ -1,4 +1,5 @@
-import { Effect, EffectDefaults, Utils } from '../core'
+import { Effect, EffectDefaults } from '../core'
+import { isInRange, isBool } from '../../utils'
 import { createWorkletEffectNode } from '../worklet'
 
 /**
@@ -39,7 +40,7 @@ export default class J60Chorus extends Effect {
 		return this.options.chorusI
 	}
 	set chorusI(on: boolean) {
-		if (!Utils.isBool(on)) return
+		if (!isBool(on)) return
 		this.options.chorusI = on
 		this.node.parameters.get('chorusI').value = on ? 1 : 0
 	}
@@ -49,7 +50,7 @@ export default class J60Chorus extends Effect {
 		return this.options.chorusII
 	}
 	set chorusII(on: boolean) {
-		if (!Utils.isBool(on)) return
+		if (!isBool(on)) return
 		this.options.chorusII = on
 		this.node.parameters.get('chorusII').value = on ? 1 : 0
 	}
@@ -59,7 +60,7 @@ export default class J60Chorus extends Effect {
 		return this.options.mix
 	}
 	set mix(mix: number) {
-		if (!Utils.isInRange(mix, 0, 1)) return
+		if (!isInRange(mix, 0, 1)) return
 		this.options.mix = mix
 		this.node.parameters.get('mix').setTargetAtTime(mix, this.context.currentTime, 0.02)
 	}

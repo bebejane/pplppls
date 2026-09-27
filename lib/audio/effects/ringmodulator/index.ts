@@ -1,4 +1,5 @@
-import { Effect, EffectDefaults, Utils } from '../core'
+import { Effect, EffectDefaults } from '../core'
+import { isInRange } from '../../utils'
 import { createWorkletEffectNode } from '../worklet'
 
 /**
@@ -27,7 +28,7 @@ export default class RingModulator extends Effect {
 		return this.options.mix
 	}
 	set mix(mix: number) {
-		if (!Utils.isInRange(mix, 0, 1)) return
+		if (!isInRange(mix, 0, 1)) return
 		this.options.mix = mix
 		this.node.parameters.get('mix').setTargetAtTime(mix, this.context.currentTime, 0.02)
 	}
@@ -37,7 +38,7 @@ export default class RingModulator extends Effect {
 		return this.options.speed
 	}
 	set speed(speed: number) {
-		if (!Utils.isInRange(speed, 0, 2000)) return
+		if (!isInRange(speed, 0, 2000)) return
 		this.options.speed = speed
 		this.node.parameters.get('speed').value = speed
 	}
@@ -47,7 +48,7 @@ export default class RingModulator extends Effect {
 		return this.options.distortion
 	}
 	set distortion(distortion: number) {
-		if (!Utils.isInRange(distortion, 0.2, 50)) return
+		if (!isInRange(distortion, 0.2, 50)) return
 		this.options.distortion = parseFloat(String(distortion))
 		this.node.parameters.get('distortion').value = this.options.distortion
 	}

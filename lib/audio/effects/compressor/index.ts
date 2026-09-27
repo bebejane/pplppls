@@ -1,4 +1,5 @@
-import { Effect, EffectDefaults, Utils } from '../core'
+import { Effect, EffectDefaults } from '../core'
+import { isInRange } from '../../utils'
 import { createWorkletEffectNode } from '../worklet'
 
 /**
@@ -27,7 +28,7 @@ export default class Compressor extends Effect {
 		return this.options.threshold
 	}
 	set threshold(value: number) {
-		if (!Utils.isInRange(value, -100, 0)) return
+		if (!isInRange(value, -100, 0)) return
 		this.options.threshold = value
 		this.node.parameters.get('threshold').value = value
 	}
@@ -36,7 +37,7 @@ export default class Compressor extends Effect {
 		return this.options.knee
 	}
 	set knee(value: number) {
-		if (!Utils.isInRange(value, 0, 40)) return
+		if (!isInRange(value, 0, 40)) return
 		this.options.knee = value
 		this.node.parameters.get('knee').value = value
 	}
@@ -45,7 +46,7 @@ export default class Compressor extends Effect {
 		return this.options.attack
 	}
 	set attack(value: number) {
-		if (!Utils.isInRange(value, 0, 1)) return
+		if (!isInRange(value, 0, 1)) return
 		this.options.attack = value
 		this.node.parameters.get('attack').value = value
 	}
@@ -54,7 +55,7 @@ export default class Compressor extends Effect {
 		return this.options.release
 	}
 	set release(value: number) {
-		if (!Utils.isInRange(value, 0, 1)) return
+		if (!isInRange(value, 0, 1)) return
 		this.options.release = value
 		this.node.parameters.get('release').value = value
 	}
@@ -63,7 +64,7 @@ export default class Compressor extends Effect {
 		return this.options.ratio
 	}
 	set ratio(value: number) {
-		if (!Utils.isInRange(value, 1, 20)) return
+		if (!isInRange(value, 1, 20)) return
 		this.options.ratio = value
 		this.node.parameters.get('ratio').value = value
 	}

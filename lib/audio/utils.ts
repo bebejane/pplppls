@@ -1,73 +1,53 @@
 import clamp from 'clamp'
 
-export const Utils = {
-	isString: function (arg: unknown): boolean {
-		return toString.call(arg) === '[object String]';
-	},
+export const isString = (arg: unknown): boolean => toString.call(arg) === '[object String]';
 
-	isObject: function (arg: unknown): boolean {
-		return toString.call(arg) === '[object Object]';
-	},
+export const isObject = (arg: unknown): boolean => toString.call(arg) === '[object Object]';
 
-	isFunction: function (arg: unknown): boolean {
-		return toString.call(arg) === '[object Function]';
-	},
+export const isFunction = (arg: unknown): boolean => toString.call(arg) === '[object Function]';
 
-	isNumber: function (arg: unknown): boolean {
-		return toString.call(arg) === '[object Number]' && (arg as number) === +arg;
-	},
+export const isNumber = (arg: unknown): boolean =>
+	toString.call(arg) === '[object Number]' && (arg as number) === +arg;
 
-	isArray: function (arg: unknown): boolean {
-		return toString.call(arg) === '[object Array]';
-	},
+export const isArray = (arg: unknown): boolean => toString.call(arg) === '[object Array]';
 
-	isInRange: function (arg: unknown, min: unknown, max: unknown): boolean {
-		if (!this.isNumber(arg) || !this.isNumber(min) || !this.isNumber(max)) return false;
+export const isInRange = (arg: unknown, min: unknown, max: unknown): boolean => {
+	if (!isNumber(arg) || !isNumber(min) || !isNumber(max)) return false;
 
-		return (arg as number) >= (min as number) && (arg as number) <= (max as number);
-	},
+	return (arg as number) >= (min as number) && (arg as number) <= (max as number);
+};
 
-	isBool: function (arg: unknown): boolean {
-		return typeof arg === 'boolean';
-	},
+export const isBool = (arg: unknown): boolean => typeof arg === 'boolean';
 
-	isOscillator: function (audioNode: { toString(): string } | null | undefined): boolean {
-		return !!audioNode && audioNode.toString() === '[object OscillatorNode]';
-	},
+export const isOscillator = (audioNode: { toString(): string } | null | undefined): boolean =>
+	!!audioNode && audioNode.toString() === '[object OscillatorNode]';
 
-	isAudioBufferSourceNode: function (
-		audioNode: { toString(): string } | null | undefined,
-	): boolean {
-		return !!audioNode && audioNode.toString() === '[object AudioBufferSourceNode]';
-	},
-	// Takes a number from 0 to 1 and normalizes it to fit within range floor to ceiling
-	normalize: function (num: number, floor: number, ceil: number): number {
-		if (!this.isNumber(num) || !this.isNumber(floor) || !this.isNumber(ceil)) return;
-		return ((ceil - floor) * num) / 1 + floor;
-	},
+export const isAudioBufferSourceNode = (
+	audioNode: { toString(): string } | null | undefined,
+): boolean => !!audioNode && audioNode.toString() === '[object AudioBufferSourceNode]';
 
-	getDryLevel: function (mix: number): number {
-		if (!this.isNumber(mix) || mix > 1 || mix < 0) return 0;
-		if (mix <= 0.5) return 1;
-		return 1 - (mix - 0.5) * 2;
-	},
+export const getDryLevel = (mix: number): number => {
+	if (!isNumber(mix) || mix > 1 || mix < 0) return 0;
+	if (mix <= 0.5) return 1;
+	return 1 - (mix - 0.5) * 2;
+};
 
-	getWetLevel: function (mix: number): number {
-		if (!this.isNumber(mix) || mix > 1 || mix < 0) return 0;
-		if (mix >= 0.5) return 1;
-		return 1 - (0.5 - mix) * 2;
-	},
-	fileToMimeType: (filename?: string) => {
-		if (!filename) return filename ?? null;
-		const file = filename.toLowerCase();
-		if (file.endsWith('.mp3')) return 'audio/mpeg';
-		if (file.endsWith('.mp4') || file.endsWith('.m4a')) return 'audio/mp4';
-		if (file.endsWith('.wav')) return 'audio/wav';
-		if (file.endsWith('.ogg')) return 'audio/ogg';
-		if (file.endsWith('.aif')) return 'audio/aiff';
-		if (file.endsWith('.webm')) return 'audio/webm';
-		return null;
-	},
+export const getWetLevel = (mix: number): number => {
+	if (!isNumber(mix) || mix > 1 || mix < 0) return 0;
+	if (mix >= 0.5) return 1;
+	return 1 - (0.5 - mix) * 2;
+};
+
+export const fileToMimeType = (filename?: string) => {
+	if (!filename) return filename ?? null;
+	const file = filename.toLowerCase();
+	if (file.endsWith('.mp3')) return 'audio/mpeg';
+	if (file.endsWith('.mp4') || file.endsWith('.m4a')) return 'audio/mp4';
+	if (file.endsWith('.wav')) return 'audio/wav';
+	if (file.endsWith('.ogg')) return 'audio/ogg';
+	if (file.endsWith('.aif')) return 'audio/aiff';
+	if (file.endsWith('.webm')) return 'audio/webm';
+	return null;
 };
 
 // ---------------------------------------------------------------- DSP utils --

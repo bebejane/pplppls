@@ -1,4 +1,5 @@
-import { Effect, EffectDefaults, Utils } from '../core'
+import { Effect, EffectDefaults } from '../core'
+import { isInRange, isBool } from '../../utils'
 import { createWorkletEffectNode } from '../worklet'
 
 /**
@@ -39,7 +40,7 @@ export default class StonePhaser extends Effect {
 		return this.options.speed
 	}
 	set speed(speed: number) {
-		if (!Utils.isInRange(speed, 0.01, 5)) return
+		if (!isInRange(speed, 0.01, 5)) return
 		this.options.speed = speed
 		this.node.parameters.get('speed').value = speed
 	}
@@ -49,7 +50,7 @@ export default class StonePhaser extends Effect {
 		return this.options.feedback
 	}
 	set feedback(feedback: number) {
-		if (!Utils.isInRange(feedback, 0, 0.99)) return
+		if (!isInRange(feedback, 0, 0.99)) return
 		this.options.feedback = feedback
 		this.node.parameters.get('feedback').value = feedback
 	}
@@ -59,7 +60,7 @@ export default class StonePhaser extends Effect {
 		return this.options.feedbackBassCut
 	}
 	set feedbackBassCut(cut: number) {
-		if (!Utils.isInRange(cut, 10, 5000)) return
+		if (!isInRange(cut, 10, 5000)) return
 		this.options.feedbackBassCut = cut
 		this.node.parameters.get('feedbackBassCut').value = cut
 	}
@@ -69,7 +70,7 @@ export default class StonePhaser extends Effect {
 		return this.options.mix
 	}
 	set mix(mix: number) {
-		if (!Utils.isInRange(mix, 0, 1)) return
+		if (!isInRange(mix, 0, 1)) return
 		this.options.mix = mix
 		this.node.parameters.get('mix').value = mix
 	}
@@ -79,7 +80,7 @@ export default class StonePhaser extends Effect {
 		return this.options.color
 	}
 	set color(color: boolean) {
-		if (!Utils.isBool(color)) return
+		if (!isBool(color)) return
 		this.options.color = color
 		this.node.parameters.get('color').value = color ? 1 : 0
 	}
@@ -89,7 +90,7 @@ export default class StonePhaser extends Effect {
 		return this.options.phase
 	}
 	set phase(phase: number) {
-		if (!Utils.isInRange(phase, -180, 180)) return
+		if (!isInRange(phase, -180, 180)) return
 		this.options.phase = phase
 		this.node.parameters.get('phase').value = phase
 	}

@@ -1,4 +1,5 @@
-import { Effect, EffectDefaults, Utils } from '../core'
+import { Effect, EffectDefaults } from '../core'
+import { isInRange } from '../../utils'
 import { createWorkletEffectNode } from '../worklet'
 
 /**
@@ -27,7 +28,7 @@ export default class Delay extends Effect {
 		return this.options.mix
 	}
 	set mix(mix: number) {
-		if (!Utils.isInRange(mix, 0, 1)) return
+		if (!isInRange(mix, 0, 1)) return
 		this.options.mix = mix
 		this.node.parameters.get('mix').setTargetAtTime(mix, this.context.currentTime, 0.02)
 	}
@@ -37,7 +38,7 @@ export default class Delay extends Effect {
 		return this.options.time
 	}
 	set time(time: number) {
-		if (!Utils.isInRange(time, 0, 180) && this.options.time !== time) return
+		if (!isInRange(time, 0, 180) && this.options.time !== time) return
 		const p = this.node.parameters.get('time')
 		const ct = this.context.currentTime
 		p.cancelScheduledValues(ct)
@@ -51,7 +52,7 @@ export default class Delay extends Effect {
 		return this.options.feedback
 	}
 	set feedback(feedback: number) {
-		if (!Utils.isInRange(feedback, 0, 1) && this.options.feedback !== feedback) return
+		if (!isInRange(feedback, 0, 1) && this.options.feedback !== feedback) return
 		const p = this.node.parameters.get('feedback')
 		const ct = this.context.currentTime
 		p.cancelScheduledValues(ct)

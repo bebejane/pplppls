@@ -1,4 +1,5 @@
-import { Effect, EffectDefaults, Utils } from '../core'
+import { Effect, EffectDefaults } from '../core'
+import { isInRange } from '../../utils'
 import { createWorkletEffectNode } from '../worklet'
 
 /**
@@ -23,7 +24,7 @@ export default class StereoPanner extends Effect {
 		return this.options.pan
 	}
 	set pan(pan: number) {
-		if (!Utils.isInRange(pan, -1, 1)) return
+		if (!isInRange(pan, -1, 1)) return
 		this.options.pan = pan
 		this.node.parameters.get('pan').value = pan
 	}

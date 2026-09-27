@@ -1,4 +1,5 @@
-import { Effect, EffectDefaults, Utils } from '../core'
+import { Effect, EffectDefaults } from '../core'
+import { isInRange, isBool } from '../../utils'
 import { createWorkletEffectNode } from '../worklet'
 
 /**
@@ -53,7 +54,7 @@ export default class TapeDelay extends Effect {
 		return this.options.time
 	}
 	set time(value: number) {
-		if (!Utils.isInRange(value, 30, 600)) return
+		if (!isInRange(value, 30, 600)) return
 		this.options.time = value
 		this.node.parameters.get('time').value = value
 	}
@@ -63,7 +64,7 @@ export default class TapeDelay extends Effect {
 		return this.options.feedback
 	}
 	set feedback(value: number) {
-		if (!Utils.isInRange(value, 0, 1.05)) return
+		if (!isInRange(value, 0, 1.05)) return
 		this.options.feedback = value
 		this.node.parameters.get('feedback').setTargetAtTime(value, this.context.currentTime, 0.02)
 	}
@@ -73,7 +74,7 @@ export default class TapeDelay extends Effect {
 		return this.options.mix
 	}
 	set mix(value: number) {
-		if (!Utils.isInRange(value, 0, 1)) return
+		if (!isInRange(value, 0, 1)) return
 		this.options.mix = value
 		this.node.parameters.get('mix').setTargetAtTime(value, this.context.currentTime, 0.02)
 	}
@@ -82,7 +83,7 @@ export default class TapeDelay extends Effect {
 		return this.options.head1
 	}
 	set head1(on: boolean) {
-		if (!Utils.isBool(on)) return
+		if (!isBool(on)) return
 		this.options.head1 = on
 		this.node.parameters.get('head1').value = on ? 1 : 0
 	}
@@ -91,7 +92,7 @@ export default class TapeDelay extends Effect {
 		return this.options.head2
 	}
 	set head2(on: boolean) {
-		if (!Utils.isBool(on)) return
+		if (!isBool(on)) return
 		this.options.head2 = on
 		this.node.parameters.get('head2').value = on ? 1 : 0
 	}
@@ -100,7 +101,7 @@ export default class TapeDelay extends Effect {
 		return this.options.head3
 	}
 	set head3(on: boolean) {
-		if (!Utils.isBool(on)) return
+		if (!isBool(on)) return
 		this.options.head3 = on
 		this.node.parameters.get('head3').value = on ? 1 : 0
 	}
@@ -110,7 +111,7 @@ export default class TapeDelay extends Effect {
 		return this.options.density
 	}
 	set density(value: number) {
-		if (!Utils.isInRange(value, 0.5, 2)) return
+		if (!isInRange(value, 0.5, 2)) return
 		this.options.density = value
 		this.node.parameters.get('density').value = value
 	}
@@ -120,7 +121,7 @@ export default class TapeDelay extends Effect {
 		return this.options.wowFlutter
 	}
 	set wowFlutter(value: number) {
-		if (!Utils.isInRange(value, 0, 1)) return
+		if (!isInRange(value, 0, 1)) return
 		this.options.wowFlutter = value
 		this.node.parameters.get('wowFlutter').value = value
 	}
@@ -130,7 +131,7 @@ export default class TapeDelay extends Effect {
 		return this.options.drive
 	}
 	set drive(value: number) {
-		if (!Utils.isInRange(value, 0, 1)) return
+		if (!isInRange(value, 0, 1)) return
 		this.options.drive = value
 		this.node.parameters.get('drive').value = value
 	}
@@ -140,7 +141,7 @@ export default class TapeDelay extends Effect {
 		return this.options.bass
 	}
 	set bass(value: number) {
-		if (!Utils.isInRange(value, -15, 15)) return
+		if (!isInRange(value, -15, 15)) return
 		this.options.bass = value
 		this.node.parameters.get('bass').value = value
 	}
@@ -150,7 +151,7 @@ export default class TapeDelay extends Effect {
 		return this.options.treble
 	}
 	set treble(value: number) {
-		if (!Utils.isInRange(value, -15, 15)) return
+		if (!isInRange(value, -15, 15)) return
 		this.options.treble = value
 		this.node.parameters.get('treble').value = value
 	}
@@ -160,7 +161,7 @@ export default class TapeDelay extends Effect {
 		return this.options.hiss
 	}
 	set hiss(value: number) {
-		if (!Utils.isInRange(value, 0, 1)) return
+		if (!isInRange(value, 0, 1)) return
 		this.options.hiss = value
 		this.node.parameters.get('hiss').value = value
 	}
@@ -170,7 +171,7 @@ export default class TapeDelay extends Effect {
 		return this.options.tapeType
 	}
 	set tapeType(value: number) {
-		if (!Utils.isInRange(value, 0, 2)) return
+		if (!isInRange(value, 0, 2)) return
 		this.options.tapeType = value
 		this.node.parameters.get('tapeType').value = value
 	}
@@ -180,7 +181,7 @@ export default class TapeDelay extends Effect {
 		return this.options.age
 	}
 	set age(value: number) {
-		if (!Utils.isInRange(value, 0, 1)) return
+		if (!isInRange(value, 0, 1)) return
 		this.options.age = value
 		this.node.parameters.get('age').value = value
 	}

@@ -6,10 +6,8 @@
  * Kept in its own module so effect classes can import from here without a
  * circular import back to effects/index.
  */
-import { Utils } from '../utils';
+import { isInRange } from '../utils';
 import { createWorkletEffectNode } from './worklet';
-
-export { Utils };
 
 /** One editable parameter, as declared in the engine catalog (EFFECTS). */
 export interface EffectParamDef {
@@ -128,7 +126,7 @@ export abstract class FilterEffect extends Effect {
 		return this.options.frequency;
 	}
 	set frequency(value: number) {
-		if (Utils.isInRange(value, 10, 22050)) {
+		if (isInRange(value, 10, 22050)) {
 			this.options.frequency = value;
 			this.node.parameters.get('frequency').value = value;
 		}
@@ -139,7 +137,7 @@ export abstract class FilterEffect extends Effect {
 		return this.options.peak;
 	}
 	set peak(value: number) {
-		if (Utils.isInRange(value, 0.0001, 1000)) {
+		if (isInRange(value, 0.0001, 1000)) {
 			this.options.peak = value;
 			this.node.parameters.get('peak').value = value;
 		}
@@ -188,7 +186,7 @@ export abstract class Korg35FilterEffect extends Effect {
 		return this.options.cutoff;
 	}
 	set cutoff(value: number) {
-		if (Utils.isInRange(value, 20, 20000)) {
+		if (isInRange(value, 20, 20000)) {
 			this.options.cutoff = value;
 			this.node.parameters.get('cutoff').value = value;
 		}
@@ -199,7 +197,7 @@ export abstract class Korg35FilterEffect extends Effect {
 		return this.options.q;
 	}
 	set q(value: number) {
-		if (Utils.isInRange(value, 0.5, 10)) {
+		if (isInRange(value, 0.5, 10)) {
 			this.options.q = value;
 			this.node.parameters.get('q').value = value;
 		}

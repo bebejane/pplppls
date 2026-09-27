@@ -1,5 +1,5 @@
 import Master from './master';
-import { Utils, slice } from './utils';
+import { slice } from './utils';
 import Sound from './sound';
 import { WebMidi } from 'webmidi';
 import type { NoteMessageEvent } from 'webmidi';
@@ -47,7 +47,6 @@ const defaultOptions: AudioEngineOptions = {
 class AudioEngine extends EventEmitter {
 	context: AudioContext;
 	sampleRate: number;
-	utils: typeof Utils;
 	sounds: SoundItem[];
 	soundMap: Record<string, SoundItem>;
 	midiMap: Record<number, string[]>;
@@ -105,7 +104,6 @@ class AudioEngine extends EventEmitter {
 		this.enableLoops = o.enableLoops;
 		this.enableElapsed = o.enableElapsed;
 		this.processSample = o.processSample;
-		this.utils = Utils;
 		this.sounds = [];
 		this.soundMap = {};
 		this.midiMap = {};

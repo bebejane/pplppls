@@ -1,4 +1,5 @@
-import { Effect, EffectDefaults, Utils } from '../core'
+import { Effect, EffectDefaults } from '../core'
+import { isInRange } from '../../utils'
 import { createWorkletEffectNode } from '../worklet'
 
 /**
@@ -26,7 +27,7 @@ export default class Tremolo extends Effect {
 		return this.options.mix
 	}
 	set mix(mix: number) {
-		if (!Utils.isInRange(mix, 0, 1)) return
+		if (!isInRange(mix, 0, 1)) return
 		this.options.mix = mix
 		this.node.parameters.get('mix').setTargetAtTime(mix, this.context.currentTime, 0.02)
 	}
@@ -36,7 +37,7 @@ export default class Tremolo extends Effect {
 		return this.options.speed
 	}
 	set speed(speed: number) {
-		if (!Utils.isInRange(speed, 0, 20)) return
+		if (!isInRange(speed, 0, 20)) return
 		this.options.speed = speed
 		this.node.parameters.get('speed').value = speed
 	}
@@ -46,7 +47,7 @@ export default class Tremolo extends Effect {
 		return this.options.depth
 	}
 	set depth(depth: number) {
-		if (!Utils.isInRange(depth, 0, 1)) return
+		if (!isInRange(depth, 0, 1)) return
 		this.options.depth = depth
 		this.node.parameters.get('depth').value = depth
 	}

@@ -1,4 +1,5 @@
-import { Effect, EffectDefaults, Utils } from '../core'
+import { Effect, EffectDefaults } from '../core'
+import { isInRange } from '../../utils'
 import { createWorkletEffectNode } from '../worklet'
 
 /**
@@ -24,7 +25,7 @@ export default class Quadrafuzz extends Effect {
 	}
 
 	private setBand(name: string, value: number): void {
-		if (!Utils.isInRange(value, 0, 1)) return
+		if (!isInRange(value, 0, 1)) return
 		this.options[name] = value
 		this.node.parameters.get(name).value = value
 	}

@@ -1,4 +1,5 @@
-import { Effect, EffectDefaults, Utils } from '../core'
+import { Effect, EffectDefaults } from '../core'
+import { isInRange } from '../../utils'
 import { createWorkletEffectNode } from '../worklet'
 
 /**
@@ -28,7 +29,7 @@ export default class Flanger extends Effect {
 		return this.options.time
 	}
 	set time(time: number) {
-		if (!Utils.isInRange(time, 0, 1)) return
+		if (!isInRange(time, 0, 1)) return
 		this.options.time = time
 		this.node.parameters.get('time').value = time
 	}
@@ -37,7 +38,7 @@ export default class Flanger extends Effect {
 		return this.options.speed
 	}
 	set speed(speed: number) {
-		if (!Utils.isInRange(speed, 0, 1)) return
+		if (!isInRange(speed, 0, 1)) return
 		this.options.speed = speed
 		this.node.parameters.get('speed').value = speed
 	}
@@ -46,7 +47,7 @@ export default class Flanger extends Effect {
 		return this.options.depth
 	}
 	set depth(depth: number) {
-		if (!Utils.isInRange(depth, 0, 1)) return
+		if (!isInRange(depth, 0, 1)) return
 		this.options.depth = depth
 		this.node.parameters.get('depth').value = depth
 	}
@@ -55,7 +56,7 @@ export default class Flanger extends Effect {
 		return this.options.feedback
 	}
 	set feedback(feedback: number) {
-		if (!Utils.isInRange(feedback, 0, 1)) return
+		if (!isInRange(feedback, 0, 1)) return
 		this.options.feedback = feedback
 		this.node.parameters.get('feedback').value = feedback
 	}
@@ -64,7 +65,7 @@ export default class Flanger extends Effect {
 		return this.options.mix
 	}
 	set mix(mix: number) {
-		if (!Utils.isInRange(mix, 0, 1)) return
+		if (!isInRange(mix, 0, 1)) return
 		this.options.mix = mix
 		this.node.parameters.get('mix').setTargetAtTime(mix, this.context.currentTime, 0.02)
 	}

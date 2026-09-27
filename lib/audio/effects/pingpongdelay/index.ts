@@ -1,4 +1,5 @@
-import { Effect, EffectDefaults, Utils } from '../core'
+import { Effect, EffectDefaults } from '../core'
+import { isInRange } from '../../utils'
 import { createWorkletEffectNode } from '../worklet'
 
 /**
@@ -26,7 +27,7 @@ export default class PingPongDelay extends Effect {
 		return this.options.mix
 	}
 	set mix(mix: number) {
-		if (!Utils.isInRange(mix, 0, 1)) return
+		if (!isInRange(mix, 0, 1)) return
 		this.options.mix = mix
 		this.node.parameters.get('mix').setTargetAtTime(mix, this.context.currentTime, 0.02)
 	}
@@ -36,7 +37,7 @@ export default class PingPongDelay extends Effect {
 		return this.options.time
 	}
 	set time(time: number) {
-		if (!Utils.isInRange(time, 0, 180)) return
+		if (!isInRange(time, 0, 180)) return
 		this.options.time = time
 		this.node.parameters.get('time').value = time
 	}
@@ -46,7 +47,7 @@ export default class PingPongDelay extends Effect {
 		return this.options.feedback
 	}
 	set feedback(feedback: number) {
-		if (!Utils.isInRange(feedback, 0, 1)) return
+		if (!isInRange(feedback, 0, 1)) return
 		this.options.feedback = parseFloat(String(feedback))
 		this.node.parameters.get('feedback').value = this.feedback
 	}

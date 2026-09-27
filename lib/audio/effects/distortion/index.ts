@@ -1,4 +1,5 @@
-import { Effect, EffectDefaults, Utils } from '../core'
+import { Effect, EffectDefaults } from '../core'
+import { isInRange } from '../../utils'
 import { createWorkletEffectNode } from '../worklet'
 
 /**
@@ -24,7 +25,7 @@ export default class Distortion extends Effect {
 		return this.options.gain
 	}
 	set gain(gain: number) {
-		if (!Utils.isInRange(gain, 0, 1)) return
+		if (!isInRange(gain, 0, 1)) return
 		this.options.gain = gain
 		this.node.parameters.get('gain').value = gain
 	}

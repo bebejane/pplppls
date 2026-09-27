@@ -1,4 +1,5 @@
-import { Effect, EffectDefaults, Utils } from '../core'
+import { Effect, EffectDefaults } from '../core'
+import { isInRange, isBool } from '../../utils'
 import { createWorkletEffectNode } from '../worklet'
 
 /**
@@ -29,7 +30,7 @@ export default class Reverb extends Effect {
 		return this.options.mix
 	}
 	set mix(mix: number) {
-		if (!Utils.isInRange(mix, 0, 1)) return
+		if (!isInRange(mix, 0, 1)) return
 		this.options.mix = mix
 		this.node.parameters.get('mix').setTargetAtTime(mix, this.context.currentTime, 0.02)
 	}
@@ -38,7 +39,7 @@ export default class Reverb extends Effect {
 		return this.options.time
 	}
 	set time(time: number) {
-		if (!Utils.isInRange(time, 0.0001, 10)) return
+		if (!isInRange(time, 0.0001, 10)) return
 		this.options.time = time
 		this.buildImpulse()
 	}
@@ -47,7 +48,7 @@ export default class Reverb extends Effect {
 		return this.options.decay
 	}
 	set decay(decay: number) {
-		if (!Utils.isInRange(decay, 0.0001, 10)) return
+		if (!isInRange(decay, 0.0001, 10)) return
 		this.options.decay = decay
 		this.buildImpulse()
 	}
@@ -56,7 +57,7 @@ export default class Reverb extends Effect {
 		return this.options.reverse
 	}
 	set reverse(reverse: boolean) {
-		if (!Utils.isBool(reverse)) return
+		if (!isBool(reverse)) return
 		this.options.reverse = reverse
 		this.buildImpulse()
 	}

@@ -185,7 +185,7 @@ import StereoPanner from './stereopanner'
 import StonePhaser from './stonephaser'
 import TapeDelay from './tapedelay'
 import Tremolo from './tremolo'
-import { Utils, Effect, type EffectDefaults } from './core'
+import { Effect, type EffectDefaults } from './core'
 import { ensureEffectsWorklet } from './worklet'
 
 /** A catalog entry: an effect that can be added to a chain. */
@@ -239,4 +239,4 @@ const createEffect = async (id: string, context: AudioContext, opt: Record<strin
 	return new EFFECT_CLASSES[id](context, options);
 }
 
-export { createEffect, Utils, Effect, EFFECTS, EFFECT_CLASSES }
+export { createEffect, Effect, EFFECTS, EFFECT_CLASSES }

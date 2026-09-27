@@ -162,7 +162,6 @@ export interface AudioEngine
 	sounds: SoundLike[];
 	soundMap: Record<string, SoundLike>;
 	sampleRate: number;
-	utils: Record<string, Any>;
 	effects: EffectDef[];
 	encodeAudio(buffer: Float32Array[] | AudioBuffer, format: 'wav' | 'mp3', opt?: Record<string, unknown>): Promise<Blob>;
 	cancelEncodeAudio(): void;

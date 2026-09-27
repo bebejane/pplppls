@@ -1,4 +1,5 @@
-import { Effect, EffectDefaults, Utils } from '../core'
+import { Effect, EffectDefaults } from '../core'
+import { isInRange, isFunction } from '../../utils'
 import { createWorkletEffectNode } from '../worklet'
 
 /**
@@ -35,12 +36,12 @@ export default class Convolver extends Effect {
 				const n = Math.min(2, buffer.numberOfChannels)
 				for (let i = 0; i < n; i++) channels.push(buffer.getChannelData(i))
 				this.node.port.postMessage({ type: 'ir', channels })
-				if (this.callback && Utils.isFunction(this.callback)) this.callback()
+				if (this.callback && isFunction(this.callback)) this.callback()
 			})
 			.catch((error) => {
 				error = error || new Error('Error decoding impulse file')
 				console.error('Error while fetching impulse file', error)
-				if (this.callback && Utils.isFunction(this.callback)) this.callback(error)
+				if (this.callback && isFunction(this.callback)) this.callback(error)
 			})
 	}
 
@@ -48,7 +49,7 @@ export default class Convolver extends Effect {
 		return this.options.mix
 	}
 	set mix(mix: number) {
-		if (!Utils.isInRange(mix, 0, 1)) return
+		if (!isInRange(mix, 0, 1)) return
 		this.options.mix = mix
 		this.node.parameters.get('mix').setTargetAtTime(mix, this.context.currentTime, 0.02)
 	}
