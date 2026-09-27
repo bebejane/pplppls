@@ -4,6 +4,8 @@ import Global from '@/lib/global';
 import moment from 'moment';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import cn from 'classnames';
+import { clampTime, selectionBox } from './waveform-geometry';
+import { useWaveformView } from './useWaveformView';
 import s from './Waveform.module.scss';
 
 type Selection = {
@@ -101,7 +103,8 @@ export default function Waveform({
 	st.enableElapsed = enableElapsed;
 	st.disabled = disabled;
 
-	const zoomRef = useRef<{ viewStart?: number; viewEnd?: number }>({});
+	// zoom window + time↔pixel mapping (pure math lives in waveform-geometry)
+	const view = useWaveformView(stateRef);
 	const waveformDataRef = useRef<any>(null);
 
 	const setSel = (next: Selection) => {
@@ -199,7 +202,7 @@ export default function Waveform({
 		// when the play position is outside that view
 		let mk = 0;
 		if (elapsed > 0 && st.duration > 0) {
-			const px = timeToPx(elapsed);
+			const px = view.timeToPx(elapsed);
 			if (px >= 0 && px <= width) mk = px;
 		}
 		const mkw = 1;
@@ -238,27 +241,19 @@ export default function Waveform({
 			// a selection may legitimately begin or end at 0 — only bail when
 			// nothing is defined at all
 			if (!st.duration || (start === undefined && end === undefined)) return;
-			next.width =
-				(end ?? 0) > (start ?? 0) ? (end ?? 0) - (start ?? 0) : (start ?? 0) - (end ?? 0);
-			next.x = (end ?? 0) < (start ?? 0) ? (end ?? 0) : (start ?? 0);
+			const box = selectionBox(start, end);
+			next.width = box.width;
+			next.x = box.x;
 			setSel(next);
 			if (onSelectionChange && !noCallback)
 				onSelectionChange({
-					start: pxToTime(next.x!),
-					end: pxToTime(next.x! + next.width!),
+					start: view.pxToTime(box.x),
+					end: view.pxToTime(box.x + box.width),
 				});
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[onSelectionChange],
 	);
-
-	const resetWaveform = useCallback(() => {
-		const canvas = refCanvas.current;
-		const ctx = ctxRef.current;
-		if (canvas && ctx) {
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-		}
-	}, []);
 
 	// wire canvas contexts; measure + draw once layout is settled; observe resizes
 	useEffect(() => {
@@ -270,8 +265,7 @@ export default function Waveform({
 		const onChange = (dur: number) => {
 			st.duration = dur;
 			// new duration invalidates the zoom window — reset to full view
-			zoomRef.current.viewStart = undefined;
-			zoomRef.current.viewEnd = undefined;
+			view.reset();
 			resetSelection();
 			if (!measure()) return;
 			updateWaveform(true);
@@ -357,8 +351,8 @@ export default function Waveform({
 			// restore current loop selection after sizing
 			if (st.loopStart || st.loopEnd) {
 				updateSelection({
-					start: timeToPx(st.loopStart || 0),
-					end: timeToPx(st.loopEnd || 0),
+					start: view.timeToPx(st.loopStart || 0),
+					end: view.timeToPx(st.loopEnd || 0),
 				});
 			}
 			updateWaveform(true);
@@ -373,7 +367,7 @@ export default function Waveform({
 				if (observerTimeout) clearTimeout(observerTimeout);
 				observerTimeout = setTimeout(() => {
 					if (st.duration) {
-						const win = viewWindow();
+						const win = view.view();
 						measure();
 						updateWaveform(true, { start: win.start, end: win.end });
 					}
@@ -401,68 +395,17 @@ export default function Waveform({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [id, enableElapsed]);
 
-	// visible time-window in seconds — [0, duration] unless zoomed
-	const viewWindow = () => {
-		const z = zoomRef.current;
-		const full = st.duration || 0;
-		if (
-			z.viewStart === undefined ||
-			z.viewEnd === undefined ||
-			z.viewEnd <= z.viewStart ||
-			z.viewEnd > full + 0.0001
-		)
-			return { start: 0, end: full };
-		return { start: z.viewStart, end: z.viewEnd };
-	};
-	const timeToPx = (t: number) => {
-		const { start, end } = viewWindow();
-		const width = st.width || 1;
-		const len = end - start || 1;
-		return Math.floor(((t - start) / len) * width);
-	};
-	const pxToTime = (px: number) => {
-		const { start, end } = viewWindow();
-		const width = st.width || 1;
-		const len = end - start || 1;
-		return start + (px / width) * len;
-	};
-
 	const zoom = useCallback(
 		(zoomIn: boolean, x: number) => {
-			const full = st.duration || 0;
-			if (!full) return;
-			const width = st.width || 1;
-			const p = Math.max(0, Math.min(1, x / width));
-			const z = zoomRef.current;
-			const win = viewWindow();
-			const len = win.end - win.start || full;
-			const step = zoomIn ? 0.75 : 1.25;
-			// center the new view on the click point, clamped to [0, full]
-			const center = win.start + len * p;
-			const half = (len * step) / 2;
-			let start = center - half;
-			let end = center + half;
-			if (start < 0) {
-				end -= start;
-				start = 0;
-			}
-			if (end > full) {
-				start -= end - full;
-				end = full;
-			}
-			if (start < 0) start = 0;
-			if (end - start < 0.002) {
-				start = 0;
-				end = full;
-			}
-			z.viewStart = start;
-			z.viewEnd = end;
-			updateWaveform(true, { start, end });
-			// re-project an existing loop selection into the new view
+			// mutate the (hook-owned) zoom window, then redraw and re-project any
+			// existing loop selection into the new view
+			const next = view.zoom(zoomIn, x);
+			if (!next) return;
+			updateWaveform(true, { start: next.start, end: next.end });
 			if (st.loopStart || st.loopEnd) {
 				updateSelection({
-					start: timeToPx(st.loopStart || 0),
-					end: timeToPx(st.loopEnd || 0),
+					start: view.timeToPx(st.loopStart || 0),
+					end: view.timeToPx(st.loopEnd || 0),
 				});
 			}
 		},
@@ -472,13 +415,14 @@ export default function Waveform({
 
 	const newSelection = useCallback(
 		(next: Selection) => {
-			const clampTime = (v: number) => Math.max(0, Math.min(v, st.duration || v));
+			const duration = st.duration || 0;
+			const at = (v: number) => clampTime(view.pxToTime(v), duration);
 			if (next.start !== next.end) {
 				if (onSelection)
 					onSelection({
-						start: clampTime(pxToTime(next.x || 0)),
-						end: clampTime(pxToTime((next.x || 0) + (next.width || 0))),
-						time: clampTime(pxToTime(next.x || 0)),
+						start: at(next.x || 0),
+						end: at((next.x || 0) + (next.width || 0)),
+						time: at(next.x || 0),
 					});
 			} else {
 				resetSelection();
@@ -486,7 +430,7 @@ export default function Waveform({
 					onSelection({
 						start: 0,
 						end: 0,
-						time: clampTime(pxToTime(next.x || 0)),
+						time: at(next.x || 0),
 					});
 			}
 		},
