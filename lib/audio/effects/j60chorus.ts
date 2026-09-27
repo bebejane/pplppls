@@ -2,9 +2,7 @@ import { Effect, EffectDefaults, Utils } from './core'
 import { createWorkletEffectNode } from './worklet'
 
 /**
- * J60 Chorus — the Juno-60 chorus. The DSP lives in its own worklet module
- * (`./j60chorus/source.ts`, registered by `./j60chorus/worklet.ts`) rather than
- * the shared `EFFECTS_WORKLET_SOURCE`.
+ * J60 Chorus — the Juno-60 chorus, running in the `pp-j60chorus` worklet.
  *
  * The delay is a true switched-capacitor Bucket-Brigade model (256 stages with
  * the measured Juno-60 input/output charge filters), driven by the LFO and mode

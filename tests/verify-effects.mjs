@@ -1,7 +1,6 @@
 // Offline DSP harness for the effects AudioWorklet source. Runs each processor
 // in a simulated audio-thread environment and asserts behavior.
 import { EFFECTS_WORKLET_SOURCE } from '../lib/audio/effects/workletsource.ts';
-import { J60CHORUS_WORKLET_SOURCE } from '../lib/audio/effects/j60chorus/source.ts';
 
 const SR = 44100;
 const BLOCK = 128;
@@ -21,9 +20,7 @@ globalThis.registerProcessor = (name, cls) => {
 };
 
 const registered = {};
-// each source is its own worklet module; run both so every processor registers
 new Function(EFFECTS_WORKLET_SOURCE)();
-new Function(J60CHORUS_WORKLET_SOURCE)();
 const names = Object.keys(registered);
 console.log('registered processors:', names.length);
 

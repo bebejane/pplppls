@@ -174,7 +174,6 @@ import DubDelay from './dubdelay'
 import Flanger from './flanger'
 import { HighPassFilter, LowPassFilter } from './filters'
 import J60Chorus from './j60chorus'
-import { ensureJ60ChorusWorklet } from './j60chorus/worklet'
 import { Korg35HighPassFilter, Korg35LowPassFilter } from './korg35filters'
 import PingPongDelay from './pingpongdelay'
 import Quadrafuzz from './quadrafuzz'
@@ -222,16 +221,6 @@ const EFFECT_CLASSES: Record<string, EffectCtor> = {
 	tapedelay: TapeDelay,
 }
 
-/**
- * Effects whose DSP lives in its own worklet module: `createEffect` awaits the
- * matching ensure function before constructing the node (the shared
- * EFFECTS_WORKLET_SOURCE covers every other processor). Everything not listed
- * here is already registered by `ensureEffectsWorklet`.
- */
-const EFFECT_ENSURERS: Record<string, (context: AudioContext) => Promise<void>> = {
-	j60chorus: ensureJ60ChorusWorklet,
-}
-
 const createEffect = async (id: string, context: AudioContext, opt: Record<string, any> = {}): Promise<Effect> => {
 	const defs = EFFECTS.filter((eff) => eff.id === id)[0];
 	if (!defs || !EFFECT_CLASSES[id]) throw new Error('Effect doesnt exist: ' + id);
@@ -245,7 +234,6 @@ const createEffect = async (id: string, context: AudioContext, opt: Record<strin
 	});
 	// AudioWorkletNode construction requires the processor to be registered
 	await ensureEffectsWorklet(context);
-	if (EFFECT_ENSURERS[id]) await EFFECT_ENSURERS[id](context);
 	return new EFFECT_CLASSES[id](context, options);
 }
 
