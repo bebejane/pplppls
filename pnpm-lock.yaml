@@ -111,7 +111,7 @@ importers:
     dependencies:
       audio-engine:
         specifier: github:bebejane/audio-engine
-        version: https://codeload.github.com/bebejane/audio-engine/tar.gz/a54cb65a3a6511af16b17414370c3f49eb0ec767
+        version: https://codeload.github.com/bebejane/audio-engine/tar.gz/3bd141b4d9dbd1160ec30bc7ea06d3bd504edfb3
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
@@ -225,9 +225,6 @@ packages:
   '@babel/runtime@7.29.7':
     resolution: {integrity: sha512-Nq8OhGWiZIZGV6hLHoyAKLLcJihP/xFeBMGJoUrxTX2psI8dCifzLhZISFb+VWS3wFMRDmCGw5R+dOySCqPLhw==}
     engines: {node: '>=6.9.0'}
-
-  '@babel/runtime@7.9.0':
-    resolution: {integrity: sha512-cTIudHnzuWLS56ik4DnRnqqNf8MkdUzV4iFFI1h7Jo9xvrpQROYaAnaSd2mHLQAzzZAPfATynX5ord6YlNYNMA==}
 
   '@babel/template@7.29.7':
     resolution: {integrity: sha512-puq+Gf35oI24FeN11LkoUQFqv9uwNeWpxXZi/Ji3rRIoKAzKnxRaZ+Gkj0vKS9ZCiTESfng1N9LyOyXvo+m+Gg==}
@@ -967,8 +964,8 @@ packages:
     resolution: {integrity: sha512-hsU18Ae8CDTR6Kgu9DYf0EbCr/a5iGL0rytQDobUcdpYOKokk8LEjVphnXkDkgpi0wYVsqrXuP0bZxJaTqdgoA==}
     engines: {node: '>= 0.4'}
 
-  audio-engine@https://codeload.github.com/bebejane/audio-engine/tar.gz/a54cb65a3a6511af16b17414370c3f49eb0ec767:
-    resolution: {gitHosted: true, integrity: sha512-P0vG5jSEyP7CgSw0oGHrdkayaYVjPHVQo9+7YtlnkW3CWTzou81QbENbpnAS4MYxqsQxfeBWkMadS5gGNEYDhw==, tarball: https://codeload.github.com/bebejane/audio-engine/tar.gz/a54cb65a3a6511af16b17414370c3f49eb0ec767}
+  audio-engine@https://codeload.github.com/bebejane/audio-engine/tar.gz/3bd141b4d9dbd1160ec30bc7ea06d3bd504edfb3:
+    resolution: {gitHosted: true, integrity: sha512-xP1A5ZepeEl/8lHm0asZJ4H6qfvpOVzW73YB+6dqN/N5NGodvZAF6kcJY+CbfUpBh0rxMIqC6PNA6swqp9028Q==, tarball: https://codeload.github.com/bebejane/audio-engine/tar.gz/3bd141b4d9dbd1160ec30bc7ea06d3bd504edfb3}
     version: 0.1.0
 
   available-typed-arrays@1.0.7:
@@ -1938,9 +1935,6 @@ packages:
     resolution: {integrity: sha512-00o4I+DVrefhv+nX0ulyi3biSHCPDe+yLv5o/p6d/UVlirijB8E16FtfwSAi4g3tcqrQ4lRAqQSoFEZJehYEcw==}
     engines: {node: '>= 0.4'}
 
-  regenerator-runtime@0.13.11:
-    resolution: {integrity: sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==}
-
   regexp.prototype.flags@1.5.4:
     resolution: {integrity: sha512-dYqgNSZbDwkaJ2ceRd9ojCGjBq+mOm9LmtXnAnEGyHhN/5R7iDW2TRw3h+o/jCFxus3P2LfWIIiwowAjANm7IA==}
     engines: {node: '>= 0.4'}
@@ -2340,10 +2334,6 @@ snapshots:
       '@babel/types': 7.29.8
 
   '@babel/runtime@7.29.7': {}
-
-  '@babel/runtime@7.9.0':
-    dependencies:
-      regenerator-runtime: 0.13.11
 
   '@babel/template@7.29.7':
     dependencies:
@@ -3026,7 +3016,7 @@ snapshots:
 
   async-function@1.0.0: {}
 
-  audio-engine@https://codeload.github.com/bebejane/audio-engine/tar.gz/a54cb65a3a6511af16b17414370c3f49eb0ec767:
+  audio-engine@https://codeload.github.com/bebejane/audio-engine/tar.gz/3bd141b4d9dbd1160ec30bc7ea06d3bd504edfb3:
     dependencies:
       events: 3.3.0
       jszip: 3.10.2
@@ -3060,7 +3050,7 @@ snapshots:
 
   babel-plugin-macros@2.8.0:
     dependencies:
-      '@babel/runtime': 7.9.0
+      '@babel/runtime': 7.29.7
       cosmiconfig: 6.0.0
       resolve: 1.15.0
 
@@ -4177,8 +4167,6 @@ snapshots:
       get-intrinsic: 1.3.0
       get-proto: 1.0.1
       which-builtin-type: 1.2.1
-
-  regenerator-runtime@0.13.11: {}
 
   regexp.prototype.flags@1.5.4:
     dependencies:

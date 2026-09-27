@@ -10,7 +10,8 @@
 		"lint": "eslint .",
 		"typecheck": "tsc --noEmit",
 		"engine:link": "node scripts/use-local-engine.mjs --required",
-		"engine:unlink": "pnpm unlink audio-engine"
+		"engine:unlink": "pnpm unlink audio-engine",
+		"engine:sync": "pnpm update audio-engine --lockfile-only"
 	},
 	"dependencies": {
 		"audio-engine": "github:bebejane/audio-engine",
