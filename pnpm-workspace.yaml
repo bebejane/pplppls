@@ -7,3 +7,5 @@ allowBuilds:
   es5-ext: true
   fsevents: true
   unrs-resolver: true
+overrides:
+  audio-engine: link:../audio-engine
