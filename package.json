@@ -8,7 +8,9 @@
 		"build": "next build",
 		"start": "next start",
 		"lint": "eslint .",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"engine:link": "node scripts/use-local-engine.mjs",
+		"engine:unlink": "pnpm unlink audio-engine"
 	},
 	"dependencies": {
 		"audio-engine": "github:bebejane/audio-engine#v0.1.0",
