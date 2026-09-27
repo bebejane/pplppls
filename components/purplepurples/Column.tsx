@@ -1,7 +1,7 @@
 'use client';
 
 import s from './Column.module.scss';
-import Global from '@/lib/Global';
+import Global from '@/lib/global';
 import { useEffect, useRef, useState } from 'react';
 import { AiOutlineLoading } from 'react-icons/ai';
 import cn from 'classnames';

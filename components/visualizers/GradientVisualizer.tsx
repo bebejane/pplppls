@@ -1,7 +1,7 @@
 'use client';
 
 import Visualizer from './Visualizer';
-import Global from '@/lib/Global';
+import Global from '@/lib/global';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 /**

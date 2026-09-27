@@ -1,6 +1,6 @@
 'use client';
 
-import Global from '@/lib/Global';
+import Global from '@/lib/global';
 import { useCallback, useEffect, useState } from 'react';
 import cn from 'classnames';
 import { IconPlay, IconStop } from '@/components/icons/Icons';
@@ -127,9 +127,7 @@ export default function EffectChain({
 						disabled={!effects.length}
 						title={anyActive ? 'Bypass every effect' : 'Enable every effect'}
 						onClick={() =>
-							anyActive
-								? Global.engine.disableEffects(id)
-								: Global.engine.enableEffects(id)
+							anyActive ? Global.engine.disableEffects(id) : Global.engine.enableEffects(id)
 						}
 					>
 						{anyActive ? 'Bypass all' : 'Enable all'}
@@ -183,9 +181,7 @@ export default function EffectChain({
 									type='button'
 									className={cn(s.mini, !effect.bypassed && s.on)}
 									title={effect.bypassed ? 'Enable effect' : 'Bypass effect'}
-									onClick={() =>
-										Global.engine.effectBypass(id, effect.idx, !effect.bypassed)
-									}
+									onClick={() => Global.engine.effectBypass(id, effect.idx, !effect.bypassed)}
 								>
 									{effect.bypassed ? <IconStop /> : <IconPlay />}
 								</button>
@@ -239,11 +235,7 @@ function Param({
 				<div className={s.paramLabel} title={label}>
 					{label}
 				</div>
-				<button
-					type='button'
-					className={cn(s.bool, on && s.on)}
-					onClick={() => onChange(!on)}
-				>
+				<button type='button' className={cn(s.bool, on && s.on)} onClick={() => onChange(!on)}>
 					{on ? 'ON' : 'OFF'}
 				</button>
 			</div>
@@ -273,9 +265,7 @@ function Param({
 					onChange(isInt ? Math.round(v) : parseFloat(v.toFixed(4)));
 				}}
 			/>
-			<div className={s.paramValue}>
-				{isInt ? Math.round(current) : current.toFixed(2)}
-			</div>
+			<div className={s.paramValue}>{isInt ? Math.round(current) : current.toFixed(2)}</div>
 		</div>
 	);
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import Global from '@/lib/Global';
+import Global from '@/lib/global';
 import { useEffect, useRef, useState } from 'react';
 import { MdPlayArrow, MdStop } from 'react-icons/md';
 import moment from 'moment';
@@ -106,9 +106,7 @@ export default function RecordingsDialog({
 							</div>
 							<div className={s.label}>
 								{r.filename.replace('.wav', '')}&nbsp;-&nbsp;
-								<div className={s.duration}>
-									{formatDuration(elapsed[r.id] || r.duration)}
-								</div>
+								<div className={s.duration}>{formatDuration(elapsed[r.id] || r.duration)}</div>
 							</div>
 							<div className={s.tools}>
 								<div className={s.download} onClick={(e) => download(r.id, 'wav', e)}>

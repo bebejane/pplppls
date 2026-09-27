@@ -1,6 +1,6 @@
 'use client';
 
-import Global from '@/lib/Global';
+import Global from '@/lib/global';
 import { fileToMimeType } from 'audio-engine';
 import screenfull from 'screenfull';
 import { AiOutlineLoading } from 'react-icons/ai';
@@ -480,9 +480,7 @@ export default function PurplePurples() {
 					.catch((err) => handleError(err));
 				return;
 			}
-			const objURL = URL.createObjectURL(
-				new Blob([buffer], { type: fileToMimeType(filename) }),
-			);
+			const objURL = URL.createObjectURL(new Blob([buffer], { type: fileToMimeType(filename) }));
 			Global.engine.replace(id, objURL, filename);
 		},
 		[buildGrid],
@@ -738,10 +736,7 @@ export default function PurplePurples() {
 		if (Global.engine.hasPreset(idx)) Global.engine.restorePreset(idx);
 		else Global.engine.randomizePreset(idx);
 		setPresetBar({ visible: true, lit: key });
-		setTimeout(
-			() => setPresetBar((prev) => (prev.lit === key ? { ...prev, lit: -1 } : prev)),
-			350,
-		);
+		setTimeout(() => setPresetBar((prev) => (prev.lit === key ? { ...prev, lit: -1 } : prev)), 350);
 		revealPresetBar();
 	};
 

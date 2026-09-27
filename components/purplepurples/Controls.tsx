@@ -1,6 +1,6 @@
 'use client';
 
-import Global from '@/lib/Global';
+import Global from '@/lib/global';
 import { useEffect, useRef, useState } from 'react';
 import {
 	MdPlayArrow,
@@ -111,17 +111,14 @@ export default function Controls(props: ControlsProps) {
 					onClick={() => props.onRecord(!recording)}
 					className={cn(
 						(recordingProgress && (recordingProgress as any).recording && s.recording) ||
-							((recordingProgress && (recordingProgress as any).processing && s.processing) ||
-								undefined),
+							(recordingProgress && (recordingProgress as any).processing && s.processing) ||
+							undefined,
 					)}
 				/>
 				{playId !== undefined ? (
 					<MdStop onClick={onStop} />
 				) : (
-					<MdPlayArrow
-						className={recordings.length ? s.toggle : ''}
-						onClick={onPlay}
-					/>
+					<MdPlayArrow className={recordings.length ? s.toggle : ''} onClick={onPlay} />
 				)}
 				<div className={s.recordingProgress}>
 					{formatDuration(elapsed || (recordingProgress && (recordingProgress as any).elapsed))}
@@ -167,11 +164,7 @@ export default function Controls(props: ControlsProps) {
 				<RiDownload2Line data-tip data-for={'tt-save'} onClick={() => props.onSave()} />
 				<RiUpload2Line data-tip data-for={'tt-load'} onClick={() => props.onLoad()} />
 				<FiPlus data-tip data-for={'tt-new'} onClick={() => props.onToggleNewSet()} />
-				<IoMdHelp
-					data-tip
-					data-for={'tt-help'}
-					onClick={() => props.onToggleHelp(!showHelp)}
-				/>
+				<IoMdHelp data-tip data-for={'tt-help'} onClick={() => props.onToggleHelp(!showHelp)} />
 
 				<ReactTooltip id='tt-playing' type='dark' place='top' effect='float' delayShow={800}>
 					Play/Stop

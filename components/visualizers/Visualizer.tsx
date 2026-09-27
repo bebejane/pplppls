@@ -1,6 +1,6 @@
 'use client';
 
-import Global from '@/lib/Global';
+import Global from '@/lib/global';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import s from './Visualizer.module.scss';
 
@@ -107,12 +107,7 @@ export default function Visualizer({
 
 	return (
 		<div className={s.container} ref={containerRef}>
-			<canvas
-				ref={canvasRef}
-				width={size.width}
-				height={size.height}
-				className={s.canvas}
-			/>
+			<canvas ref={canvasRef} width={size.width} height={size.height} className={s.canvas} />
 		</div>
 	);
 }

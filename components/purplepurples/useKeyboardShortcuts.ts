@@ -1,6 +1,6 @@
 'use client';
 
-import Global from '@/lib/Global';
+import Global from '@/lib/global';
 import { useEffect } from 'react';
 
 export interface KeyboardHandlers {

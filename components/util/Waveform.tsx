@@ -1,6 +1,6 @@
 'use client';
 
-import Global from '@/lib/Global';
+import Global from '@/lib/global';
 import moment from 'moment';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import cn from 'classnames';
@@ -238,7 +238,8 @@ export default function Waveform({
 			// a selection may legitimately begin or end at 0 — only bail when
 			// nothing is defined at all
 			if (!st.duration || (start === undefined && end === undefined)) return;
-			next.width = (end ?? 0) > (start ?? 0) ? (end ?? 0) - (start ?? 0) : (start ?? 0) - (end ?? 0);
+			next.width =
+				(end ?? 0) > (start ?? 0) ? (end ?? 0) - (start ?? 0) : (start ?? 0) - (end ?? 0);
 			next.x = (end ?? 0) < (start ?? 0) ? (end ?? 0) : (start ?? 0);
 			setSel(next);
 			if (onSelectionChange && !noCallback)
@@ -323,8 +324,7 @@ export default function Waveform({
 			if (!sel.leaveLeft && !sel.leaveRight) {
 				// an armed press that never became a drag would stay "active"
 				// forever — clear it on release
-				if (e.type === 'mouseup' && sel.active && sel.start === sel.end)
-					resetSelection();
+				if (e.type === 'mouseup' && sel.active && sel.start === sel.end) resetSelection();
 				return;
 			}
 			if (sel.active || sel.handleActive || sel.movingActive) {
@@ -472,8 +472,7 @@ export default function Waveform({
 
 	const newSelection = useCallback(
 		(next: Selection) => {
-			const clampTime = (v: number) =>
-				Math.max(0, Math.min(v, st.duration || v));
+			const clampTime = (v: number) => Math.max(0, Math.min(v, st.duration || v));
 			if (next.start !== next.end) {
 				if (onSelection)
 					onSelection({
@@ -654,9 +653,7 @@ export default function Waveform({
 			onContextMenu={(e) => {
 				e.preventDefault();
 				e.stopPropagation();
-				const x =
-					e.clientX -
-					(refContainer.current?.getBoundingClientRect().left || 0);
+				const x = e.clientX - (refContainer.current?.getBoundingClientRect().left || 0);
 				zoom(sel.zoomInActive!, x);
 			}}
 		>
@@ -701,15 +698,9 @@ export default function Waveform({
 											: s.handleRight,
 							)}
 							style={pos.includes('left') ? leftHandleStyle : rightHandleStyle}
-							onMouseMove={(e) =>
-								handleSelectionHandle(e, pos.includes('left') ? 'left' : 'right')
-							}
-							onMouseDown={(e) =>
-								handleSelectionHandle(e, pos.includes('left') ? 'left' : 'right')
-							}
-							onMouseUp={(e) =>
-								handleSelectionHandle(e, pos.includes('left') ? 'left' : 'right')
-							}
+							onMouseMove={(e) => handleSelectionHandle(e, pos.includes('left') ? 'left' : 'right')}
+							onMouseDown={(e) => handleSelectionHandle(e, pos.includes('left') ? 'left' : 'right')}
+							onMouseUp={(e) => handleSelectionHandle(e, pos.includes('left') ? 'left' : 'right')}
 						></div>
 					))}
 				</div>

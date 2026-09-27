@@ -1,6 +1,6 @@
 'use client';
 
-import Global from '@/lib/Global';
+import Global from '@/lib/global';
 import AudioEngine from 'audio-engine';
 import { useEffect, useState } from 'react';
 import PurplePurples from '@/components/purplepurples/PurplePurples';

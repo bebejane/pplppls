@@ -1,6 +1,6 @@
 'use client';
 
-import Global from '@/lib/Global';
+import Global from '@/lib/global';
 import { useEffect, useState } from 'react';
 import Slider from 'react-input-slider';
 import ReactTooltip from 'react-tooltip';
