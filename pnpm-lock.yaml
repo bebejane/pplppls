@@ -109,6 +109,9 @@ importers:
 
   .:
     dependencies:
+      audio-engine:
+        specifier: link:../audio-engine
+        version: link:../audio-engine
       classnames:
         specifier: ^2.5.1
         version: 2.5.1

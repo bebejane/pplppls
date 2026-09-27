@@ -1,4 +1,4 @@
-import type { AudioEngine } from './audio/types';
+import type { AudioEngineFacade } from 'audio-engine';
 
 /**
  * Client-only global singleton for the audio engine and small helpers.
@@ -6,7 +6,7 @@ import type { AudioEngine } from './audio/types';
  */
 
 export interface GlobalSingleton {
-	engine: AudioEngine | null;
+	engine: AudioEngineFacade | null;
 }
 
 const Global: GlobalSingleton = {

@@ -8,15 +8,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
-    "test": "node tests/verify-effects.mjs",
-    "worklet:gen": "node scripts/build-effects-worklet.mjs",
-    "worklet:check": "node scripts/build-effects-worklet.mjs --check",
-    "predev": "node scripts/build-effects-worklet.mjs",
-    "prebuild": "node scripts/build-effects-worklet.mjs",
-    "pretest": "node scripts/build-effects-worklet.mjs"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "audio-engine": "link:../audio-engine",
     "classnames": "^2.5.1",
     "events": "^3.3.0",
     "jszip": "^3.10.2",

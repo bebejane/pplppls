@@ -7,9 +7,10 @@ export type {
 	PresetSound,
 	SoundSettings,
 	EffectSnapshot,
-} from '@/lib/audio/model-types';
-
-export type { EffectDef, EffectParamDef, EffectEntry } from '@/lib/audio/types';
+	EffectDef,
+	EffectParamDef,
+	EffectEntry,
+} from 'audio-engine';
 
 export interface ColData {
 	x: number;

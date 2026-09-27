@@ -1,7 +1,7 @@
 'use client';
 
 import Global from '@/lib/Global';
-import { fileToMimeType } from '@/lib/audio/utils';
+import { fileToMimeType } from 'audio-engine';
 import screenfull from 'screenfull';
 import { AiOutlineLoading } from 'react-icons/ai';
 import MobileDetect from 'mobile-detect';
@@ -142,7 +142,7 @@ export default function PurplePurples() {
 	useEngineListeners(set, setCols, stateRef);
 
 	// ---- model grid ------------------------------------------------------
-	// The engine owns model I/O + presets (lib/audio/model.ts); this only builds
+	// The engine owns model I/O + presets (audio-engine's model.ts); this only builds
 	// the grid state for the model the engine just populated.
 	const buildGrid = useCallback((model: Model) => {
 		const cols: Record<string, any> = {};
