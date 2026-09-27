@@ -1,4 +1,5 @@
-import clamp from 'clamp'
+export const clamp = (value: number, min: number, max: number): number =>
+	Math.min(Math.max(value, min), max);
 
 export const isString = (arg: unknown): boolean => toString.call(arg) === '[object String]';
 
