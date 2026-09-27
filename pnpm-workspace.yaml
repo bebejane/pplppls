@@ -7,5 +7,8 @@ allowBuilds:
   es5-ext: true
   fsevents: true
   unrs-resolver: true
-overrides:
-  audio-engine: link:../audio-engine
+# NOTE: do NOT add an `overrides: { audio-engine: link:../audio-engine }` entry here.
+# Overrides apply on Vercel too, where the sibling checkout does not exist — the
+# install then produces a dangling symlink and the build fails with
+# "Module not found: Can't resolve 'audio-engine'". For local engine development
+# use `pnpm link ../audio-engine` (node_modules only, never committed).

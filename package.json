@@ -11,7 +11,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"audio-engine": "github:bebejane/audio-engine",
+		"audio-engine": "github:bebejane/audio-engine#v0.1.0",
 		"classnames": "^2.5.1",
 		"mobile-detect": "^1.4.5",
 		"moment": "^2.31.0",
