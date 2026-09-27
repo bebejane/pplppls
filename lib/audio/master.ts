@@ -4,7 +4,7 @@
  * exact same behavior (including events and masterstate emission), with
  * engine access via `this.engine`.
  */
-import type AudioEngine from './AudioEngine';
+import type AudioEngine from './audioengine';
 
 /** Broadcast transport state (engine.master.state / masterstate events). */
 export interface MasterState {

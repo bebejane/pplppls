@@ -2,7 +2,7 @@ import AudioUtils from './utils';
 import { arrayMoveImmutable as arrayMove } from 'array-move';
 import { EventEmitter } from 'events';
 import type { Effect, EffectDefaults } from './effects/core';
-import type AudioEngine from './AudioEngine';
+import type AudioEngine from './audioengine';
 
 /** Options accepted by Sound.play() (callers may pass extras via the index sig). */
 interface PlayOptions {

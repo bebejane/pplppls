@@ -1,17 +1,17 @@
-import Master from './Master';
+import Master from './master';
 import AudioUtils from './utils';
-import Sound from './Sound';
+import Sound from './sound';
 import { WebMidi } from 'webmidi';
 import type { NoteMessageEvent } from 'webmidi';
 import { createEncoderWorker } from './workers';
-import Recorder from './Recorder';
-import Analyser from './Analyser';
+import Recorder from './recorder';
+import Analyser from './analyser';
 import extractPeaks from 'webaudio-peaks';
 import { EFFECTS, createEffect } from './effects';
 import { ensureEffectsWorklet } from './effects/worklet';
 import { EventEmitter } from 'events';
 import ModelManager from './model';
-import Automation from './Automation';
+import Automation from './automation';
 import type { Effect } from './effects/core';
 import type { EffectDefinition } from './effects';
 import type {
