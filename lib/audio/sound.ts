@@ -1,4 +1,4 @@
-import AudioUtils from './utils';
+import { reverse, slice } from './utils';
 import { arrayMoveImmutable as arrayMove } from 'array-move';
 import { EventEmitter } from 'events';
 import type { Effect, EffectDefaults } from './effects/core';
@@ -1111,8 +1111,8 @@ class Sound extends EventEmitter {
 	reverse(on?: boolean): unknown {
 		if (on === undefined) return this._reverse;
 		if (!this.buffer) return;
-		if (on && !this._reversed) AudioUtils.reverse(this.buffer);
-		if (!on && this._reversed) AudioUtils.reverse(this.buffer);
+		if (on && !this._reversed) reverse(this.buffer);
+		if (!on && this._reversed) reverse(this.buffer);
 		this._bufferVersion++;
 		this._reversed = on;
 		this._emit('reversed', on);
@@ -1122,7 +1122,7 @@ class Sound extends EventEmitter {
 		const s = Math.floor(start * this.sampleRate);
 		const e = Math.floor(end * this.sampleRate);
 		const data = this.buffer.getChannelData(0);
-		const cropped = AudioUtils.slice([data], s, e > data.length - 1 ? data.length - 1 : e);
+		const cropped = slice([data], s, e > data.length - 1 ? data.length - 1 : e);
 		const newBuff = new AudioBuffer({
 			length: cropped[0].length,
 			numberOfChannels: 1,
@@ -1236,7 +1236,7 @@ class Sound extends EventEmitter {
 			if (buffer) {
 				//console.log('decoded data', this.id, buffer.duration)
 
-				this.buffer = this._reversed ? AudioUtils.reverse(buffer) : buffer;
+				this.buffer = this._reversed ? reverse(buffer) : buffer;
 				this._buffer = _buffer;
 				this._bufferVersion++;
 				this._duration = buffer.duration; ///buffer.numberOfChannels;

@@ -1,4 +1,4 @@
-import AudioUtils from './utils'
+import { normalize, trim } from './utils'
 import type { ProcessSampleOptions } from './types'
 import { createRecordWorker, createEncoderWorker } from './workers';
 import moment from 'moment'
@@ -280,24 +280,24 @@ class Recorder extends EventEmitter{
         
         // only called when _processSample is truthy (see init message handler)
         const ps = this._processSample as ProcessSampleOptions;
-        const trim = ps.trim;
+        const trimOpt = ps.trim;
 
         this.emit('sampleprocess', this._id, true)
         console.time('processsample')
 
         return new Promise((resolve,reject)=>{
             let data = buffer;
-            if(trim)
-                data = AudioUtils.trim(buffer, typeof trim === 'object' ? trim : {level:0.01, trimLeft:true, trimRight:false})
+            if(trimOpt)
+                data = trim(buffer, typeof trimOpt === 'object' ? trimOpt : {level:0.01, trimLeft:true, trimRight:false})
             
             if(!data || !data[0].length) 
                 return reject('I didn\'t hear what u said. Speak louder!')
 
             if(ps.normalize)
-              data =  AudioUtils.normalize(data);
+              data =  normalize(data);
             
             if(ps.fade){
-                //data = AudioUtils.fade(data, 1000)
+                //data = fade(data, 1000)
             }
             
             return this._encodeAudio(data, 'wav', {sampleRate:this._sampleRate, numChannels:data.length}).then((b: Blob)=>{

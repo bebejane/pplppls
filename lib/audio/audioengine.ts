@@ -1,5 +1,5 @@
 import Master from './master';
-import AudioUtils from './utils';
+import { Utils, slice } from './utils';
 import Sound from './sound';
 import { WebMidi } from 'webmidi';
 import type { NoteMessageEvent } from 'webmidi';
@@ -47,7 +47,7 @@ const defaultOptions: AudioEngineOptions = {
 class AudioEngine extends EventEmitter {
 	context: AudioContext;
 	sampleRate: number;
-	utils: typeof AudioUtils;
+	utils: typeof Utils;
 	sounds: SoundItem[];
 	soundMap: Record<string, SoundItem>;
 	midiMap: Record<number, string[]>;
@@ -105,7 +105,7 @@ class AudioEngine extends EventEmitter {
 		this.enableLoops = o.enableLoops;
 		this.enableElapsed = o.enableElapsed;
 		this.processSample = o.processSample;
-		this.utils = AudioUtils;
+		this.utils = Utils;
 		this.sounds = [];
 		this.soundMap = {};
 		this.midiMap = {};
@@ -495,7 +495,7 @@ class AudioEngine extends EventEmitter {
 			const start = Math.floor((opt.start || 0) * this.sampleRate);
 			const end = Math.floor((opt.end || buffer.duration) * this.sampleRate);
 			const length = data[0].length;
-			const cropped = AudioUtils.slice(data, start, end > length - 1 ? length - 1 : end);
+			const cropped = slice(data, start, end > length - 1 ? length - 1 : end);
 			const copy = new AudioBuffer({
 				length: cropped[0].length,
 				numberOfChannels: buffer.numberOfChannels,

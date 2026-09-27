@@ -1,6 +1,7 @@
 'use client';
 
 import Global from '@/lib/Global';
+import { Utils } from '@/lib/audio/utils';
 import screenfull from 'screenfull';
 import { AiOutlineLoading } from 'react-icons/ai';
 import MobileDetect from 'mobile-detect';
@@ -480,7 +481,7 @@ export default function PurplePurples() {
 				return;
 			}
 			const objURL = URL.createObjectURL(
-				new Blob([buffer], { type: Global.fileToMimeType(filename) }),
+				new Blob([buffer], { type: Utils.fileToMimeType(filename) }),
 			);
 			Global.engine.replace(id, objURL, filename);
 		},
@@ -497,7 +498,7 @@ export default function PurplePurples() {
 				if (offset + idx >= Global.engine.sounds.length) return;
 				const targetId = Global.engine.sounds[offset + idx].id;
 				const objURL = URL.createObjectURL(
-					new Blob([f.contents], { type: Global.fileToMimeType(f.filename) }),
+					new Blob([f.contents], { type: Utils.fileToMimeType(f.filename) }),
 				);
 				Global.engine.replace(targetId, objURL, f.filename);
 			});

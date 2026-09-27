@@ -6,7 +6,7 @@
  * Kept in its own module so effect classes can import from here without a
  * circular import back to effects/index.
  */
-import Utils from './utils';
+import { Utils } from '../utils';
 import { createWorkletEffectNode } from './worklet';
 
 export { Utils };

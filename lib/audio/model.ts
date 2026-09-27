@@ -10,6 +10,7 @@ import JSZip from 'jszip';
 import Global from '../Global';
 import type AudioEngine from './audioengine';
 import type Sound from './sound';
+import { Utils } from './utils';
 import type {
 	EffectSnapshot,
 	Model,
@@ -301,7 +302,7 @@ export default class ModelManager {
 			}
 			model.files.push({
 				filename: sound._filename,
-				mimeType: Global.fileToMimeType(sound._filename) || undefined,
+				mimeType: Utils.fileToMimeType(sound._filename) || undefined,
 				params: sound.getSaveState(),
 			});
 		}
