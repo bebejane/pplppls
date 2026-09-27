@@ -157,9 +157,6 @@ importers:
       wasm-media-encoders:
         specifier: ^0.7.0
         version: 0.7.0
-      webaudio-peaks:
-        specifier: ^0.0.6
-        version: 0.0.6
       webmidi:
         specifier: ^3.3.1
         version: 3.3.1
@@ -2228,9 +2225,6 @@ packages:
   wasm-media-encoders@0.7.0:
     resolution: {integrity: sha512-Sp4wUasgxOK/IFfNhpon6LQQgYGwtpxyV4isjGIe1rvhnJL3w2KYr4f+CdqDNtGPDcgCDRY+uBanVfSx6Si0WQ==}
     engines: {node: '>= 10'}
-
-  webaudio-peaks@0.0.6:
-    resolution: {integrity: sha512-Z0NbyeaNwubKJmWkm3+hlbS4QVYlVpgh8HMvRZp+8WsPS3kWCY7Vs5QdlqTODOEDeLqrWQV3xZ5p2g/VguktBQ==}
 
   webmidi@3.3.1:
     resolution: {integrity: sha512-nbJPD3mtV4FbuaOsvgmyInBAnkU3yA0HDzidKtFRK4gweGfodoGEFo6Egddgxzlrk+pk887mwgkxGafrsujfLA==}
@@ -4570,8 +4564,6 @@ snapshots:
   wasm-media-encoders@0.7.0:
     dependencies:
       '@swc/helpers': 0.5.23
-
-  webaudio-peaks@0.0.6: {}
 
   webmidi@3.3.1:
     dependencies:

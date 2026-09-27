@@ -33,7 +33,6 @@
 		"sass": "^1.105.0",
 		"screenfull": "^5.2.0",
 		"wasm-media-encoders": "^0.7.0",
-		"webaudio-peaks": "^0.0.6",
 		"webmidi": "^3.3.1"
 	},
 	"devDependencies": {

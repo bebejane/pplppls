@@ -1,12 +1,11 @@
 import Master from './master';
-import { slice } from './utils';
+import { extractPeaks, slice } from './utils';
 import Sound from './sound';
 import { WebMidi } from 'webmidi';
 import type { NoteMessageEvent } from 'webmidi';
 import { createEncoderWorker } from './workers';
 import Recorder from './recorder';
 import Analyser from './analyser';
-import extractPeaks from 'webaudio-peaks';
 import { EFFECTS, createEffect } from './effects';
 import { ensureEffectsWorklet } from './effects/worklet';
 import { EventEmitter } from 'events';

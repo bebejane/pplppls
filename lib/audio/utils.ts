@@ -1,5 +1,15 @@
 export const clamp = (value: number, min: number, max: number): number =>
-	Math.min(Math.max(value, min), max);
+	min < max
+		? value < min
+			? min
+			: value > max
+				? max
+				: value
+		: value < max
+			? max
+			: value > min
+				? min
+				: value;
 
 export const isString = (arg: unknown): boolean => toString.call(arg) === '[object String]';
 
@@ -87,21 +97,20 @@ export const findZeroCrossing = (
 		if (a === 0) return idx;
 		if (b === 0) return idx + 1;
 		// sign change between idx and idx+1: pick the member closest to zero
-		if ((a > 0 && b <= 0) || (a < 0 && b >= 0))
-			return Math.abs(a) <= Math.abs(b) ? idx : idx + 1;
+		if ((a > 0 && b <= 0) || (a < 0 && b >= 0)) return Math.abs(a) <= Math.abs(b) ? idx : idx + 1;
 	}
 	return -1;
 };
 
 export const reverse = (buffer: AudioBuffer): AudioBuffer => {
-	for (let i = 0, c = buffer.numberOfChannels; i < c; ++i) buffer.getChannelData(i).reverse()
-	return buffer
-}
+	for (let i = 0, c = buffer.numberOfChannels; i < c; ++i) buffer.getChannelData(i).reverse();
+	return buffer;
+};
 
 export const normalize = (buffer: Float32Array[], start?: number, end?: number): Float32Array[] => {
 	const isNeg = (number: number): boolean => {
-		return number === 0 && 1 / number === -Infinity
-	}
+		return number === 0 && 1 / number === -Infinity;
+	};
 
 	const nidx = (idx: number | null | undefined, length: number): number =>
 		idx == null
@@ -112,56 +121,56 @@ export const normalize = (buffer: Float32Array[], start?: number, end?: number):
 					? 0
 					: idx < 0
 						? length + (idx % length)
-						: Math.min(length, idx)
+						: Math.min(length, idx);
 
-	start = start == null ? 0 : nidx(start, buffer.length)
-	end = end == null ? buffer.length : nidx(end, buffer.length)
+	start = start == null ? 0 : nidx(start, buffer.length);
+	end = end == null ? buffer.length : nidx(end, buffer.length);
 
 	// for every channel bring it to max-min amplitude range
-	const normalized: Float32Array[] = []
-	let max = 0
+	const normalized: Float32Array[] = [];
+	let max = 0;
 
 	for (let c = 0; c < buffer.length; c++) {
-		const data = buffer[c]
+		const data = buffer[c];
 
 		for (let i = 0; i < data.length; i++) {
-			max = Math.max(Math.abs(data[i]), max)
+			max = Math.max(Math.abs(data[i]), max);
 		}
-		normalized.push(new Float32Array(buffer[c].length))
+		normalized.push(new Float32Array(buffer[c].length));
 	}
 
-	const amp = Math.max(1 / max, 1)
+	const amp = Math.max(1 / max, 1);
 
 	for (let c = 0; c < buffer.length; c++) {
-		const data = buffer[c]
-		for (let i = 0; i < data.length; i++) normalized[c][i] = clamp(data[i] * amp, -1, 1)
+		const data = buffer[c];
+		for (let i = 0; i < data.length; i++) normalized[c][i] = clamp(data[i] * amp, -1, 1);
 	}
-	console.log('NORMALIZED', amp, normalized.length)
-	return normalized
-}
+	console.log('NORMALIZED', amp, normalized.length);
+	return normalized;
+};
 
 export const slice = (buffer: Float32Array[], start: number, end: number): Float32Array[] => {
-	if (end > buffer[0].length) end = buffer[0].length - 1
+	if (end > buffer[0].length) end = buffer[0].length - 1;
 
-	const rightChunk = new Float32Array(end - start)
-	const leftChunk = new Float32Array(end - start)
+	const rightChunk = new Float32Array(end - start);
+	const leftChunk = new Float32Array(end - start);
 
-	for (let i = start, x = 0; x < leftChunk.length; x++, i++) leftChunk[x] = buffer[0][i]
+	for (let i = start, x = 0; x < leftChunk.length; x++, i++) leftChunk[x] = buffer[0][i];
 
 	if (buffer.length === 2) {
-		for (let i = start, x = 0; x < rightChunk.length; x++, i++) rightChunk[x] = buffer[0][i]
+		for (let i = start, x = 0; x < rightChunk.length; x++, i++) rightChunk[x] = buffer[0][i];
 	}
 
-	if (buffer.length === 2) return [leftChunk, rightChunk]
-	else return [leftChunk]
-}
+	if (buffer.length === 2) return [leftChunk, rightChunk];
+	else return [leftChunk];
+};
 
 export const fade = (buffer: Float32Array[], ms: number, sampleRate = 44100): Float32Array[] => {
-	return buffer
-	ms = 1000
+	return buffer;
+	ms = 1000;
 	const isNeg = (number: number): boolean => {
-		return number === 0 && 1 / number === -Infinity
-	}
+		return number === 0 && 1 / number === -Infinity;
+	};
 
 	const nidx = (idx: number | null | undefined, length: number): number =>
 		idx == null
@@ -172,91 +181,91 @@ export const fade = (buffer: Float32Array[], ms: number, sampleRate = 44100): Fl
 					? 0
 					: idx < 0
 						? length + (idx % length)
-						: Math.min(length, idx)
+						: Math.min(length, idx);
 
 	for (let c = 0; c < buffer.length; c++) {
-		const data = buffer[c]
-		const samples = ms * (44100 / 1000)
-		const level = data[samples]
-		const amp = level / samples
-		console.log('fade', samples, level, amp)
-		const fadeFrameCount = samples
-		const ascending = false
+		const data = buffer[c];
+		const samples = ms * (44100 / 1000);
+		const level = data[samples];
+		const amp = level / samples;
+		console.log('fade', samples, level, amp);
+		const fadeFrameCount = samples;
+		const ascending = false;
 
 		for (let i = 0; i < fadeFrameCount; i++) {
-			const currentFrameFadePercentage = (i - 0) / fadeFrameCount
+			const currentFrameFadePercentage = (i - 0) / fadeFrameCount;
 			data[i] = ascending
 				? data[i] * currentFrameFadePercentage
-				: data[i] * (1 - currentFrameFadePercentage)
-			if (i < 100) console.log(data[i])
+				: data[i] * (1 - currentFrameFadePercentage);
+			if (i < 100) console.log(data[i]);
 		}
 	}
-	return buffer
-}
+	return buffer;
+};
 
 export interface TrimOptions {
-	sampleRate?: number
-	trimLeft?: boolean
-	trimRight?: boolean
-	level?: number
+	sampleRate?: number;
+	trimLeft?: boolean;
+	trimRight?: boolean;
+	level?: number;
 }
 
 export const trim = (
 	buffer: Float32Array[],
 	opt: TrimOptions = { sampleRate: 44100, trimLeft: true, trimRight: false, level: 0.05 },
 ): Float32Array[] => {
-	const level = opt.level == null ? 0 : Math.abs(opt.level)
-	const sampleRate = opt.sampleRate || 44100
+	const level = opt.level == null ? 0 : Math.abs(opt.level);
+	const sampleRate = opt.sampleRate || 44100;
 	// how far to hunt for a zero crossing: ~8ms. Big enough to catch a crossing
 	// even for low-pitched content (a 62Hz tone's nearest crossing is ~8ms away),
 	// small enough that snapping never audibly shifts the attack or eats the tail.
-	const maxLook = Math.max(64, Math.round(sampleRate * 0.008))
+	const maxLook = Math.max(64, Math.round(sampleRate * 0.008));
 
-	let start = 0
-	let end = buffer[0].length
+	let start = 0;
+	let end = buffer[0].length;
 
 	if (opt.trimLeft) {
-		const data = buffer[0]
+		const data = buffer[0];
 		for (let i = 0; i < data.length; i++) {
 			if (Math.abs(data[i]) > level) {
-				start = i
-				break
+				start = i;
+				break;
 			}
 		}
 		// snap the cut point to the nearest zero crossing so the sample starts
 		// on a stationary point instead of a mid-cycle value (click)
 		if (start > 0) {
-			const zc = findZeroCrossing(data, start - 1, -1, maxLook)
-			if (zc >= 0) start = zc
-			else start = start - 1 // everything before start is <= level: cutting one sample early is click-free
+			const zc = findZeroCrossing(data, start - 1, -1, maxLook);
+			if (zc >= 0) start = zc;
+			else start = start - 1; // everything before start is <= level: cutting one sample early is click-free
 		} else {
 			// recording began mid-cycle with no pre-roll silence: snap forward
 			// to the next crossing (removes at most ~maxLook of near-zero onset),
 			// but only take it if the crossing member is actually quieter than
 			// the current first sample (keeps the attack fully intact)
-			const zc = findZeroCrossing(data, 0, 1, maxLook)
-			if (zc >= 0 && Math.abs(data[zc]) < Math.abs(data[0])) start = zc
+			const zc = findZeroCrossing(data, 0, 1, maxLook);
+			if (zc >= 0 && Math.abs(data[zc]) < Math.abs(data[0])) start = zc;
 		}
 	}
 	if (opt.trimRight) {
-		const data = buffer[0]
+		const data = buffer[0];
 		for (let i = data.length - 1; i >= 0; i--) {
 			if (Math.abs(data[i]) > level) {
-				end = i + 1
-				break
+				end = i + 1;
+				break;
 			}
 		}
 		// snap the cut point forward to the next zero crossing in the
 		// below-level tail so the sample also ends on a stationary point
 		// (avoids a click at loop wrap); keep the crossing only if its member
 		// is quieter than the current last sample
-		const zc = findZeroCrossing(data, end, 1, maxLook)
-		if (zc >= 0 && end > 0 && Math.abs(data[zc]) < Math.abs(data[end - 1])) end = zc + 1
+		const zc = findZeroCrossing(data, end, 1, maxLook);
+		if (zc >= 0 && end > 0 && Math.abs(data[zc]) < Math.abs(data[end - 1])) end = zc + 1;
 	}
 
 	// the two snaps may step toward each other; keep a minimum length so
 	// slice() never gets a negative/zero range
-	if (end <= start) end = Math.min(buffer[0].length, start + 1)
+	if (end <= start) end = Math.min(buffer[0].length, start + 1);
 
 	console.log(
 		'trim',
@@ -268,6 +277,124 @@ export const trim = (
 		end,
 		'buffer',
 		buffer[0].length,
-	)
-	return slice(buffer, start, end)
+	);
+	return slice(buffer, start, end);
+};
+
+// ------------------------------------------------------------ peaks --
+// Ported from the MIT-licensed "webaudio-peaks" package (© Naomi Aro,
+// github.com/naomiaro/webaudio-peaks) so the engine carries no runtime
+// dependency on it. `extractPeaks` returns per-channel interleaved [min,max]
+// peak arrays quantized to 8/16/32-bit signed integers.
+
+export interface Peaks {
+	length: number;
+	data: Array<Int8Array | Int16Array | Int32Array>;
+	bits: number;
 }
+
+const findMinMax = (array: Float32Array): { min: number; max: number } => {
+	let min = Infinity;
+	let max = -Infinity;
+	for (let i = 0; i < array.length; i++) {
+		const curr = array[i];
+		if (min > curr) min = curr;
+		if (max < curr) max = curr;
+	}
+	return { min, max };
+};
+
+const convert = (n: number, bits: number): number => {
+	const max = Math.pow(2, bits - 1);
+	const v = n < 0 ? n * max : n * max - 1;
+	return Math.max(-max, Math.min(max - 1, v));
+};
+
+const makePeakArray = (bits: number, length: number): Int8Array | Int16Array | Int32Array => {
+	if (bits === 8) return new Int8Array(length);
+	if (bits === 16) return new Int16Array(length);
+	return new Int32Array(length);
+};
+
+const extractChannelPeaks = (
+	channel: Float32Array,
+	samplesPerPixel: number,
+	bits: number,
+): Int8Array | Int16Array | Int32Array => {
+	const chanLength = channel.length;
+	const numPeaks = Math.ceil(chanLength / samplesPerPixel);
+	const peaks = makePeakArray(bits, numPeaks * 2);
+	for (let i = 0; i < numPeaks; i++) {
+		const start = i * samplesPerPixel;
+		const end = (i + 1) * samplesPerPixel > chanLength ? chanLength : (i + 1) * samplesPerPixel;
+		const extrema = findMinMax(channel.subarray(start, end));
+		peaks[i * 2] = convert(extrema.min, bits);
+		peaks[i * 2 + 1] = convert(extrema.max, bits);
+	}
+	return peaks;
+};
+
+const makeMono = (
+	channelPeaks: Array<Int8Array | Int16Array | Int32Array>,
+	bits: number,
+): Array<Int8Array | Int16Array | Int32Array> => {
+	const numChan = channelPeaks.length;
+	const weight = 1 / numChan;
+	const numPeaks = channelPeaks[0].length / 2;
+	const peaks = makePeakArray(bits, numPeaks * 2);
+	for (let i = 0; i < numPeaks; i++) {
+		let min = 0;
+		let max = 0;
+		for (let c = 0; c < numChan; c++) {
+			min += weight * channelPeaks[c][i * 2];
+			max += weight * channelPeaks[c][i * 2 + 1];
+		}
+		peaks[i * 2] = min;
+		peaks[i * 2 + 1] = max;
+	}
+	return [peaks];
+};
+
+/**
+ * Extract interleaved [min, max] peaks from an AudioBuffer (or a raw
+ * Float32Array channel): `samplesPerPixel` audio frames per peak, quantized to
+ * `bits` (8/16/32). `isMono` averages the channels together (default true).
+ */
+export const extractPeaks = (
+	source: AudioBuffer | Float32Array,
+	samplesPerPixel = 10000,
+	isMono = true,
+	cueIn?: number,
+	cueOut?: number,
+	bits = 8,
+): Peaks => {
+	if ([8, 16, 32].indexOf(bits) < 0) throw new Error('Invalid number of bits specified for peaks.');
+
+	let peaks: Array<Int8Array | Int16Array | Int32Array> = [];
+	if (typeof (source as Float32Array).subarray === 'undefined') {
+		const buffer = source as AudioBuffer;
+		for (let c = 0; c < buffer.numberOfChannels; c++) {
+			const channel = buffer.getChannelData(c);
+			peaks.push(
+				extractChannelPeaks(
+					channel.subarray(cueIn || 0, cueOut || channel.length),
+					samplesPerPixel,
+					bits,
+				),
+			);
+		}
+	} else {
+		const channel = source as Float32Array;
+		peaks.push(
+			extractChannelPeaks(
+				channel.subarray(cueIn || 0, cueOut || channel.length),
+				samplesPerPixel,
+				bits,
+			),
+		);
+	}
+
+	if (isMono && peaks.length > 1) peaks = makeMono(peaks, bits);
+
+	return { length: peaks[0].length / 2, data: peaks, bits };
+};
