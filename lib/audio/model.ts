@@ -8,8 +8,8 @@
  */
 import JSZip from 'jszip';
 import Global from '../Global';
-import type AudioEngine from './AudioEngine';
-import type Sound from './Sound';
+import type AudioEngine from './audioengine';
+import type Sound from './sound';
 import type {
 	EffectSnapshot,
 	Model,

@@ -1,5 +1,5 @@
 /**
- * Lightweight typed facade over the JS audio engine (lib/audio/AudioEngine.js).
+ * Lightweight typed facade over the JS audio engine (lib/audio/audioengine.ts).
  * Only the surface the React app calls is declared; the engine itself stays
  * untyped JavaScript. Signature details are intentionally loose (the engine's
  * own types are whatever the Web Audio API yields) — the point is that

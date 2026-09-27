@@ -1,5 +1,5 @@
 import slice from './slice'
-import findZeroCrossing from './zeroCrossing'
+import findZeroCrossing from './zerocrossing'
 
 export interface TrimOptions {
 	sampleRate?: number

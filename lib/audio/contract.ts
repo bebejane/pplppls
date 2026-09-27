@@ -12,9 +12,9 @@ import type { AudioEngine, MasterLike } from './types';
 type Assert<T extends true> = T;
 
 export type EngineMatchesFacade = Assert<
-	import('./AudioEngine').default extends AudioEngine ? true : false
+	import('./audioengine').default extends AudioEngine ? true : false
 >;
 
 export type MasterMatchesFacade = Assert<
-	import('./Master').default extends MasterLike ? true : false
+	import('./master').default extends MasterLike ? true : false
 >;

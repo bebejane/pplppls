@@ -57,6 +57,28 @@ const EFFECTS: EffectDefinition[] = [
 			peak: {value:0.0001, max:1000, min:0, type:'float'}
 		},
 	},{
+		id:'j60chorus',
+		name: 'J60 Chorus',
+		defaults:{
+			chorusI: {value:false, max:true, min:false, type:'boolean'},
+			chorusII: {value:true, max:true, min:false, type:'boolean'},
+			mix: {value:1, max:1, min:0, type:'float'}
+		},
+	},{
+		id:'korg35hpf',
+		name: 'Korg 35 HPF',
+		defaults:{
+			cutoff: {value:350, max:20000, min:20, type:'integer'},
+			q: {value:1, max:10, min:0.5, type:'float'}
+		},
+	},{
+		id:'korg35lpf',
+		name: 'Korg 35 LPF',
+		defaults:{
+			cutoff: {value:350, max:20000, min:20, type:'integer'},
+			q: {value:1, max:10, min:0.5, type:'float'}
+		},
+	},{
 		id:'lowpassfilter',
 		name: 'Lopass Filter',
 		defaults:{
@@ -115,6 +137,25 @@ const EFFECTS: EffectDefinition[] = [
 			phase: {value:0, max:180, min:-180, type:'integer'}
 		},
 	},{
+		id: 'tapedelay',
+		name: 'Tape Delay',
+		defaults:{
+			time: {value:220, max:600, min:30, type:'float'},
+			feedback: {value:0.5, max:1.05, min:0, type:'float'},
+			mix: {value:0.5, max:1, min:0, type:'float'},
+			head1: {value:true, max:true, min:false, type:'boolean'},
+			head2: {value:false, max:true, min:false, type:'boolean'},
+			head3: {value:false, max:true, min:false, type:'boolean'},
+			density: {value:1, max:2, min:0.5, type:'float'},
+			wowFlutter: {value:0.3, max:1, min:0, type:'float'},
+			drive: {value:0.3, max:1, min:0, type:'float'},
+			bass: {value:0, max:15, min:-15, type:'float'},
+			treble: {value:0, max:15, min:-15, type:'float'},
+			hiss: {value:0.1, max:1, min:0, type:'float'},
+			tapeType: {value:0, max:2, min:0, type:'integer'},
+			age: {value:0.2, max:1, min:0, type:'float'}
+		},
+	},{
 		id: 'tremolo',
 		name: 'Tremolo',
 		defaults:{
@@ -125,20 +166,24 @@ const EFFECTS: EffectDefinition[] = [
 	},
 ]
 
-import Compressor from './Compressor'
-import Convolver from './Convolver'
-import Delay from './Delay'
-import Distortion from './Distortion'
-import DubDelay from './DubDelay'
-import Flanger from './Flanger'
-import { HighPassFilter, LowPassFilter } from './Filters'
-import PingPongDelay from './PingPongDelay'
-import Quadrafuzz from './Quadrafuzz'
-import Reverb from './Reverb'
-import RingModulator from './RingModulator'
-import StereoPanner from './StereoPanner'
-import StonePhaser from './StonePhaser'
-import Tremolo from './Tremolo'
+import Compressor from './compressor'
+import Convolver from './convolver'
+import Delay from './delay'
+import Distortion from './distortion'
+import DubDelay from './dubdelay'
+import Flanger from './flanger'
+import { HighPassFilter, LowPassFilter } from './filters'
+import J60Chorus from './j60chorus'
+import { ensureJ60ChorusWorklet } from './j60chorus/worklet'
+import { Korg35HighPassFilter, Korg35LowPassFilter } from './korg35filters'
+import PingPongDelay from './pingpongdelay'
+import Quadrafuzz from './quadrafuzz'
+import Reverb from './reverb'
+import RingModulator from './ringmodulator'
+import StereoPanner from './stereopanner'
+import StonePhaser from './stonephaser'
+import TapeDelay from './tapedelay'
+import Tremolo from './tremolo'
 import { Utils, Effect, type EffectDefaults } from './core'
 import { ensureEffectsWorklet } from './worklet'
 
@@ -171,6 +216,20 @@ const EFFECT_CLASSES: Record<string, EffectCtor> = {
 	ringmodulator: RingModulator,
 	highpassfilter: HighPassFilter,
 	lowpassfilter: LowPassFilter,
+	j60chorus: J60Chorus,
+	korg35hpf: Korg35HighPassFilter,
+	korg35lpf: Korg35LowPassFilter,
+	tapedelay: TapeDelay,
+}
+
+/**
+ * Effects whose DSP lives in its own worklet module: `createEffect` awaits the
+ * matching ensure function before constructing the node (the shared
+ * EFFECTS_WORKLET_SOURCE covers every other processor). Everything not listed
+ * here is already registered by `ensureEffectsWorklet`.
+ */
+const EFFECT_ENSURERS: Record<string, (context: AudioContext) => Promise<void>> = {
+	j60chorus: ensureJ60ChorusWorklet,
 }
 
 const createEffect = async (id: string, context: AudioContext, opt: Record<string, any> = {}): Promise<Effect> => {
@@ -186,6 +245,7 @@ const createEffect = async (id: string, context: AudioContext, opt: Record<strin
 	});
 	// AudioWorkletNode construction requires the processor to be registered
 	await ensureEffectsWorklet(context);
+	if (EFFECT_ENSURERS[id]) await EFFECT_ENSURERS[id](context);
 	return new EFFECT_CLASSES[id](context, options);
 }
 

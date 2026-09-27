@@ -1,6 +1,7 @@
 // Offline DSP harness for the effects AudioWorklet source. Runs each processor
 // in a simulated audio-thread environment and asserts behavior.
-import { EFFECTS_WORKLET_SOURCE } from '../lib/audio/effects/workletSource.ts';
+import { EFFECTS_WORKLET_SOURCE } from '../lib/audio/effects/workletsource.ts';
+import { J60CHORUS_WORKLET_SOURCE } from '../lib/audio/effects/j60chorus/source.ts';
 
 const SR = 44100;
 const BLOCK = 128;
@@ -20,7 +21,9 @@ globalThis.registerProcessor = (name, cls) => {
 };
 
 const registered = {};
+// each source is its own worklet module; run both so every processor registers
 new Function(EFFECTS_WORKLET_SOURCE)();
+new Function(J60CHORUS_WORKLET_SOURCE)();
 const names = Object.keys(registered);
 console.log('registered processors:', names.length);
 
@@ -168,6 +171,217 @@ console.log('\npp-lowpassfilter');
 	}
 	const hiPeak = maxIdx(Float32Array.from(outHi.slice(BLOCK * 5, BLOCK * 10))).m; // steady region
 	check('4.4k attenuated at 100Hz cutoff', hiPeak < 0.15, `peak=${hiPeak.toFixed(4)}`);
+}
+
+// -- pp-korg35lpf / pp-korg35hpf -------------------------------------------
+// Ported from faustfilters (SpotlightKid) — see korg35filters.ts. Checks the
+// two defining traits of the Korg 35 models: low-pass/high-pass shaping plus
+// the resonance peak that makes these filters musical.
+console.log('\npp-korg35 filters');
+{
+	const runTone = (name, params, freq, blocks = 16) => {
+		const d = makeProc(name, params);
+		const n = blocks * BLOCK;
+		const s = sine(freq, 0.5, n);
+		const L = new Float32Array(n);
+		for (let b = 0; b < blocks; b++) {
+			const [oL] = d.run(s.subarray(b * BLOCK, (b + 1) * BLOCK));
+			L.set(oL, b * BLOCK);
+		}
+		return L;
+	};
+	// settled-region peak (skip the first 8 blocks of transients/smoothing)
+	const peak = (sig) => maxIdx(sig.subarray(BLOCK * 8)).m;
+
+	// low pass
+	{
+		const d = makeProc('pp-korg35lpf', { cutoff: 1000, q: 1 });
+		const dc = new Float32Array(BLOCK).fill(1);
+		const out = [];
+		for (let b = 0; b < 20; b++) {
+			const [o] = d.run(dc);
+			out.push(...o);
+		}
+		const g = out.slice(BLOCK * 12).reduce((a, v) => a + v, 0) / (8 * BLOCK);
+		check('LPF DC passes (unity)', Math.abs(g - 1) < 0.05, `dcg=${g.toFixed(3)}`);
+
+		const pass = peak(runTone('pp-korg35lpf', { cutoff: 1500, q: 0.707 }, 220));
+		check('LPF passband preserved', pass > 0.25, `peak=${pass.toFixed(3)}`);
+		const stop = peak(runTone('pp-korg35lpf', { cutoff: 150, q: 0.707 }, 4400));
+		check('LPF stopband attenuated', stop < 0.05, `peak=${stop.toFixed(4)}`);
+
+		const flat = peak(runTone('pp-korg35lpf', { cutoff: 1000, q: 0.707 }, 1000));
+		const res = peak(runTone('pp-korg35lpf', { cutoff: 1000, q: 5 }, 1000));
+		check('LPF Q raises the cutoff peak', res > flat * 1.6, `flat=${flat.toFixed(3)} res=${res.toFixed(3)}`);
+		check('LPF finite', Number.isFinite(res));
+	}
+
+	// high pass
+	{
+		const d = makeProc('pp-korg35hpf', { cutoff: 500, q: 1 });
+		const dc = new Float32Array(BLOCK).fill(1);
+		const out = [];
+		for (let b = 0; b < 24; b++) {
+			const [o] = d.run(dc);
+			out.push(...o);
+		}
+		const tail = maxIdx(Float32Array.from(out.slice(BLOCK * 16))).m;
+		check('HPF blocks DC', tail < 0.02, `tail=${tail.toFixed(4)}`);
+
+		const pass = peak(runTone('pp-korg35hpf', { cutoff: 150, q: 0.707 }, 4400));
+		check('HPF passband preserved', pass > 0.25, `peak=${pass.toFixed(3)}`);
+		const stop = peak(runTone('pp-korg35hpf', { cutoff: 3000, q: 0.707 }, 100));
+		check('HPF stopband attenuated', stop < 0.05, `peak=${stop.toFixed(4)}`);
+
+		const flat = peak(runTone('pp-korg35hpf', { cutoff: 1000, q: 0.707 }, 1000));
+		const res = peak(runTone('pp-korg35hpf', { cutoff: 1000, q: 5 }, 1000));
+		check('HPF Q raises the cutoff peak', res > flat * 1.6, `flat=${flat.toFixed(3)} res=${res.toFixed(3)}`);
+		check('HPF finite', Number.isFinite(res));
+	}
+}
+
+// -- pp-j60chorus ----------------------------------------------------------
+// Juno-60 chorus. I and II are stereo (the right LFO is inverted); I+II runs
+// the same phase on both sides and is near-mono. Ported from
+// jpcima/rc-effect-playground (Hera Chorus) — see j60chorus.ts.
+console.log('\npp-j60chorus');
+{
+	const SEC = Math.ceil(SR / BLOCK);
+	const blocks = SEC * 2;
+	const tone = sine(220, 0.5, blocks * BLOCK);
+	const capture = (params) => {
+		const d = makeProc('pp-j60chorus', params);
+		const L = new Float32Array(blocks * BLOCK);
+		const R = new Float32Array(blocks * BLOCK);
+		for (let b = 0; b < blocks; b++) {
+			const inb = tone.subarray(b * BLOCK, (b + 1) * BLOCK);
+			const [oL, oR] = d.run(inb, inb);
+			L.set(oL, b * BLOCK);
+			R.set(oR, b * BLOCK);
+		}
+		return { L, R };
+	};
+
+	// both buttons off => exact dry passthrough (enabled settles to 0)
+	const off = capture({ chorusI: 0, chorusII: 0, mix: 1 });
+	let offErr = 0;
+	for (let i = SEC * BLOCK; i < blocks * BLOCK; i += 17)
+		offErr = Math.max(offErr, Math.abs(off.L[i] - tone[i]));
+	check('both off => dry passthrough', offErr < 1e-4, `maxErr=${offErr.toExponential(2)}`);
+
+	// mode II => anti-phase stereo modulation
+	const ii = capture({ chorusI: 0, chorusII: 1, mix: 1 });
+	check('II finite', ii.L.every((v) => Number.isFinite(v)));
+	const diff = new Float32Array(blocks * BLOCK);
+	for (let i = 0; i < diff.length; i++) diff[i] = ii.L[i] - ii.R[i];
+	const width = maxIdx(diff.subarray(SEC * BLOCK)).m;
+	check('II => L/R stereo (anti-phase LFO)', width > 0.02, `maxDiff=${width.toFixed(4)}`);
+
+	// the comb sweeps with the LFO => a steady tone swells over time
+	const mags = [];
+	for (let w = SEC; w + Math.ceil(2048 / BLOCK) < blocks; w += 20)
+		mags.push(dftBin(ii.L, 220, w * BLOCK, 2048));
+	check('II => moving comb', Math.max(...mags) > Math.min(...mags) * 1.5,
+		`max=${Math.max(...mags).toFixed(2)} min=${Math.min(...mags).toFixed(2)}`);
+
+	// I+II => near-mono (same LFO phase both sides), far less stereo than II
+	const both = capture({ chorusI: 1, chorusII: 1, mix: 1 });
+	const bd = new Float32Array(blocks * BLOCK);
+	for (let i = 0; i < bd.length; i++) bd[i] = both.L[i] - both.R[i];
+	const bothWidth = maxIdx(bd.subarray(SEC * BLOCK)).m;
+	check('I+II => near-mono', bothWidth < width * 0.5, `diff=${bothWidth.toFixed(4)} vs ${width.toFixed(4)}`);
+
+	// mix=0 => dry even with a button engaged
+	const dry = capture({ chorusI: 0, chorusII: 1, mix: 0 });
+	let mErr = 0;
+	for (let i = SEC * BLOCK; i < blocks * BLOCK; i += 17)
+		mErr = Math.max(mErr, Math.abs(dry.L[i] - tone[i]));
+	check('mix=0 => dry', mErr < 1e-4, `maxErr=${mErr.toExponential(2)}`);
+}
+
+// -- pp-tapedelay ----------------------------------------------------------
+// Multi-head tape echo. Head echoes land at t, 2t, 3t; feedback decays; drive
+// saturates; wow/flutter shifts the tape. Ported from re-deemer (ISC) — see
+// tapedelay.ts.
+console.log('\npp-tapedelay');
+{
+	const base = {
+		time: 200, feedback: 0, mix: 1, head1: 1, head2: 0, head3: 0,
+		density: 1, wowFlutter: 0, drive: 0, bass: 0, treble: 0, hiss: 0,
+		tapeType: 0, age: 0,
+	};
+	const capture = (params, blocks, gen) => {
+		const d = makeProc('pp-tapedelay', params);
+		const out = new Float32Array(blocks * BLOCK);
+		for (let b = 0; b < blocks; b++) {
+			const inb = gen ? gen(b) : new Float32Array(BLOCK);
+			if (!gen && b === 0) inb[0] = 1;
+			const [oL] = d.run(inb, inb);
+			out.set(oL, b * BLOCK);
+		}
+		return out;
+	};
+	const peakNear = (sig, center, half) => {
+		let m = 0, idx = 0;
+		const lo = Math.max(0, center - half);
+		const hi = Math.min(sig.length, center + half);
+		for (let i = lo; i < hi; i++) if (Math.abs(sig[i]) > m) { m = Math.abs(sig[i]); idx = i; }
+		return { m, idx };
+	};
+	const t = Math.round(200 * SR / 1000); // 8820
+
+	// head 1 echo at t
+	const h1 = capture(base, 320);
+	const e1 = peakNear(h1, t, 200);
+	check('head1 echo lands at ~t', Math.abs(e1.idx - t) < 30, `idx=${e1.idx} m=${e1.m.toFixed(3)}`);
+	check('tapedelay finite', h1.every(Number.isFinite));
+
+	// heads 2 + 3 echo at 2t and 3t
+	const h23 = capture({ ...base, head1: 0, head2: 1, head3: 1 }, 500);
+	const e2 = peakNear(h23, 2 * t, 200);
+	const e3 = peakNear(h23, 3 * t, 300);
+	check('head2 echo at ~2t', Math.abs(e2.idx - 2 * t) < 60 && e2.m > 0.02, `idx=${e2.idx} m=${e2.m.toFixed(3)}`);
+	check('head3 echo at ~3t', Math.abs(e3.idx - 3 * t) < 120 && e3.m > 0.02, `idx=${e3.idx} m=${e3.m.toFixed(3)}`);
+
+	// feedback regenerates and decays
+	const fd = capture({ ...base, feedback: 0.6 }, 700);
+	const f1 = peakNear(fd, t, 200).m;
+	const f2 = peakNear(fd, 2 * t, 200).m;
+	check('feedback repeats decay', f1 > 0.02 && f2 > 0 && f2 < f1, `f1=${f1.toFixed(3)} f2=${f2.toFixed(3)}`);
+
+	// mix=0 => dry passthrough
+	const dryD = capture({ ...base, mix: 0 }, 8);
+	let dryErr = 0;
+	for (let i = 0; i < dryD.length; i += 7) dryErr = Math.max(dryErr, Math.abs(dryD[i] - (i === 0 ? 1 : 0)));
+	check('mix=0 => dry', dryErr < 1e-5, `maxErr=${dryErr.toExponential(2)}`);
+
+	// wow/flutter shifts the echo in time
+	const w = capture({ ...base, wowFlutter: 1 }, 320);
+	const ew = peakNear(w, t, 200);
+	check('wow/flutter shifts the tape', Math.abs(ew.idx - e1.idx) >= 3, `shift=${ew.idx - e1.idx}`);
+
+	// drive saturates a tone (more harmonics), stays bounded
+	const SEC2 = Math.ceil(SR / BLOCK);
+	const tone = sine(200, 0.8, SEC2 * BLOCK);
+	const gen = (b) => tone.subarray(b * BLOCK, (b + 1) * BLOCK);
+	const harmonics = (params) => {
+		const out = capture({ ...base, time: 50, ...params }, SEC2, gen);
+		const start = BLOCK * 30;
+		const f0 = dftBin(out, 200, start, 2048);
+		const h3 = dftBin(out, 600, start, 2048);
+		const h2 = dftBin(out, 400, start, 2048);
+		return { thd: Math.max(h2, h3) / Math.max(1e-9, f0), peak: maxIdx(out.subarray(start)).m };
+	};
+	const clean = harmonics({ drive: 0 });
+	const hot = harmonics({ drive: 1 });
+	check('drive adds tape harmonics', hot.thd > clean.thd * 1.5, `clean=${clean.thd.toFixed(4)} hot=${hot.thd.toFixed(4)}`);
+	check('drive stays bounded', hot.peak < 3 && Number.isFinite(hot.peak), `peak=${hot.peak.toFixed(2)}`);
+
+	// all tape types run clean
+	for (const tt of [0, 1, 2]) {
+		const o = capture({ ...base, tapeType: tt }, 8);
+		check('tapeType ' + tt + ' finite', o.every(Number.isFinite));
+	}
 }
 
 // -- pp-distortion ---------------------------------------------------------
