@@ -1,62 +1,61 @@
 {
-	"name": "purplepurples",
-	"version": "0.2.0",
-	"author": "Bebe Jane",
-	"private": true,
-	"scripts": {
-		"dev": "next dev",
-		"build": "next build",
-		"start": "next start",
-		"lint": "eslint .",
-		"typecheck": "tsc --noEmit",
-		"test": "node tests/verify-effects.mjs",
-		"worklet:gen": "node scripts/build-effects-worklet.mjs",
-		"worklet:check": "node scripts/build-effects-worklet.mjs --check",
-		"predev": "node scripts/build-effects-worklet.mjs",
-		"prebuild": "node scripts/build-effects-worklet.mjs",
-		"pretest": "node scripts/build-effects-worklet.mjs"
-	},
-	"dependencies": {
-		"array-move": "^4.0.0",
-		"classnames": "^2.5.1",
-		"events": "^3.3.0",
-		"jszip": "^3.10.2",
-		"lamejs": "^1.2.1",
-		"mobile-detect": "^1.4.5",
-		"moment": "^2.31.0",
-		"next": "^16.3.6",
-		"react": "^19.3.0",
-		"react-dom": "^19.3.0",
-		"react-icons": "^5.7.0",
-		"react-input-slider": "^5.1.7",
-		"react-tooltip": "^4.5.1",
-		"sass": "^1.105.0",
-		"screenfull": "^5.2.0",
-		"wasm-media-encoders": "^0.7.0",
-		"webmidi": "^3.3.1"
-	},
-	"devDependencies": {
-		"@types/node": "^26.6.2",
-		"@types/react": "^19.3.0",
-		"@types/react-dom": "^19.3.0",
-		"eslint": "^9.39.5",
-		"eslint-config-next": "^16.3.6",
-		"typescript": "^5.9.3"
-	},
-	"engines": {
-		"node": "24.x"
-	},
-	"packageManager": "pnpm@12.3.4",
-	"browserslist": {
-		"production": [
-			">0.2%",
-			"not dead",
-			"not op_mini all"
-		],
-		"development": [
-			"last 1 chrome version",
-			"last 1 firefox version",
-			"last 1 safari version"
-		]
-	}
+  "name": "purplepurples",
+  "version": "0.2.0",
+  "author": "Bebe Jane",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "node tests/verify-effects.mjs",
+    "worklet:gen": "node scripts/build-effects-worklet.mjs",
+    "worklet:check": "node scripts/build-effects-worklet.mjs --check",
+    "predev": "node scripts/build-effects-worklet.mjs",
+    "prebuild": "node scripts/build-effects-worklet.mjs",
+    "pretest": "node scripts/build-effects-worklet.mjs"
+  },
+  "dependencies": {
+    "classnames": "^2.5.1",
+    "events": "^3.3.0",
+    "jszip": "^3.10.2",
+    "lamejs": "^1.2.1",
+    "mobile-detect": "^1.4.5",
+    "moment": "^2.31.0",
+    "next": "^16.3.6",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-icons": "^5.7.0",
+    "react-input-slider": "^5.1.7",
+    "react-tooltip": "^4.5.1",
+    "sass": "^1.105.0",
+    "screenfull": "^5.2.0",
+    "wasm-media-encoders": "^0.7.0",
+    "webmidi": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.6",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": "24.x"
+  },
+  "packageManager": "pnpm@12.3.4",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
 }

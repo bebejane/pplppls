@@ -398,3 +398,28 @@ export const extractPeaks = (
 
 	return { length: peaks[0].length / 2, data: peaks, bits };
 };
+
+// ------------------------------------------------------- array-move --
+// Ported from the MIT-licensed "array-move" package (© Sindre Sorhus,
+// github.com/sindresorhus/array-move).
+
+export const arrayMoveMutable = <T>(array: T[], fromIndex: number, toIndex: number): void => {
+	const startIndex = fromIndex < 0 ? array.length + fromIndex : fromIndex;
+
+	if (startIndex >= 0 && startIndex < array.length) {
+		const endIndex = toIndex < 0 ? array.length + toIndex : toIndex;
+
+		const [item] = array.splice(fromIndex, 1);
+		array.splice(endIndex, 0, item);
+	}
+};
+
+export const arrayMoveImmutable = <T>(
+	array: readonly T[],
+	fromIndex: number,
+	toIndex: number,
+): T[] => {
+	const moved = [...array];
+	arrayMoveMutable(moved, fromIndex, toIndex);
+	return moved;
+};

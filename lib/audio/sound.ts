@@ -1,5 +1,4 @@
-import { reverse, slice } from './utils';
-import { arrayMoveImmutable as arrayMove } from 'array-move';
+import { arrayMoveImmutable, reverse, slice } from './utils';
 import { EventEmitter } from 'events';
 import type { Effect, EffectDefaults } from './effects/core';
 import type AudioEngine from './audioengine';
@@ -512,7 +511,7 @@ class Sound extends EventEmitter {
 		return this._currentEffectParams();
 	}
 	moveEffect(id: string, idx: number, toIdx: number): EffectParamEntry | EffectParamEntry[] {
-		this.effects = arrayMove(this.effects, idx, toIdx);
+		this.effects = arrayMoveImmutable(this.effects, idx, toIdx);
 		this.effects.forEach((e, idx) => (e.idx = idx));
 		this._invalidateEffects();
 		this._connectChain();
