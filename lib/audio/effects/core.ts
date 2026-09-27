@@ -6,17 +6,17 @@
  * Kept in its own module so effect classes can import from here without a
  * circular import back to effects/index.
  */
-import Utils from './utils'
-import { createWorkletEffectNode } from './worklet'
+import Utils from './utils';
+import { createWorkletEffectNode } from './worklet';
 
-export { Utils }
+export { Utils };
 
 /** One editable parameter, as declared in the engine catalog (EFFECTS). */
 export interface EffectParamDef {
 	value: number | boolean;
 	max: number | boolean;
 	min: number | boolean;
-	type: string;
+	type: 'float' | 'integer' | 'boolean';
 }
 
 export type EffectDefaults = Record<string, EffectParamDef>;
@@ -38,7 +38,11 @@ export abstract class Effect {
 	connected = false;
 	_connectedNode: AudioNode | null = null;
 
-	constructor(context: AudioContext, options: Record<string, any> = {}, defaults: EffectDefaults = {}) {
+	constructor(
+		context: AudioContext,
+		options: Record<string, any> = {},
+		defaults: EffectDefaults = {},
+	) {
 		this.context = context;
 		this.options = { ...options };
 		this.defaults = defaults;
@@ -70,8 +74,7 @@ export abstract class Effect {
 	}
 
 	disconnect(audioNode?: AudioNode): this {
-		if (this.connected)
-			this.outputNode.disconnect(audioNode || (this._connectedNode as AudioNode));
+		if (this.connected) this.outputNode.disconnect(audioNode || (this._connectedNode as AudioNode));
 		this.connected = false;
 		return this;
 	}
@@ -101,40 +104,44 @@ export abstract class FilterEffect extends Effect {
 	/** 'lowpass' | 'highpass' — the filter kind this instance was built as. */
 	type: string;
 
-	constructor(context: AudioContext, options: Record<string, any>, type: string, processorId: string) {
+	constructor(
+		context: AudioContext,
+		options: Record<string, any>,
+		type: string,
+		processorId: string,
+	) {
 		const defaults: EffectDefaults = {
 			frequency: { value: 350, max: 22050, min: 10, type: 'integer' },
 			peak: { value: 0.0001, max: 1000, min: 0, type: 'float' },
-		}
-		super(context, options, defaults)
-		this.inputNode = this.outputNode = this.node = createWorkletEffectNode(
-			context,
-			processorId,
-			this.collectInit(),
-		)
-		this.type = type
-		this.initParams()
+		};
+		super(context, options, defaults);
+		this.inputNode =
+			this.outputNode =
+			this.node =
+				createWorkletEffectNode(context, processorId, this.collectInit());
+		this.type = type;
+		this.initParams();
 	}
 
 	/** Cutoff frequency. */
 	get frequency(): number {
-		return this.options.frequency
+		return this.options.frequency;
 	}
 	set frequency(value: number) {
 		if (Utils.isInRange(value, 10, 22050)) {
-			this.options.frequency = value
-			this.node.parameters.get('frequency').value = value
+			this.options.frequency = value;
+			this.node.parameters.get('frequency').value = value;
 		}
 	}
 
 	/** How peaked the response is around the cutoff. */
 	get peak(): number {
-		return this.options.peak
+		return this.options.peak;
 	}
 	set peak(value: number) {
 		if (Utils.isInRange(value, 0.0001, 1000)) {
-			this.options.peak = value
-			this.node.parameters.get('peak').value = value
+			this.options.peak = value;
+			this.node.parameters.get('peak').value = value;
 		}
 	}
 }
@@ -157,40 +164,44 @@ export abstract class Korg35FilterEffect extends Effect {
 	/** 'korg35lpf' | 'korg35hpf' — the filter kind this instance was built as. */
 	type: string;
 
-	constructor(context: AudioContext, options: Record<string, any>, type: string, processorId: string) {
+	constructor(
+		context: AudioContext,
+		options: Record<string, any>,
+		type: string,
+		processorId: string,
+	) {
 		const defaults: EffectDefaults = {
 			cutoff: { value: 350, max: 20000, min: 20, type: 'integer' },
 			q: { value: 1, max: 10, min: 0.5, type: 'float' },
-		}
-		super(context, options, defaults)
-		this.inputNode = this.outputNode = this.node = createWorkletEffectNode(
-			context,
-			processorId,
-			this.collectInit(),
-		)
-		this.type = type
-		this.initParams()
+		};
+		super(context, options, defaults);
+		this.inputNode =
+			this.outputNode =
+			this.node =
+				createWorkletEffectNode(context, processorId, this.collectInit());
+		this.type = type;
+		this.initParams();
 	}
 
 	/** Cutoff frequency in Hertz (20 - 20000). */
 	get cutoff(): number {
-		return this.options.cutoff
+		return this.options.cutoff;
 	}
 	set cutoff(value: number) {
 		if (Utils.isInRange(value, 20, 20000)) {
-			this.options.cutoff = value
-			this.node.parameters.get('cutoff').value = value
+			this.options.cutoff = value;
+			this.node.parameters.get('cutoff').value = value;
 		}
 	}
 
 	/** Resonance (0.5 - 10; 0.707 is flat, higher values emphasize the cutoff). */
 	get q(): number {
-		return this.options.q
+		return this.options.q;
 	}
 	set q(value: number) {
 		if (Utils.isInRange(value, 0.5, 10)) {
-			this.options.q = value
-			this.node.parameters.get('q').value = value
+			this.options.q = value;
+			this.node.parameters.get('q').value = value;
 		}
 	}
 }

@@ -112,18 +112,12 @@ importers:
       array-move:
         specifier: ^4.0.0
         version: 4.0.0
-      bpm:
-        specifier: ^0.0.2
-        version: 0.0.2
       clamp:
         specifier: ^1.0.1
         version: 1.0.1
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
-      dsp.js:
-        specifier: ^1.0.1
-        version: 1.0.1
       events:
         specifier: ^3.3.0
         version: 3.3.0
@@ -139,9 +133,6 @@ importers:
       moment:
         specifier: ^2.31.0
         version: 2.31.0
-      ndfft:
-        specifier: ^0.0.0
-        version: 0.0.0
       next:
         specifier: ^16.3.6
         version: 16.3.6(@babel/core@7.29.7(supports-color@6.1.0))(@types/node@26.6.2)(babel-plugin-macros@2.8.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.105.0)
@@ -1034,13 +1025,6 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  bit-twiddle@0.0.2:
-    resolution: {integrity: sha512-76iFAOrkcuw5UPA30Pt32XaytMHXz/04JembgIwsQAp7ImHYSWNq1shBbrlWf6CUvh1+amQ81LI8hNhqQgsBEw==}
-
-  bpm@0.0.2:
-    resolution: {integrity: sha512-Z6StnY9KuJqIeumPLchgck6/LLmKujsC6KLiJKaqPtCZOUiEvUtljXmJPHr7QOlZQrj+8jstlOxC815SY1qjvg==}
-    hasBin: true
-
   brace-expansion@1.1.21:
     resolution: {integrity: sha512-9zeA+KLZNNzglF2TPKRQEDyx6Yby7daAkuy8MiPzpXPsYDWi/DRM8jmwUDxokQjYqBpv5DgPiwD4h4ZZSy1Ujw==}
 
@@ -1179,9 +1163,6 @@ packages:
   doctrine@2.1.0:
     resolution: {integrity: sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==}
     engines: {node: '>=0.10.0'}
-
-  dsp.js@1.0.1:
-    resolution: {integrity: sha512-5ols1j2i2tdbtd38DMR6xGSmE8dE/qFWgqrNN1ZNnIZnOEAFjzoVq5hM57nbQS9u0VmxqCUw8YccgsS9+zhtNg==}
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -1717,9 +1698,6 @@ packages:
   jzz@1.9.6:
     resolution: {integrity: sha512-J7ENLhXwfm2BNDKRUrL8eKtPhUS/CtMBpiafxQHDBcOWSocLhearDKEdh+ylnZFcr5OXWTed0gj6l/txeQA9vg==}
 
-  keypress@0.1.0:
-    resolution: {integrity: sha512-x0yf9PL/nx9Nw9oLL8ZVErFAk85/lslwEP7Vz7s5SI1ODXZIgit3C5qyWjw4DxOuO/3Hb4866SQh28a1V1d+WA==}
-
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
@@ -1800,10 +1778,6 @@ packages:
 
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
-
-  ndfft@0.0.0:
-    resolution: {integrity: sha512-gEQuDv0vRxuHManliRE5m4GdFLQtJ1a9ELMH4Hz0eigxDjPf7VZU0pzMGVe8Y0NcdvZoWu0OOo6AlUU+Pn494Q==}
-    deprecated: Use https://www.npmjs.org/package/ndarray-fft instead
 
   next@16.3.6:
     resolution: {integrity: sha512-L+otWM/aQbYTx98aZhgEoMb4bZAXx1YVW4UMA/vuCyCoWG5HJyZUili8QAkqzrcC+5///tsz3s0M+SlyB5bLMw==}
@@ -3118,12 +3092,6 @@ snapshots:
 
   baseline-browser-mapping@2.11.25: {}
 
-  bit-twiddle@0.0.2: {}
-
-  bpm@0.0.2:
-    dependencies:
-      keypress: 0.1.0
-
   brace-expansion@1.1.21:
     dependencies:
       balanced-match: 1.0.2
@@ -3269,8 +3237,6 @@ snapshots:
   doctrine@2.1.0:
     dependencies:
       esutils: 2.0.3
-
-  dsp.js@1.0.1: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -3959,8 +3925,6 @@ snapshots:
       jazz-midi: 1.7.9
     optional: true
 
-  keypress@0.1.0: {}
-
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
@@ -4030,10 +3994,6 @@ snapshots:
   napi-postinstall@0.3.4: {}
 
   natural-compare@1.4.0: {}
-
-  ndfft@0.0.0:
-    dependencies:
-      bit-twiddle: 0.0.2
 
   next@16.3.6(@babel/core@7.29.7(supports-color@6.1.0))(@types/node@26.6.2)(babel-plugin-macros@2.8.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.105.0):
     dependencies:

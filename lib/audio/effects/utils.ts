@@ -55,5 +55,5 @@ const Utils = {
 		if (mix >= 0.5) return 1;
 		return 1 - (0.5 - mix) * 2;
 	},
-}
-export default Utils
+};
+export default Utils;
