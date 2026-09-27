@@ -110,8 +110,8 @@ importers:
   .:
     dependencies:
       audio-engine:
-        specifier: link:../audio-engine
-        version: link:../audio-engine
+        specifier: github:bebejane/audio-engine#v0.1.0
+        version: https://codeload.github.com/bebejane/audio-engine/tar.gz/319630905ebbe54d345a148549fd68a4a81bf239
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
@@ -981,6 +981,10 @@ packages:
   async-function@1.0.0:
     resolution: {integrity: sha512-hsU18Ae8CDTR6Kgu9DYf0EbCr/a5iGL0rytQDobUcdpYOKokk8LEjVphnXkDkgpi0wYVsqrXuP0bZxJaTqdgoA==}
     engines: {node: '>= 0.4'}
+
+  audio-engine@https://codeload.github.com/bebejane/audio-engine/tar.gz/319630905ebbe54d345a148549fd68a4a81bf239:
+    resolution: {gitHosted: true, integrity: sha512-hsAMgAHI7AWt9xPLmgOzeAQHP9nVoAtIbhVsUv7qDZvz/RLS14MskIfNdRC89Acucd1Ot7xaz/FHXYQJmpYrTA==, tarball: https://codeload.github.com/bebejane/audio-engine/tar.gz/319630905ebbe54d345a148549fd68a4a81bf239}
+    version: 0.1.0
 
   available-typed-arrays@1.0.7:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
@@ -3036,6 +3040,15 @@ snapshots:
   ast-types-flow@0.0.8: {}
 
   async-function@1.0.0: {}
+
+  audio-engine@https://codeload.github.com/bebejane/audio-engine/tar.gz/319630905ebbe54d345a148549fd68a4a81bf239:
+    dependencies:
+      events: 3.3.0
+      jszip: 3.10.2
+      lamejs: 1.2.1
+      moment: 2.31.0
+      wasm-media-encoders: 0.7.0
+      webmidi: 3.3.1
 
   available-typed-arrays@1.0.7:
     dependencies:
