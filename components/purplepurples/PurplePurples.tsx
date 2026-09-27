@@ -1,16 +1,15 @@
 'use client';
 
+import s from './PurplePurples.module.scss';
 import Global from '@/lib/global';
-import { fileToMimeType } from 'audio-engine';
+import { fileToMimeType, MediaDeviceInfoLike, MidiDeviceInfoLike } from 'audio-engine';
 import screenfull from 'screenfull';
 import { AiOutlineLoading } from 'react-icons/ai';
 import MobileDetect from 'mobile-detect';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import cn from 'classnames';
 import Column from './Column';
 import PresetBar, { keyToSlot } from './PresetBar';
 import Controls from './Controls';
-import Home from './Home';
 import SaveDialog from './SaveDialog';
 import NewDialog from './NewDialog';
 import HelpDialog from './HelpDialog';
@@ -20,7 +19,6 @@ import NotSupported from './NotSupported';
 import { useKeyboardShortcuts, type KeyboardHandlers } from './useKeyboardShortcuts';
 import { useEngineListeners } from './useEngineListeners';
 import type { Model, MoveData, PresetSlot } from './types';
-import s from './PurplePurples.module.scss';
 
 interface PurplePurplesState {
 	init: boolean;
@@ -36,8 +34,8 @@ interface PurplePurplesState {
 	automation: { recording: boolean; playing: boolean; count: number };
 	models: Model[];
 	presets: PresetSlot[];
-	inputDevices: { label: string; deviceId: string }[];
-	midiDevices: { name: string; deviceId: string }[];
+	inputDevices: MediaDeviceInfoLike[];
+	midiDevices: MidiDeviceInfoLike[];
 	midiSupported: boolean;
 	loading: boolean;
 	loaded: number;
@@ -141,6 +139,23 @@ export default function PurplePurples() {
 
 	useEngineListeners(set, setCols, stateRef);
 
+	const init = useCallback(async () => {
+		try {
+			set({
+				inputDevices: await Global.engine.listDevices(),
+				midiDevices: await Global.engine.listMidiDevices(),
+			});
+			const model = await Global.engine.loadModel(stateRef.current.model);
+			if (model) buildGrid(model);
+		} catch (err) {
+			handleError(err);
+		}
+	}, []);
+
+	useEffect(() => {
+		init();
+	}, []);
+
 	// ---- model grid ------------------------------------------------------
 	// The engine owns model I/O + presets (audio-engine's model.ts); this only builds
 	// the grid state for the model the engine just populated.
@@ -223,66 +238,6 @@ export default function PurplePurples() {
 		}, 0);
 	}, []);
 
-	const initDone = useCallback(async () => {
-		try {
-			const model = await Global.engine.loadModel(stateRef.current.model);
-			if (model) buildGrid(model);
-		} catch (err) {
-			handleError(err);
-		}
-	}, [buildGrid]);
-
-	const init = useCallback(
-		(start?: boolean) => {
-			if (!Global.engine)
-				return handleError(
-					'This browser is not really supported. Use Firefox or Chrome to try this out!',
-				);
-			set({ init: false });
-
-			const lastInputDevice = localStorage.getItem('lastInputDevice');
-			const lastMidiDevice = localStorage.getItem('lastMidiDevice');
-
-			Global.engine
-				.init(lastInputDevice, lastMidiDevice)
-				.then((info: any) => {
-					if (info && info.devices) set({ deviceId: info.selected, inputDevices: info.devices });
-					if (start) initDone();
-				})
-				.catch((err: unknown) => {
-					if (err === 'NOTALLOWED') {
-						set({ inputNotAllowed: true });
-						if (start) initDone();
-						return;
-					}
-					handleError(err);
-				});
-
-			Global.engine
-				.initMidi()
-				.then((devices: { deviceId: string; name: string }[]) => {
-					set({ midiDevices: devices, midiSupported: true });
-					if (!devices.length) return;
-					const device = devices.filter((d) => d.deviceId === lastMidiDevice)[0] || devices[0];
-					onMidiDeviceChange(device.deviceId);
-				})
-				.catch(() => {
-					console.log('MIDI NOT AVAILABLE');
-				});
-		},
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[initDone],
-	);
-
-	const onStart = useCallback(() => {
-		if (!introTimeoutRef.current) {
-			introTimeoutRef.current = setTimeout(() => set({ hud: true, controls: true }), 30000);
-		} else {
-			clearTimeout(introTimeoutRef.current);
-		}
-		Global.engine.context.resume().then(() => init(true));
-	}, [init]);
-
 	const onRequestInput = useCallback(() => {
 		Global.engine
 			.initInputDevices()
@@ -322,11 +277,9 @@ export default function PurplePurples() {
 
 	// ---- mount: load models index, init devices, block touchmove ---------
 	useEffect(() => {
-		let cancelled = false;
 		(async () => {
 			try {
 				await Global.engine.loadModels();
-				if (!cancelled) init(false);
 			} catch (err) {
 				handleError(err);
 			}
@@ -334,7 +287,6 @@ export default function PurplePurples() {
 		const touchHandler = (e: TouchEvent) => e.preventDefault();
 		document.addEventListener('touchmove', touchHandler, true);
 		return () => {
-			cancelled = true;
 			document.removeEventListener('touchmove', touchHandler, true);
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -859,7 +811,6 @@ export default function PurplePurples() {
 
 	return (
 		<div className={s.container}>
-			<Home init={initialized} onStart={onStart} />
 			<form style={{ display: 'none' }}>
 				<input
 					type='file'

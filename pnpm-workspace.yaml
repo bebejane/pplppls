@@ -7,6 +7,12 @@ allowBuilds:
   es5-ext: true
   fsevents: true
   unrs-resolver: true
+# pnpm ≥12 re-installs before running any script (`verify-deps-before-run`), which
+# silently reverts a local `node_modules/audio-engine` link back to the github
+# dependency — so `pnpm engine:link` would stop taking effect after the next
+# `pnpm typecheck`/`lint`/`dev`. Turn that off; run `pnpm install` yourself after
+# editing dependencies. Vercel installs explicitly, so this doesn't affect deploys.
+verifyDepsBeforeRun: false
 # NOTE: do NOT add an `overrides: { audio-engine: link:../audio-engine }` entry here.
 # Overrides apply on Vercel too, where the sibling checkout does not exist — the
 # install then produces a dangling symlink and the build fails with

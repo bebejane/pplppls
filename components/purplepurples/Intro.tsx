@@ -2,19 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import cn from 'classnames';
-import s from './Home.module.scss';
+import s from './Intro.module.scss';
 
-const random = (min: number, max: number) =>
-	Math.floor(Math.random() * (max - min)) + min + 1;
+const random = (min: number, max: number) => Math.floor(Math.random() * (max - min)) + min + 1;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export default function Home({
-	init,
-	onStart,
-}: {
-	init: boolean;
-	onStart: () => void;
-}) {
+export default function Intro({ onStart }: { onStart: () => void }) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const cancelRef = useRef<{ flackao?: boolean; blakao?: boolean; crackao?: boolean }>({});
@@ -28,6 +21,8 @@ export default function Home({
 	// mutable size ref so loops can read latest without re-rendering
 	const sizeRef = useRef(size);
 	sizeRef.current = size;
+
+	useEffect(() => {}, []);
 
 	useEffect(() => {
 		const update = () => {
@@ -69,7 +64,12 @@ export default function Home({
 				ctx.fillRect(x3, y3, random(1, 3), random(0, h));
 				await sleep(30);
 				ctx.fillStyle = 'rgb(68, 5, 90)';
-				ctx.fillRect(random(0, w), random(0, h), random(1, 4) + size / 10, random(1, 4) + size / 10);
+				ctx.fillRect(
+					random(0, w),
+					random(0, h),
+					random(1, 4) + size / 10,
+					random(1, 4) + size / 10,
+				);
 				await sleep(60);
 				if (cancelRef.current.flackao) return;
 			}
@@ -117,11 +117,11 @@ export default function Home({
 		setTimeout(() => onStart(), 50);
 	};
 
-	if (init || started) return null;
+	if (started) return null;
 
 	return (
 		<div
-			className={s.home}
+			className={s.intro}
 			ref={containerRef}
 			onMouseMove={(e) => {
 				xRef.current = e.pageX;

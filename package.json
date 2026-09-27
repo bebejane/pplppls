@@ -4,16 +4,16 @@
 	"author": "Bebe Jane",
 	"private": true,
 	"scripts": {
-		"dev": "next dev",
+		"dev": "node scripts/use-local-engine.mjs && next dev",
 		"build": "next build",
 		"start": "next start",
 		"lint": "eslint .",
 		"typecheck": "tsc --noEmit",
-		"engine:link": "node scripts/use-local-engine.mjs",
+		"engine:link": "node scripts/use-local-engine.mjs --required",
 		"engine:unlink": "pnpm unlink audio-engine"
 	},
 	"dependencies": {
-		"audio-engine": "github:bebejane/audio-engine#v0.1.0",
+		"audio-engine": "github:bebejane/audio-engine",
 		"classnames": "^2.5.1",
 		"mobile-detect": "^1.4.5",
 		"moment": "^2.31.0",

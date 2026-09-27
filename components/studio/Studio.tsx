@@ -5,6 +5,7 @@ import AudioEngine from 'audio-engine';
 import { useEffect, useState } from 'react';
 import PurplePurples from '@/components/purplepurples/PurplePurples';
 import NotSupported from '@/components/purplepurples/NotSupported';
+import Intro from '@/components/purplepurples/Intro';
 
 /**
  * Client-only root. The WebAudio engine can't exist on the server, so it is
@@ -14,7 +15,7 @@ export default function Studio() {
 	const [ready, setReady] = useState(false);
 	const [supported, setSupported] = useState(true);
 
-	useEffect(() => {
+	const start = async () => {
 		if (Global.engine) {
 			setReady(true);
 			return;
@@ -33,14 +34,19 @@ export default function Studio() {
 				},
 			});
 
+			const { input, midi } = await Global.engine.init({
+				input: true,
+				midi: true,
+			});
+
 			setReady(true);
 		} catch (err) {
 			console.error(err);
 			setSupported(false);
 		}
-	}, []);
+	};
 
 	if (!supported) return <NotSupported />;
-	if (!ready) return null;
+	if (!ready) return <Intro onStart={start} />;
 	return <PurplePurples />;
 }
