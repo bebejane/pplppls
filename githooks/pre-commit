@@ -1,0 +1,4 @@
+#!/bin/sh
+# Refresh the pinned audio-engine commit in pnpm-lock.yaml before committing
+# (skips offline; never blocks the commit). Logic: scripts/sync-engine-lockfile.mjs
+node "$(git rev-parse --show-toplevel)/scripts/sync-engine-lockfile.mjs"

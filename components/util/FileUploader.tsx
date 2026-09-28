@@ -81,12 +81,7 @@ export default function FileUploader({
 				}
 			}
 		}
-		if (ev.dataTransfer.files) {
-			for (let i = 0; i < ev.dataTransfer.files.length; i++) {
-				const item = ev.dataTransfer.files.item(i);
-				if (item) files.push(item);
-			}
-		}
+
 		if (files.length > 1 && multi) {
 			const uploaded: UploadedFile[] = [];
 			for (const f of files) uploaded.push(await uploadFile(f));
@@ -96,6 +91,7 @@ export default function FileUploader({
 			if (file) {
 				try {
 					const uploaded = await uploadFile(file);
+					console.log(uploaded);
 					if (onUpload) onUpload(uploaded.contents, uploaded.filename);
 				} catch (err) {
 					handleError(err);

@@ -16,7 +16,11 @@ import HelpDialog from './HelpDialog';
 import RecordingsDialog, { type Recording } from './RecordingsDialog';
 import Mixer from './Mixer';
 import NotSupported from './NotSupported';
-import { loadStoredRecordings, putStoredRecording, deleteStoredRecording } from '@/lib/recordings-store';
+import {
+	loadStoredRecordings,
+	putStoredRecording,
+	deleteStoredRecording,
+} from '@/lib/recordings-store';
 import { useKeyboardShortcuts, type KeyboardHandlers } from './useKeyboardShortcuts';
 import { useEngineListeners } from './useEngineListeners';
 import type { Model, MoveData, PresetSlot } from './types';
@@ -457,6 +461,7 @@ export default function PurplePurples() {
 				return;
 			}
 			const objURL = URL.createObjectURL(new Blob([buffer], { type: fileToMimeType(filename) }));
+			console.log('replace', id, filename, objURL);
 			Global.engine.replace(id, objURL, filename);
 		},
 		[buildGrid],

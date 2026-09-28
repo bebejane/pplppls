@@ -2,7 +2,7 @@
 
 import Global from '@/lib/global';
 import AudioEngine from 'audio-engine';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import PurplePurples from '@/components/purplepurples/PurplePurples';
 import NotSupported from '@/components/purplepurples/NotSupported';
 import Intro from '@/components/purplepurples/Intro';
