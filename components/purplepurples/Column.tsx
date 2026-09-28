@@ -154,8 +154,6 @@ export default function Column(props: ColumnProps) {
 
 	const onLoopSelection = (selection: { start: number; end: number }) => {
 		const loop = selection.start && selection.end ? true : false;
-		console.log(loop, selection);
-
 		Global.engine.loop(id, loop, selection);
 		Global.engine.play(id);
 	};
