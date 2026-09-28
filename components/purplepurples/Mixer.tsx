@@ -9,6 +9,7 @@ import VolumeVisualizer from '@/components/visualizers/VolumeVisualizer';
 import { IconPlay, IconStop, IconRecord, IconVolume } from '@/components/icons/Icons';
 import MixerChannelStrip from './MixerChannelStrip';
 import EffectChain from './EffectChain';
+import EqEditor from './EqEditor';
 import s from './Mixer.module.scss';
 import cs from './MixerChannelStrip.module.scss';
 
@@ -35,6 +36,7 @@ export default function Mixer({
 }: MixerProps) {
 	const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 	const [fxId, setFxId] = useState<string | null>(null);
+	const [eqId, setEqId] = useState<string | null>(null);
 
 	// one strip per actual sound — a model's grid can have more cells than
 	// files (empty cells have no sound and nothing to show)
@@ -71,6 +73,7 @@ export default function Mixer({
 						onPitch={(semitones) => Global.engine.pitch(id, semitones)}
 						onReverse={(on) => Global.engine.reverse(id, on)}
 						onLoop={(on) => Global.engine.loop(id, on)}
+						onEq={() => setEqId(id)}
 						onEffects={() => setFxId(id)}
 						onPlay={() => Global.engine.play(id)}
 						onStop={() => Global.engine.stop(id)}
@@ -102,6 +105,9 @@ export default function Mixer({
 			<ReactTooltip id='tt-mixer-loop' type='dark' place='top' effect='float' delayShow={600}>
 				Loop
 			</ReactTooltip>
+			<ReactTooltip id='tt-mixer-eq' type='dark' place='top' effect='float' delayShow={600}>
+				EQ
+			</ReactTooltip>
 			<ReactTooltip id='tt-mixer-effects' type='dark' place='top' effect='float' delayShow={600}>
 				Effects
 			</ReactTooltip>
@@ -112,6 +118,15 @@ export default function Mixer({
 					id={fxId}
 					filename={cols[fxId]?.filename}
 					onClose={() => setFxId(null)}
+				/>
+			)}
+
+			{eqId && (
+				<EqEditor
+					key={version + ':' + eqId}
+					id={eqId}
+					filename={cols[eqId]?.filename}
+					onClose={() => setEqId(null)}
 				/>
 			)}
 		</div>

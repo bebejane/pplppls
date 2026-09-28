@@ -42,6 +42,7 @@ export default function MixerChannelStrip({
 	onReverse,
 	onLoop,
 	onEffects,
+	onEq,
 	onPlay,
 	onStop,
 }: MixerChannelStripProps) {
@@ -66,6 +67,23 @@ export default function MixerChannelStrip({
 		filename: params?.filename || filename || '',
 	}));
 	const [samplingProgress, setSamplingProgress] = useState<Record<string, any>>({});
+
+	// is any EQ band active? (lights the EQ button)
+	const [eqOn, setEqOn] = useState<boolean>(() => {
+		const b = Global.engine?.eq?.(id);
+		return Array.isArray(b) && b.some((x: any) => x.on);
+	});
+	useEffect(() => {
+		const sync = () => {
+			const b = Global.engine?.eq?.(id);
+			setEqOn(Array.isArray(b) && b.some((x: any) => x.on));
+		};
+		sync();
+		Global.engine.on('eq' + id, sync);
+		return () => {
+			Global.engine.off('eq' + id, sync);
+		};
+	}, [id]);
 
 	useEffect(() => {
 		const onState = (state: Record<string, any>) => setSt((prev) => ({ ...prev, ...state }));
@@ -200,6 +218,18 @@ export default function MixerChannelStrip({
 				>
 					<IconLoop />
 				</button>
+			</div>
+
+			<div className={s.toggles}>
+				<button
+					type='button'
+					className={cn(s.btn, eqOn && s.on)}
+					data-tip
+					data-for={'tt-mixer-eq'}
+					onClick={onEq}
+				>
+					EQ
+				</button>
 				<button
 					type='button'
 					className={cn(s.btn, fxCount > 0 && s.on)}
@@ -300,6 +330,8 @@ export interface MixerChannelStripProps {
 	onPitch: (semitones: number) => void;
 	onReverse: (on: boolean) => void;
 	onLoop: (on: boolean) => void;
+	/** Open the channel EQ editor for this channel. */
+	onEq: () => void;
 	/** Open the effect-chain editor for this channel. */
 	onEffects: () => void;
 	onPlay: () => void;
