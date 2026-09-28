@@ -93,10 +93,10 @@
 	padding: 40px;
 	color: rgba(255, 255, 255, 0.5);
 	font-weight: bold;
-	background-color: var(--color-bg);
+	background-color: var(--color-surface);
 	text-align: center;
 	line-height: 20px;
-	border: 20px solid rgba(255, 255, 255, 0.2);
+	border: 20px solid rgba(188, 17, 148, 0.635);
 }
 
 .notificationClose {
@@ -105,7 +105,7 @@
 
 .notificationClose > button {
 	appearance: none;
-	border-radius: 20px;
+	border-radius: 0px;
 	height: 40px;
 	background-color: rgba(255, 255, 255, 0.05);
 	border: 1px solid rgba(255, 255, 255, 0.1);

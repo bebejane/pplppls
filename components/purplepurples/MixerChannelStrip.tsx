@@ -157,7 +157,6 @@ export default function MixerChannelStrip({
 				data-for={'tt-mixer-mute'}
 				onClick={() => onMute(!muted)}
 			>
-				<IconVolume />
 				MUTE
 			</button>
 			<button
@@ -167,7 +166,6 @@ export default function MixerChannelStrip({
 				data-for={'tt-mixer-solo'}
 				onClick={() => onSolo(!solo)}
 			>
-				<IconSolo />
 				SOLO
 			</button>
 			<button
@@ -180,7 +178,6 @@ export default function MixerChannelStrip({
 				data-for={'tt-mixer-rec'}
 				onClick={() => onSampleRecord(!sampling)}
 			>
-				<IconRecord />
 				REC
 			</button>
 

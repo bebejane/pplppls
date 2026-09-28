@@ -28,6 +28,7 @@ export default function Studio() {
 				enableAnalysers: true,
 				enableElapsed: true,
 				enableLoops: true,
+				preloadPitch: true,
 				processSample: {
 					trim: true,
 					normalize: true,

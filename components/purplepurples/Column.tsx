@@ -147,6 +147,11 @@ export default function Column(props: ColumnProps) {
 		}
 	};
 
+	const onLock = (e: React.MouseEvent) => {
+		if (st.fullscreen) return;
+		Global.engine.lock(id, !st.locked);
+	};
+
 	const onLoopSelection = (selection: { start: number; end: number }) => {
 		const loop = !(selection.start === 0 && selection.end === 0);
 		Global.engine.loop(id, loop, selection);
@@ -220,8 +225,8 @@ export default function Column(props: ColumnProps) {
 			onMouseDown={(e) => !e.ctrlKey && onClick(e)}
 			onContextMenu={(e) => {
 				e.preventDefault();
-				e.ctrlKey = true;
-				onClick(e);
+				e.stopPropagation();
+				onLock(e);
 			}}
 		>
 			{locked && (

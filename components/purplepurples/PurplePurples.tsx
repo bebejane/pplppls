@@ -16,6 +16,7 @@ import HelpDialog from './HelpDialog';
 import RecordingsDialog, { type Recording } from './RecordingsDialog';
 import Mixer from './Mixer';
 import NotSupported from './NotSupported';
+import { loadStoredRecordings, putStoredRecording, deleteStoredRecording } from '@/lib/recordings-store';
 import { useKeyboardShortcuts, type KeyboardHandlers } from './useKeyboardShortcuts';
 import { useEngineListeners } from './useEngineListeners';
 import type { Model, MoveData, PresetSlot } from './types';
@@ -145,6 +146,19 @@ export default function PurplePurples() {
 				inputDevices: await Global.engine.listDevices(),
 				midiDevices: await Global.engine.listMidiDevices(),
 			});
+			// resurrect recordings persisted in IndexedDB from earlier sessions
+			// (idempotent: init can run twice under StrictMode — dedupe by id)
+			loadStoredRecordings()
+				.then((rows) =>
+					setRecordings((prev) => {
+						const have = new Set(prev.map((r) => r.id));
+						const restored = rows
+							.filter((r) => !have.has(r.id))
+							.map((r) => ({ ...r, url: URL.createObjectURL(r.blob) }));
+						return restored.concat(prev);
+					}),
+				)
+				.catch((err) => console.error('restore recordings failed', err));
 			const model = await Global.engine.loadModel(stateRef.current.model);
 			if (model) buildGrid(model);
 		} catch (err) {
@@ -357,7 +371,12 @@ export default function PurplePurples() {
 		set({ recording: true });
 		Global.engine
 			.record(true)
-			.then((recording: Recording) => setRecordings((prev) => [recording, ...prev]))
+			.then((recording: Recording) => {
+				// persist (minus the transient object url) so it survives reloads
+				const { url, ...rest } = recording;
+				putStoredRecording(rest).catch((err) => console.error('save recording failed', err));
+				setRecordings((prev) => [recording, ...prev]);
+			})
 			.catch((err: unknown) => {
 				if (err === 'CANCELLED') return;
 				console.error(err);
@@ -392,7 +411,12 @@ export default function PurplePurples() {
 	}, []);
 
 	const onDeleteRecording = useCallback((id: number) => {
-		setRecordings((prev) => prev.filter((r) => r.id !== id));
+		setRecordings((prev) => {
+			const removed = prev.find((r) => r.id === id);
+			if (removed) URL.revokeObjectURL(removed.url);
+			return prev.filter((r) => r.id !== id);
+		});
+		deleteStoredRecording(id).catch((err) => console.error('delete recording failed', err));
 	}, []);
 
 	const onDownload = useCallback(

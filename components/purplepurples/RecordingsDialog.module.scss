@@ -16,7 +16,7 @@
 	position: relative;
 	display: flex;
 	flex-direction: column;
-	padding: 40px;
+	padding: 20px;
 	max-height: 80%;
 	background-color: #7b2482;
 	box-sizing: border-box;
@@ -25,7 +25,10 @@
 }
 
 .header {
-	margin-bottom: 10px;
+	font-size: 20px;
+	letter-spacing: 0.05em;
+	margin-bottom: 16px;
+	opacity: 0.9;
 }
 
 .close {
@@ -36,70 +39,174 @@
 	font-size: 20px;
 	color: rgba(255, 255, 255, 0.4);
 	cursor: pointer;
+	line-height: 1;
 }
 
 .close:hover {
-	color: rgba(255, 255, 255, 0.5);
+	color: rgba(255, 255, 255, 0.7);
+}
+
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
 }
 
 .row {
-	position: relative;
 	display: flex;
-	flex-direction: row;
-	padding: 10px;
-	padding-left: 0px;
+	flex-direction: column;
+	gap: 6px;
+	padding: 12px 14px;
+	background-color: rgba(0, 0, 0, 0.15);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 0px;
 	box-sizing: border-box;
+	min-width: 380px;
+	transition: background-color 0.15s;
 }
 
-.row:first-child {
-	margin-top: 10px;
+.rowActive {
+	background-color: rgba(0, 0, 0, 0.3);
+	border-color: rgba(255, 255, 255, 0.25);
 }
 
-.tools {
+.rowTop {
 	display: flex;
 	align-items: center;
-	box-sizing: border-box;
-	margin-right: 5px;
+	gap: 12px;
 }
 
-.tools > svg {
-	font-size: 20px;
-	color: rgba(255, 255, 255, 0.5);
+.playBtn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	flex: none;
+	font-size: 24px;
+	color: #fff;
+	background-color: rgba(255, 255, 255, 0.1) !important;
+	border: none;
+	//border-radius: 50%;
+	cursor: pointer;
+	box-sizing: content-box;
+	padding: 0;
+	transition:
+		background-color 0.15s,
+		color 0.15s;
 }
 
-.tools > svg:hover {
-	color: rgba(255, 255, 255, 0.9);
+.playBtn:hover {
+	//background-color: rgba(255, 255, 255, 0.2);
+}
+
+.playBtnPlaying {
+	//color: #7b2482;
+	//background-color: rgba(255, 255, 255, 0.9);
+}
+
+.playBtnPlaying:hover {
+	// color: #7b2482;
+	// background-color: #fff;
 }
 
 .label {
-	display: flex;
-	align-items: center;
-	font-variant-numeric: tabular-nums;
-	max-width: 300px;
-	opacity: 0.8;
+	flex: 1;
+	font-size: 14px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	opacity: 0.95;
 }
 
-.download {
+.time {
+	display: flex;
+	align-items: baseline;
+	gap: 5px;
+	flex: none;
 	font-size: 12px;
-	background-color: rgba(255, 255, 255, 0.1);
-	padding: 5px;
-	line-height: 13px;
-	border-radius: 2px;
-	margin-left: 10px;
+	font-variant-numeric: tabular-nums;
+	opacity: 0.7;
+}
+
+.elapsed {
+	min-width: 44px;
+	text-align: right;
+	opacity: 0.55;
+}
+
+.elapsedLive {
+	opacity: 1;
+}
+
+.sep {
+	opacity: 0.5;
+}
+
+.progress {
+	position: relative;
+	height: 6px;
+	border-radius: 3px;
+	background-color: rgba(255, 255, 255, 0.12);
 	cursor: pointer;
+	margin: 10px 0;
+}
+
+.progressFill {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	border-radius: 3px;
+	background-color: rgba(255, 255, 255, 0.75);
+	transition: width 0.05s linear;
+	pointer-events: none;
+}
+
+.progressHandle {
+	position: absolute;
+	top: 50%;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background-color: #fff;
+	transform: translateY(-50%);
+	pointer-events: none;
+	transition: opacity 0.15s;
+}
+
+.rowActions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 6px;
+}
+
+.download,
+.delete {
+	font-size: 10px;
+	letter-spacing: 0.08em;
+	background-color: rgba(255, 255, 255, 0.1);
+	padding: 4px 10px;
+	line-height: 14px;
+	border-radius: 3px;
+	cursor: pointer;
+	transition: background-color 0.15s;
+	user-select: none;
 }
 
 .download:hover {
-	background-color: rgba(255, 255, 255, 0.2);
+	background-color: rgba(255, 255, 255, 0.25);
+}
+
+.delete:hover {
+	background-color: rgba(214, 48, 49, 0.6);
 }
 
 .empty {
-	min-width: 300px;
+	min-width: 340px;
+	padding: 20px 0;
 	vertical-align: middle;
 	text-align: center;
 	color: rgba(255, 255, 255, 0.3);
-}
-
-.duration {
-	display: inline-block;
 }
