@@ -153,14 +153,31 @@ export default function Column(props: ColumnProps) {
 	};
 
 	const onLoopSelection = (selection: { start: number; end: number }) => {
-		const loop = !(selection.start === 0 && selection.end === 0);
+		const loop = selection.start && selection.end ? true : false;
+		console.log(loop, selection);
+
 		Global.engine.loop(id, loop, selection);
-		if (loop) Global.engine.play(id, { enableElapsed: true });
-		else Global.engine.stop(id);
+		Global.engine.play(id);
 	};
 
-	const onMove = (touch: React.Touch | Touch, targetId: string) => {
-		// column-local move event (legacy path)
+	const activePointers = useRef<Set<number>>(new Set());
+
+	const handlePointer = (e: React.PointerEvent) => {
+		const type = e.type;
+		console.log(type, e.pointerType);
+		if (type === 'pointerdown') {
+			activePointers.current?.add(e.pointerId);
+
+			// Check if exactly two fingers are down simultaneously
+			if (activePointers.current?.size === 2) {
+				console.log('Two-finger tap/gesture initiated!');
+				// Trigger your two-finger logic here
+			}
+		} else if (type === 'pointerup') {
+			activePointers.current?.delete(e.pointerId);
+		} else if (type === 'pointercancel') {
+			activePointers.current?.clear();
+		}
 	};
 
 	const {
@@ -211,10 +228,13 @@ export default function Column(props: ColumnProps) {
 	return (
 		<div
 			id={id}
+			className={s.wrap}
 			data-sound-point
 			ref={ref}
-			className={s.wrap}
 			style={style}
+			// onPointerDown={handlePointer}
+			// onPointerUp={handlePointer}
+			// onPointerCancel={handlePointer}
 			onMouseMove={(e) => {
 				onModify(e);
 				// only re-render on the first move of a hover

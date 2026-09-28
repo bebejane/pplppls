@@ -22,8 +22,6 @@ export default function Intro({ onStart }: { onStart: () => void }) {
 	const sizeRef = useRef(size);
 	sizeRef.current = size;
 
-	useEffect(() => {}, []);
-
 	useEffect(() => {
 		const update = () => {
 			if (containerRef.current) {
@@ -48,11 +46,11 @@ export default function Intro({ onStart }: { onStart: () => void }) {
 		for (let i = 0; i < 10000000; i++) {
 			const w = sizeRef.current?.width || 1;
 			const h = sizeRef.current?.height || 1;
-			for (let y = 0; y < h; y += h / 100, size += 1) {
+			for (let y = 0; y < h; y += h / 100, size += 10) {
 				ctx.fillStyle = 'rgb(64, 0, ' + random(50, 63) + ')';
-				const w2 = random(0, w) - 100;
-				const x2 = xRef.current + random(0, w / 2);
-				const h2 = random(20, 29);
+				const w2 = random(0, w / 2) - 100;
+				const x2 = xRef.current - random(0, w / 2);
+				const h2 = random(10, 19);
 				ctx.fillRect(x2, y, w2, h2);
 				await sleep(30);
 				ctx.clearRect(x2, y, w2, h2);
@@ -71,18 +69,19 @@ export default function Intro({ onStart }: { onStart: () => void }) {
 					random(1, 4) + size / 10,
 				);
 				await sleep(60);
-				if (cancelRef.current.flackao) return;
 			}
-			await sleep(random(100, 2000));
-			if (size > 100) size = 0;
+			await sleep(random(100, 500));
+			if (size > 200) size = 0;
 		}
 	}, []);
 
 	const blakao = useCallback(async () => {
 		const canvas = canvasRef.current;
+
 		if (!canvas) return;
 		const ctx = canvas.getContext('2d');
 		if (!ctx) return;
+		console.log('blakao');
 		const w = sizeRef.current?.width || 1;
 		const h = sizeRef.current?.height || 1;
 		for (let i = 0; i < 100000; i++) {
@@ -92,29 +91,27 @@ export default function Intro({ onStart }: { onStart: () => void }) {
 				await sleep(50);
 				ctx.fillStyle = 'rgb(68, 0, 50)';
 				ctx.fillRect(random(0, w), 0, random(1, 30), random(0, h));
-				if (cancelRef.current.blakao) return;
+				//if (cancelRef.current.blakao) return;
 			}
 			await sleep(random(100, 2000));
 		}
 	}, []);
 
 	useEffect(() => {
-		flackao();
+		setTimeout(() => {
+			blakao();
+		}, 100);
+		setTimeout(() => {
+			flackao();
+		}, 2000);
+
 		setIntro(false);
-	}, [flackao]);
+	}, []);
 
 	const start = (e: React.MouseEvent) => {
 		e.stopPropagation();
-		if (!purples) {
-			cancelRef.current.flackao = true;
-			setTimeout(() => blakao(), 500);
-			setPurples(true);
-			return;
-		}
-		cancelRef.current.flackao = true;
-		cancelRef.current.blakao = true;
-		setStarted(true);
-		setTimeout(() => onStart(), 50);
+		setPurples(true);
+		setTimeout(() => onStart(), 500);
 	};
 
 	if (started) return null;

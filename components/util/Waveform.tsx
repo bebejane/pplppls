@@ -417,6 +417,7 @@ export default function Waveform({
 		(next: Selection) => {
 			const duration = st.duration || 0;
 			const at = (v: number) => clampTime(view.pxToTime(v), duration);
+			console.log(next);
 			if (next.start !== next.end) {
 				if (onSelection)
 					onSelection({
@@ -428,7 +429,7 @@ export default function Waveform({
 				resetSelection();
 				if (onSelection)
 					onSelection({
-						start: 0,
+						start: next.start,
 						end: 0,
 						time: at(next.x || 0),
 					});

@@ -17,6 +17,7 @@ export default function Studio() {
 
 	const start = async () => {
 		if (Global.engine) {
+			console.log('skip engine setup');
 			setReady(true);
 			return;
 		}

@@ -73,7 +73,7 @@ interface PurplePurplesState {
 
 const initialState: PurplePurplesState = {
 	init: false,
-	model: 'world winter II',
+	model: 'test',
 	status: '',
 	x: 0,
 	y: 0,
@@ -121,7 +121,6 @@ export default function PurplePurples() {
 	const elementMapRef = useRef<Record<string, HTMLElement>>({});
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const fileUploaderRef = useRef<HTMLInputElement>(null);
-	const introTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const touchStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
 	// pointer moves are coalesced to at most one grid update per animation frame
 	// (a trackpad can fire well over 100/s; each one otherwise cloned every
@@ -571,7 +570,7 @@ export default function PurplePurples() {
 		const heatPerc = Math.abs(data.heat - 100) / 100;
 		const delayParams = {
 			feedback: parseFloat(((heatPerc * 1.0) / 2).toFixed(1)),
-			mix: parseFloat((heatPerc * 1.0).toFixed(1)),
+			mix: parseFloat((heatPerc * 0.5).toFixed(1)),
 			time: Number(heatPerc * 1.0 <= 0 ? 0.0001 : heatPerc * 1.0),
 		};
 
