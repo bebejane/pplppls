@@ -1,0 +1,29 @@
+/* Shared fader wrappers. The wheel/swipe nudge listener is attached to the
+   wrapper (see useWheelNudge), so it works regardless of where the pointer sits
+   over the track or thumb.
+
+   A vertical fader's track is styled `height: '100%'` by its caller, so the
+   wrapper must present a *definite* height for that percentage to resolve
+   against. It stretches to fill the row instead of relying on `height: 100%`
+   chains, which collapse when any ancestor is auto-height (the track then has
+   zero height and there is no drag target). */
+
+.vertical {
+	display: flex;
+	align-items: stretch;
+	justify-content: center;
+	align-self: stretch;
+	flex: 1 1 auto;
+	width: 22px;
+}
+
+/* Horizontal faders size their track with an explicit height, so the wrapper
+   only needs to take the width its row gives it. */
+.horizontal {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: 100%;
+	min-width: 40px;
+}

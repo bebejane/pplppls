@@ -69,10 +69,10 @@
 	width: 28px;
 }
 
-/* compound selectors so the master overrides win over the shared .strip rules
-   regardless of the CSS import order between the two modules */
+/* the master strip is distinguished by colour/border only, not size — it keeps
+   the shared .strip width so every strip (and the play button squared from its
+   width) lines up */
 .channels .master {
-	width: 108px;
 	background-color: rgba(255, 255, 255, 0.07);
 	border-color: rgba(255, 255, 255, 0.28);
 }

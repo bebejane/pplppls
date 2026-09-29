@@ -2,8 +2,8 @@
 
 import Global from '@/lib/global';
 import { useEffect, useState } from 'react';
-import Slider from 'react-input-slider';
 import ReactTooltip from 'react-tooltip';
+import { HorizontalFader } from '@/components/util/Fader';
 import VolumeVisualizer from '@/components/visualizers/VolumeVisualizer';
 import s from './MasterFader.module.scss';
 
@@ -37,14 +37,13 @@ export default function MasterFader({
 
 	return (
 		<div className={s.fader}>
-			<Slider
+			<HorizontalFader
 				key={id}
-				axis='x'
-				xmax={100}
-				xmin={0}
-				x={volume * 100}
-				xstep={1}
-				onChange={(axis: any) => onVolume(axis.x / 100)}
+				label='Output volume'
+				value={volume}
+				min={0}
+				max={1}
+				onChange={onVolume}
 				styles={sliderStyle}
 			/>
 			<div className={s.meter} data-tip data-for={'tt-output'}>

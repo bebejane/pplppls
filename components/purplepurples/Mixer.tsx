@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Global from '@/lib/global';
-import Slider from 'react-input-slider';
 import ReactTooltip from 'react-tooltip';
 import cn from 'classnames';
+import { VerticalFader } from '@/components/util/Fader';
 import VolumeVisualizer from '@/components/visualizers/VolumeVisualizer';
 import { IconPlay, IconStop, IconRecord, IconVolume } from '@/components/icons/Icons';
 import MixerChannelStrip from './MixerChannelStrip';
@@ -64,7 +64,10 @@ export default function Mixer({
 						init={init}
 						sampling={sampling === id}
 						isSampling={!!sampling && sampling !== id}
-						onVolume={(vol) => Global.engine.volume(id, vol)}
+						onVolume={(vol) => {
+							console.log('vol', vol);
+							Global.engine.volume(id, vol);
+						}}
 						onMute={(on) => Global.engine.mute(id, on)}
 						onSolo={(on) => Global.engine.solo(id, on, false)}
 						onSampleRecord={(on) => onSampleRecord(id, on)}
@@ -149,24 +152,7 @@ function MasterStrip({
 }) {
 	const { volume = 0, muted, playing, recording } = masterstate;
 
-	// scroll over the master fader to nudge the level (see MixerChannelStrip)
-	const faderRef = useRef<HTMLDivElement>(null);
-	const volumeRef = useRef(volume);
-	volumeRef.current = volume;
-	useEffect(() => {
-		const el = faderRef.current;
-		if (!el) return;
-		const onWheel = (e: WheelEvent) => {
-			e.preventDefault();
-			const unit = e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? 400 : 1;
-			const step = Math.max(-0.1, Math.min(0.1, (e.deltaY * unit) / 2500));
-			const next = Math.min(1, Math.max(0, volumeRef.current + step));
-			volumeRef.current = next;
-			Global.engine.master.volume(next);
-		};
-		el.addEventListener('wheel', onWheel, { passive: false });
-		return () => el.removeEventListener('wheel', onWheel);
-	}, []);
+	// wheel-nudge now lives in the shared VerticalFader (components/util/Fader)
 
 	return (
 		<div className={cn(cs.strip, s.master, !init && cs.dim)}>
@@ -178,15 +164,14 @@ function MasterStrip({
 					    metering the recorded signal — red marks it as recording */}
 					<VolumeVisualizer id={'master'} color={recording ? '#ff3b30' : '#ffffff'} ready={init} />
 				</div>
-				<div ref={faderRef} className={cs.fader} data-tip data-for={'tt-mixer-volume'}>
-					<Slider
-						axis='y'
-						y={Math.round(Math.min(1, Math.max(0, volume)) * 100)}
-						ymin={0}
-						ymax={100}
-						ystep={1}
-						yreverse
-						onChange={({ y }) => Global.engine.master.volume(Math.min(1, Math.max(0, y / 100)))}
+				<div className={cs.fader} data-tip data-for={'tt-mixer-volume'}>
+					<VerticalFader
+						label='Master volume'
+						value={volume}
+						min={0}
+						max={1}
+						perPixel={2500}
+						onChange={(v) => Global.engine.master.volume(Math.min(1, Math.max(0, v)))}
 						styles={faderStyle}
 					/>
 				</div>
@@ -218,10 +203,10 @@ function MasterStrip({
 				className={cn(cs.btn, cs.play, playing && cs.on)}
 				data-tip
 				data-for={'tt-mixer-play'}
+				aria-label={playing ? 'Stop' : 'Play'}
 				onClick={() => (playing ? Global.engine.master.stop() : Global.engine.master.play())}
 			>
 				{playing ? <IconStop /> : <IconPlay />}
-				{playing ? 'STOP' : 'PLAY'}
 			</button>
 		</div>
 	);

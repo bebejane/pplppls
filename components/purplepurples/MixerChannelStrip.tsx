@@ -1,9 +1,9 @@
 'use client';
 
 import Global from '@/lib/global';
-import { useEffect, useRef, useState } from 'react';
-import Slider from 'react-input-slider';
+import { useEffect, useState } from 'react';
 import cn from 'classnames';
+import { HorizontalFader, VerticalFader } from '@/components/util/Fader';
 import VolumeVisualizer from '@/components/visualizers/VolumeVisualizer';
 import {
 	IconPlay,
@@ -115,29 +115,8 @@ export default function MixerChannelStrip({
 	const processing = sampling && samplingProgress.processing && !samplingProgress.recording;
 	const fxCount = Array.isArray(st.effects) ? st.effects.length : 0;
 
-	// the fader has no intrinsic wheel handling, and the mixer's horizontal
-	// scroller would otherwise eat the wheel — scroll over the fader to nudge
-	// the level (refs keep the native listener subscribed across renders)
-	const faderRef = useRef<HTMLDivElement>(null);
-	const volumeRef = useRef(volume);
-	const onVolumeRef = useRef(onVolume);
-	volumeRef.current = volume;
-	onVolumeRef.current = onVolume;
-	useEffect(() => {
-		const el = faderRef.current;
-		if (!el) return;
-		const onWheel = (e: WheelEvent) => {
-			e.preventDefault();
-			// normalise line/page deltas to pixels (~100px per mouse notch)
-			const unit = e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? 400 : 1;
-			const step = Math.max(-0.1, Math.min(0.1, (e.deltaY * unit) / 2500));
-			const next = Math.min(1, Math.max(0, volumeRef.current + step));
-			volumeRef.current = next;
-			onVolumeRef.current(next);
-		};
-		el.addEventListener('wheel', onWheel, { passive: false });
-		return () => el.removeEventListener('wheel', onWheel);
-	}, []);
+	// the fader's wheel-nudge and the horizontal sliders' swipe-nudge now live in
+	// the shared Fader components (components/util/Fader.tsx)
 
 	return (
 		<div className={cn(s.strip, !ready && s.dim)}>
@@ -154,15 +133,14 @@ export default function MixerChannelStrip({
 						<VolumeVisualizer id={id} color={'#ddace2'} ready={ready} />
 					)}
 				</div>
-				<div ref={faderRef} className={s.fader} data-tip data-for={'tt-mixer-volume'}>
-					<Slider
-						axis='y'
-						y={Math.round(Math.min(1, Math.max(0, volume)) * 100)}
-						ymin={0}
-						ymax={100}
-						ystep={1}
-						yreverse
-						onChange={({ y }) => onVolume(Math.min(1, Math.max(0, y / 100)) || 0)}
+				<div className={s.fader} data-tip data-for={'tt-mixer-volume'}>
+					<VerticalFader
+						label={`${label} volume`}
+						value={volume}
+						min={0}
+						max={1}
+						perPixel={2500}
+						onChange={(v) => onVolume(v || 0)}
 						styles={faderStyle}
 					/>
 				</div>
@@ -244,51 +222,47 @@ export default function MixerChannelStrip({
 
 			<div className={s.panRow} data-tip data-for={'tt-mixer-pan'}>
 				<span className={s.panMark}>L</span>
-				<div className={s.panSlider}>
-					<Slider
-						axis='x'
-						x={Math.round(((Math.min(90, Math.max(-90, pan)) + 90) / 180) * 100)}
-						xmin={0}
-						xmax={100}
-						xstep={1}
-						onChange={({ x }) => onPan(Math.round((x / 100) * 180 - 90))}
-						styles={panStyle}
-					/>
-				</div>
+				<HorizontalFader
+					label={`${label} pan`}
+					className={s.panSlider}
+					value={pan}
+					min={-90}
+					max={90}
+					onChange={(v) => onPan(Math.round(v))}
+					styles={panStyle}
+				/>
 				<span className={s.panMark}>R</span>
 			</div>
 
 			{/* rate: 0x … 1x (default) … 2x; shares the horizontal-slider styles */}
 			<div className={s.panRow} data-tip data-for={'tt-mixer-rate'}>
 				<span className={s.panMark}>0</span>
-				<div className={s.panSlider}>
-					<Slider
-						axis='x'
-						x={Math.round((Math.min(2, Math.max(0, rate)) / 2) * 100)}
-						xmin={0}
-						xmax={100}
-						xstep={1}
-						onChange={({ x }) => onRate(Math.round((x / 50) * 100) / 100)}
-						styles={panStyle}
-					/>
-				</div>
+				<HorizontalFader
+					label={`${label} rate`}
+					className={s.panSlider}
+					value={rate}
+					min={0}
+					max={2}
+					step={0.01}
+					onChange={onRate}
+					styles={panStyle}
+				/>
 				<span className={s.panMark}>2</span>
 			</div>
 
 			{/* pitch: tempo-preserving, in semitones (-2 … +2 octaves) */}
 			<div className={s.panRow} data-tip data-for={'tt-mixer-pitch'}>
 				<span className={s.panMark}>-</span>
-				<div className={s.panSlider}>
-					<Slider
-						axis='x'
-						x={Math.round(Math.min(24, Math.max(-24, pitch)))}
-						xmin={-24}
-						xmax={24}
-						xstep={1}
-						onChange={({ x }) => onPitch(x)}
-						styles={panStyle}
-					/>
-				</div>
+				<HorizontalFader
+					label={`${label} pitch`}
+					className={s.panSlider}
+					value={pitch}
+					min={-24}
+					max={24}
+					step={1}
+					onChange={onPitch}
+					styles={panStyle}
+				/>
 				<span className={s.panMark}>+</span>
 			</div>
 
@@ -297,10 +271,10 @@ export default function MixerChannelStrip({
 				className={cn(s.btn, s.play, playing && s.on)}
 				data-tip
 				data-for={'tt-mixer-play'}
+				aria-label={playing ? 'Stop' : 'Play'}
 				onClick={() => (playing ? onStop() : onPlay())}
 			>
 				{playing ? <IconStop /> : <IconPlay />}
-				{playing ? 'STOP' : 'PLAY'}
 			</button>
 		</div>
 	);
@@ -364,20 +338,19 @@ const faderStyle = {
 const panStyle = {
 	track: {
 		width: '100%',
-		height: 4,
+		height: 16,
 		backgroundColor: 'rgba(255, 255, 255, 0.25)',
-		borderRadius: 2,
+		borderRadius: 0,
 	},
 	active: {
-		backgroundColor: '#b354d6',
-		borderRadius: 2,
+		backgroundColor: 'rgba(255, 255, 255, 0.25)',
+		borderRadius: 0,
 	},
 	thumb: {
 		width: 8,
 		height: 16,
 		borderRadius: 2,
 		backgroundColor: 'purple',
-		boxShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
 	},
 	disabled: {
 		opacity: 0.5,

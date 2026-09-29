@@ -330,6 +330,7 @@ export default function PurplePurples() {
 	// ---- keyboard shortcuts ---------------------------------------------
 	const handlersRef = useRef<KeyboardHandlers>({
 		onRecord: () => {},
+		togglePlay: () => {},
 		toggleSave: () => {},
 		toggleControls: () => {},
 		toggleFullscreen: () => {},
@@ -348,6 +349,8 @@ export default function PurplePurples() {
 	handlersRef.current = {
 		onRecord: (on) => onRecord(on),
 		toggleSave: () => set({ saveDialog: !stateRef.current.saveDialog }),
+		togglePlay: () =>
+			masterstate.playing ? Global.engine.master.stop() : Global.engine.master.play(),
 		toggleControls: () => set({ controls: !stateRef.current.controls }),
 		toggleFullscreen: () => onFullscreen(!stateRef.current.fullscreen),
 		toggleMixer: () => set({ view: stateRef.current.view === 'mixer' ? 'grid' : 'mixer' }),
@@ -578,6 +581,10 @@ export default function PurplePurples() {
 			Global.engine.volume(data.id, parseFloat((data.heat / 100).toFixed(1)));
 			Global.engine.pan(data.id, parseFloat((data.r - data.l - 10).toFixed(0)));
 			Global.engine.effectParams(data.id, 0, delayParams);
+			const rate = Number(parseFloat(((data.heat / 100) * 2).toFixed(1)));
+			Global.engine.rate(data.id, rate);
+			//console.log(rate);
+			//console.log(parseFloat(((data.heat / 100) * 2).toFixed(1)));
 		}
 		if (soloOn) return;
 

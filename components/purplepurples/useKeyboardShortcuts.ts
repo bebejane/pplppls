@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 export interface KeyboardHandlers {
 	onRecord: (on: boolean) => void;
 	toggleSave: () => void;
+	togglePlay: () => void;
 	toggleControls: () => void;
 	toggleFullscreen: () => void;
 	toggleMixer: () => void;
@@ -34,8 +35,7 @@ export function useKeyboardShortcuts(handlersRef: React.MutableRefObject<Keyboar
 			switch (e.key) {
 				case ' ':
 				case 'Space':
-					ctrlKey && H.onRecord(!H.recording);
-					!ctrlKey && H.stop();
+					H.togglePlay();
 					break;
 				case 'Enter':
 					Global.engine.master.play();

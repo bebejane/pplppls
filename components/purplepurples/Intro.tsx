@@ -111,7 +111,7 @@ export default function Intro({ onStart }: { onStart: () => void }) {
 	const start = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		setPurples(true);
-		setTimeout(() => onStart(), 500);
+		setTimeout(() => onStart(), 200);
 	};
 
 	if (started) return null;

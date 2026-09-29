@@ -4,6 +4,7 @@ import Global from '@/lib/global';
 import { useCallback, useEffect, useState } from 'react';
 import cn from 'classnames';
 import { IconPlay, IconStop } from '@/components/icons/Icons';
+import { HorizontalFader } from '@/components/util/Fader';
 import type { EffectDef, EffectEntry, EffectParamDef } from './types';
 import s from './EffectChain.module.scss';
 
@@ -252,18 +253,13 @@ function Param({
 			<div className={s.paramLabel} title={label}>
 				{label}
 			</div>
-			<input
-				className={s.range}
-				type='range'
-				aria-label={label}
+			<HorizontalFader
+				label={label}
+				value={Math.min(max, Math.max(min, current))}
 				min={min}
 				max={max}
 				step={step}
-				value={Math.min(max, Math.max(min, current))}
-				onChange={(e) => {
-					const v = parseFloat(e.target.value);
-					onChange(isInt ? Math.round(v) : parseFloat(v.toFixed(4)));
-				}}
+				onChange={(v) => onChange(isInt ? Math.round(v) : parseFloat(v.toFixed(4)))}
 			/>
 			<div className={s.paramValue}>{isInt ? Math.round(current) : current.toFixed(2)}</div>
 		</div>

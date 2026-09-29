@@ -4,6 +4,7 @@ import Global from '@/lib/global';
 import { useCallback, useEffect, useState } from 'react';
 import cn from 'classnames';
 import type { EqBand, EqBandType, EqBandOptions } from 'audio-engine';
+import { HorizontalFader } from '@/components/util/Fader';
 import s from './EqEditor.module.scss';
 
 const TYPES: EqBandType[] = ['lowshelf', 'peaking', 'highshelf', 'lowpass', 'highpass'];
@@ -101,40 +102,42 @@ export default function EqEditor({
 
 								<div className={s.param}>
 									<span className={s.k}>Freq</span>
-									<input
-										type='range'
+									<HorizontalFader
+										label={`${LABELS[i]} frequency`}
+										value={freqToT(b.frequency)}
 										min={0}
 										max={1}
 										step={0.001}
-										value={freqToT(b.frequency)}
-										onChange={(e) => set(i, { frequency: tToFreq(Number(e.target.value)) })}
+										perPixel={400}
+										onChange={(t) => set(i, { frequency: tToFreq(t) })}
 									/>
 									<span className={s.v}>{Math.round(b.frequency)} Hz</span>
 								</div>
 
 								<div className={cn(s.param, !hasGain && s.disabled)}>
 									<span className={s.k}>Gain</span>
-									<input
-										type='range'
+									<HorizontalFader
+										label={`${LABELS[i]} gain`}
+										value={b.gain}
 										min={-18}
 										max={18}
 										step={0.5}
 										disabled={!hasGain}
-										value={b.gain}
-										onChange={(e) => set(i, { gain: Number(e.target.value), on: true })}
+										onChange={(gain) => set(i, { gain: Number(gain.toFixed(1)), on: true })}
 									/>
 									<span className={s.v}>{b.gain > 0 ? '+' : ''}{b.gain.toFixed(1)} dB</span>
 								</div>
 
 								<div className={s.param}>
 									<span className={s.k}>Q</span>
-									<input
-										type='range'
+									<HorizontalFader
+										label={`${LABELS[i]} Q`}
+										value={b.q}
 										min={0.1}
 										max={10}
 										step={0.1}
-										value={b.q}
-										onChange={(e) => set(i, { q: Number(e.target.value) })}
+										perPixel={300}
+										onChange={(q) => set(i, { q: Number(q.toFixed(1)) })}
 									/>
 									<span className={s.v}>{b.q.toFixed(1)}</span>
 								</div>
