@@ -86,7 +86,9 @@ export default function MixerChannelStrip({
 	}, [id]);
 
 	useEffect(() => {
-		const onState = (state: Record<string, any>) => setSt((prev) => ({ ...prev, ...state }));
+		const onState = (state: Record<string, any>) => {
+			setSt((prev) => ({ ...prev, ...state }));
+		};
 		Global.engine.on('state' + id, onState);
 		return () => {
 			Global.engine.off('state' + id, onState);
@@ -119,7 +121,11 @@ export default function MixerChannelStrip({
 	// the shared Fader components (components/util/Fader.tsx)
 
 	return (
-		<div className={cn(s.strip, !ready && s.dim)}>
+		// Mixer controls are mouse-driven: a pressed button must not keep focus —
+		// a focused button shows a lingering ring and re-fires on Space/Enter,
+		// fighting the global shortcuts. preventDefault on mousedown stops the
+		// click from focusing it while Tab/keyboard focus still works.
+		<div className={cn(s.strip, !ready && s.dim)} onMouseDown={(e) => e.preventDefault()}>
 			<div className={s.label} title={label}>
 				{label}
 			</div>
@@ -141,7 +147,6 @@ export default function MixerChannelStrip({
 						max={1}
 						perPixel={2500}
 						onChange={(v) => onVolume(v || 0)}
-						styles={faderStyle}
 					/>
 				</div>
 			</div>
@@ -229,7 +234,6 @@ export default function MixerChannelStrip({
 					min={-90}
 					max={90}
 					onChange={(v) => onPan(Math.round(v))}
-					styles={panStyle}
 				/>
 				<span className={s.panMark}>R</span>
 			</div>
@@ -245,7 +249,6 @@ export default function MixerChannelStrip({
 					max={2}
 					step={0.01}
 					onChange={onRate}
-					styles={panStyle}
 				/>
 				<span className={s.panMark}>2</span>
 			</div>
@@ -261,7 +264,6 @@ export default function MixerChannelStrip({
 					max={24}
 					step={1}
 					onChange={onPitch}
-					styles={panStyle}
 				/>
 				<span className={s.panMark}>+</span>
 			</div>
@@ -312,47 +314,3 @@ export interface MixerChannelStripProps {
 	onStop: () => void;
 }
 
-const faderStyle = {
-	track: {
-		width: 20,
-		height: '100%',
-		backgroundColor: 'rgba(255, 255, 255, 0.25)',
-		borderRadius: 3,
-	},
-	active: {
-		backgroundColor: '#b354d6',
-		borderRadius: 3,
-	},
-	thumb: {
-		width: 20,
-		height: 30,
-		borderRadius: 2,
-		backgroundColor: 'purple',
-		boxShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
-	},
-	disabled: {
-		opacity: 0.5,
-	},
-};
-
-const panStyle = {
-	track: {
-		width: '100%',
-		height: 16,
-		backgroundColor: 'rgba(255, 255, 255, 0.25)',
-		borderRadius: 0,
-	},
-	active: {
-		backgroundColor: 'rgba(255, 255, 255, 0.25)',
-		borderRadius: 0,
-	},
-	thumb: {
-		width: 8,
-		height: 16,
-		borderRadius: 2,
-		backgroundColor: 'purple',
-	},
-	disabled: {
-		opacity: 0.5,
-	},
-};

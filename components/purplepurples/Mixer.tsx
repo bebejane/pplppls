@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Global from '@/lib/global';
+import { useCallback, useEffect, useState } from 'react';
 import ReactTooltip from 'react-tooltip';
 import cn from 'classnames';
+import type { Model } from './types';
 import { VerticalFader } from '@/components/util/Fader';
 import VolumeVisualizer from '@/components/visualizers/VolumeVisualizer';
-import { IconPlay, IconStop, IconRecord, IconVolume } from '@/components/icons/Icons';
+import Select from '@/components/util/Select';
+import { IconPlay, IconStop, IconRecord, IconVolume, IconLoop, IconReverse } from '@/components/icons/Icons';
 import MixerChannelStrip from './MixerChannelStrip';
 import EffectChain from './EffectChain';
 import EqEditor from './EqEditor';
@@ -14,41 +16,131 @@ import s from './Mixer.module.scss';
 import cs from './MixerChannelStrip.module.scss';
 
 /**
- * Mixer view: the current model as a multi-track mixer. One channel strip per
- * sound (row-major, same order as the grid) and a master strip at the far
- * right. It overlays the grid (which stays mounted and keeps playing) — the
- * overlay swallows mouse events so the grid's heat writes don't fire through.
+ * Standalone Mixer view (no grid state via props): the Mixer itself subscribes
+ * to the engine's events — `model` (channel list), `masterstate`, `sampling`
+ * and `models` (the selector) — and keeps its own state mirror. A model
+ * selector at the top switches the loaded model (`engine.loadModel`).
  *
- * Every control is a direct engine call; only sample-record is delegated to the
- * parent, which owns the shared "one channel sampling at a time" state.
+ * It overlays the grid (which stays mounted and keeps playing); the overlay
+ * swallows mouse events so the grid's heat writes don't fire through.
+ *
+ * Kept as props (app-level orchestration, not engine data):
+ * - `init` — the app's engine-ready gate for meters.
+ * - `onRecord` — the shared master-record flow (recordings list + persistence
+ *   live in the app layer).
+ * - `onClose`.
  */
-export default function Mixer({
-	init,
-	model,
-	version,
-	ids,
-	cols,
-	sampling,
-	masterstate,
-	onSampleRecord,
-	onRecord,
-	onClose,
-}: MixerProps) {
+export default function Mixer({ init, onRecord, onClose }: MixerProps) {
 	const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 	const [fxId, setFxId] = useState<string | null>(null);
 	const [eqId, setEqId] = useState<string | null>(null);
+	const [ids, setIds] = useState<string[]>([]);
+	const [cols, setCols] = useState<Record<string, { filename?: string; params: Record<string, any> }>>({});
+	/** bumped on every 'model' event — keys strips so meters rebind to new sounds */
+	const [version, setVersion] = useState(0);
+	const [model, setModel] = useState<string>('');
+	const [models, setModels] = useState<{ name: string }[]>([]);
+	const [masterstate, setMasterstate] = useState<Record<string, any>>(Global.engine?.master?.state ?? {});
+	const [sampling, setSampling] = useState<string | null>(() => {
+		const live = (Global.engine?.sounds || []).find((s: any) => s.sound._sampling);
+		return live ? live.id : null;
+	});
 
-	// one strip per actual sound — a model's grid can have more cells than
-	// files (empty cells have no sound and nothing to show)
+	const applyModel = useCallback((m: Model) => {
+		// row-major, mirroring the grid build: only cells that actually carry a
+		// file are mixable
+		const nextIds: string[] = [];
+		const nextCols: Record<string, { filename?: string; params: Record<string, any> }> = {};
+		let fileIdx = 0;
+		for (let row = 0; row < m.rows; row++) {
+			for (let col = 0; col < m.cols; col++) {
+				const id = row + '-' + col;
+				const file = m.files[fileIdx++];
+				if (!file) continue;
+				nextCols[id] = {
+					filename: file.filename,
+					params: file.params ? { ...file.params } : {},
+				};
+				nextIds.push(id);
+			}
+		}
+		setIds(nextIds);
+		setCols(nextCols);
+		setModel(m.name);
+		setVersion((v) => v + 1);
+		setSampling(null); // old ids don't survive a model swap
+	}, []);
+
+	const startSample = useCallback((id: string, on: boolean) => {
+		const engine = Global.engine;
+		if (on) {
+			engine.sample(id, true)
+				.then(() => {
+					// lock the channel while its re-recorded sample settles
+					engine.lock(id, true);
+				})
+				.catch((err: unknown) => {
+					if (err === 'CANCELLED') return;
+					console.warn('sample failed', err);
+				});
+		} else {
+			engine.sample(id, false);
+		}
+	}, []);
+
+	useEffect(() => {
+		const engine = Global.engine;
+		if (!engine) return;
+
+		// seed: the mixer opens long after the first 'model' fired
+		if (engine.model) applyModel(engine.model);
+		if (Array.isArray(engine.models) && engine.models.length) setModels(engine.models as any);
+
+		const onModel = (m: Model) => {
+			applyModel(m);
+			setFxId(null);
+			setEqId(null);
+		};
+		const onModelsEvent = (list: unknown) =>
+			setModels(Array.isArray(list) ? list : []);
+		const onMasterState = (st: unknown) => setMasterstate(st as Record<string, any>);
+		const onSampling = (id: string, on: boolean) =>
+			setSampling((cur) => (on ? id : cur === id ? null : cur));
+
+		engine.on('model', onModel);
+		engine.on('models', onModelsEvent);
+		engine.on('masterstate', onMasterState);
+		engine.on('sampling', onSampling);
+		return () => {
+			engine.off('model', onModel);
+			engine.off('models', onModelsEvent);
+			engine.off('masterstate', onMasterState);
+			engine.off('sampling', onSampling);
+		};
+	}, [applyModel]);
+
 	const channelIds = ids.filter((id) => Global.engine.exist(id));
 
 	return (
 		<div className={s.overlay} onMouseMove={stop} onMouseDown={stop} onTouchStart={stop}>
 			<div className={s.header}>
-				<div className={s.title}>
-					MIXER <span className={s.model}>{model}</span>
-				</div>
-				<button type='button' className={s.close} onClick={onClose}>
+				<Select
+					direction='down'
+					value={model}
+					options={models.map((m) => ({ value: m.name, label: m.name }))}
+					onChange={(name) => {
+						if (name !== model) Global.engine.loadModel(String(name));
+					}}
+					onClick={() => {
+						if (!models.length) Global.engine.loadModels();
+					}}
+				/>
+				<button
+					type='button'
+					className={s.close}
+					onMouseDown={(e) => e.preventDefault()}
+					onClick={onClose}
+				>
 					Close
 				</button>
 			</div>
@@ -60,17 +152,14 @@ export default function Mixer({
 						id={id}
 						label={`${idx + 1}`}
 						filename={cols[id]?.filename}
-						params={cols[id]}
+						params={cols[id]?.params}
 						init={init}
 						sampling={sampling === id}
 						isSampling={!!sampling && sampling !== id}
-						onVolume={(vol) => {
-							console.log('vol', vol);
-							Global.engine.volume(id, vol);
-						}}
+						onVolume={(vol) => Global.engine.volume(id, vol)}
 						onMute={(on) => Global.engine.mute(id, on)}
 						onSolo={(on) => Global.engine.solo(id, on, false)}
-						onSampleRecord={(on) => onSampleRecord(id, on)}
+						onSampleRecord={(on) => startSample(id, on)}
 						onPan={(deg) => Global.engine.pan(id, deg)}
 						onRate={(rate) => Global.engine.rate(id, rate)}
 						onPitch={(semitones) => Global.engine.pitch(id, semitones)}
@@ -85,12 +174,7 @@ export default function Mixer({
 
 				<div className={s.spacer} aria-hidden='true' />
 
-				<MasterStrip
-					key={'master:' + version}
-					init={init}
-					masterstate={masterstate}
-					onRecord={onRecord}
-				/>
+				<MasterStrip key={'master:' + version} init={init} masterstate={masterstate} onRecord={onRecord} />
 			</div>
 
 			<ReactTooltip id='tt-mixer-pan' type='dark' place='top' effect='float' delayShow={600}>
@@ -138,8 +222,9 @@ export default function Mixer({
 
 /**
  * The master bus channel. It carries label, level, fader, mute, master-output
- * record and play/stop — no solo or pan (the engine has neither for the master
- * bus). Values come from the `masterstate` the app already mirrors.
+ * record and play/stop + reverse/loop all — no solo or pan (the engine has
+ * neither for the master bus). Values come from Mixer's own `masterstate`
+ * subscription.
  */
 function MasterStrip({
 	init,
@@ -150,18 +235,14 @@ function MasterStrip({
 	masterstate: Record<string, any>;
 	onRecord: (on: boolean) => void;
 }) {
-	const { volume = 0, muted, playing, recording } = masterstate;
-
-	// wheel-nudge now lives in the shared VerticalFader (components/util/Fader)
-
+	const { volume = 0, muted, playing, recording, looping, reversed } = masterstate;
 	return (
-		<div className={cn(cs.strip, s.master, !init && cs.dim)}>
+		// see MixerChannelStrip: keep mouse presses from leaving a button focused
+		<div className={cn(cs.strip, s.master, !init && cs.dim)} onMouseDown={(e) => e.preventDefault()}>
 			<div className={cs.label}>MASTER</div>
 
 			<div className={cs.faderRow}>
 				<div className={cs.meter} data-tip data-for={'tt-mixer-meter'}>
-					{/* the master recorder captures the master bus, so this keeps
-					    metering the recorded signal — red marks it as recording */}
 					<VolumeVisualizer id={'master'} color={recording ? '#ff3b30' : '#ffffff'} ready={init} />
 				</div>
 				<div className={cs.fader} data-tip data-for={'tt-mixer-volume'}>
@@ -171,8 +252,9 @@ function MasterStrip({
 						min={0}
 						max={1}
 						perPixel={2500}
-						onChange={(v) => Global.engine.master.volume(Math.min(1, Math.max(0, v)))}
-						styles={faderStyle}
+						onChange={(v) => {
+							Global.engine.master.volume(Math.min(1, Math.max(0, v)));
+						}}
 					/>
 				</div>
 			</div>
@@ -198,6 +280,28 @@ function MasterStrip({
 				<IconRecord />
 				REC
 			</button>
+
+			<div className={cs.toggles}>
+				<button
+					type='button'
+					className={cn(cs.btn, reversed && cs.on)}
+					aria-label='Reverse all'
+					title='Reverse all'
+					onClick={() => Global.engine.master.reverse(!reversed)}
+				>
+					<IconReverse />
+				</button>
+				<button
+					type='button'
+					className={cn(cs.btn, looping && cs.on)}
+					aria-label='Loop all'
+					title='Loop all'
+					onClick={() => Global.engine.master.loop(!looping)}
+				>
+					<IconLoop />
+				</button>
+			</div>
+
 			<button
 				type='button'
 				className={cn(cs.btn, cs.play, playing && cs.on)}
@@ -215,39 +319,7 @@ function MasterStrip({
 export interface MixerProps {
 	/** Engine/model ready — gates meters and controls. */
 	init: boolean;
-	model: string;
-	/** Bumped on every model load; keys the strips so meters rebind to the new sounds. */
-	version: number;
-	/** Channel ids in row-major order (the same order as the grid). */
-	ids: string[];
-	cols: Record<string, any>;
-	/** Id of the sound currently sampling, if any. */
-	sampling: string | boolean | null;
-	masterstate: Record<string, any>;
-	onSampleRecord: (id: string, on: boolean) => void;
+	/** Shared master-record flow (recordings list + persistence live in the app layer). */
 	onRecord: (on: boolean) => void;
 	onClose: () => void;
 }
-
-const faderStyle = {
-	track: {
-		width: 20,
-		height: '100%',
-		backgroundColor: 'rgba(255, 255, 255, 0.25)',
-		borderRadius: 3,
-	},
-	active: {
-		backgroundColor: '#b354d6',
-		borderRadius: 3,
-	},
-	thumb: {
-		width: 20,
-		height: 30,
-		borderRadius: 2,
-		backgroundColor: 'purple',
-		boxShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
-	},
-	disabled: {
-		opacity: 0.5,
-	},
-};

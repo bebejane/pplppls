@@ -15,15 +15,18 @@
 	align-self: stretch;
 	flex: 1 1 auto;
 	width: 22px;
+	height: 100%;
 }
 
 /* Horizontal faders size their track with an explicit height, so the wrapper
-   only needs to take the width its row gives it. */
+   only needs to take the width its row gives it. `flex: 1 1 auto` +
+   `min-width: 0` so several faders sharing a flex row (the effect dialog's
+   two-column parameter grid, pan rows, …) shrink to fit instead of each
+   insisting on 100% width and overflowing the container. */
 .horizontal {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	flex: 0 0 auto;
-	width: 100%;
-	min-width: 40px;
+	flex: 1 1 auto;
+	min-width: 0;
 }

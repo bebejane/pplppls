@@ -1,0 +1,70 @@
+/**
+ * The slider's structural look. Sizing/colour ride on `--slider-*` custom
+ * properties (with defaults matching the old `DEFAULT_STYLES`) so consumers
+ * restyle faders by setting the vars on their own wrapper element — no
+ * per-consumer style objects in TS, and no `styles` overrides prop.
+ *
+ * Dynamic positioning (the value-driven `left`/`top`/`width`/`height`) is the
+ * only inline styling left in Slider.tsx, since it is computed per render.
+ */
+.track {
+	--slider-track-w: 100%;
+	--slider-track-h: 16px;
+	--slider-bg: rgba(255, 255, 255, 0.25);
+	--slider-radius: 0;
+	--slider-active-bg: rgba(252, 18, 236, 0.544);
+	--slider-thumb-w: 8px;
+	--slider-thumb-h: 16px;
+	--slider-thumb-radius: 2px;
+	--slider-thumb-bg: purple;
+	--slider-thumb-shadow: none;
+
+	&.y {
+		--slider-track-h: 100%;
+		--slider-track-w: 16px;
+		--slider-thumb-w: 16px;
+		--slider-thumb-h: 32px;
+
+		.active {
+			width: 100%;
+		}
+	}
+	position: relative;
+	width: var(--slider-track-w);
+	height: var(--slider-track-h);
+	background-color: var(--slider-bg);
+	border-radius: var(--slider-radius);
+	touch-action: none;
+	user-select: none;
+
+	.thumb {
+		width: var(--slider-thumb-w);
+		height: var(--slider-thumb-h);
+		background-color: var(--slider-thumb-bg);
+		border-radius: var(--slider-thumb-radius);
+		box-shadow: var(--slider-thumb-shadow);
+		cursor: grab;
+
+		&:active {
+			cursor: grabbing;
+		}
+	}
+
+	.active {
+		position: absolute;
+		top: 0;
+		left: 0;
+		background-color: var(--slider-active-bg);
+		border-radius: var(--slider-radius);
+		height: 100%;
+	}
+}
+
+.disabled {
+	opacity: 0.5;
+}
+
+.handle {
+	position: absolute;
+	transform: translate(-50%, -50%);
+}

@@ -34,11 +34,11 @@ export default function Select({
 	useEffect(() => {
 		const onResize = () => {
 			if (selectRef.current)
-				setPos((p) => ({ ...p, x: selectRef.current!.offsetLeft, width: getWidth() }));
+				setPos((p) => ({ ...p, x: selectRef.current.offsetLeft, width: getWidth() }));
 		};
 		window.addEventListener('resize', onResize);
 		return () => window.removeEventListener('resize', onResize);
-	}, []);
+	}, [display]);
 
 	const onDisplay = (on: boolean) => {
 		if (onClick) onClick();
@@ -95,7 +95,6 @@ export default function Select({
 							className={s.option}
 							style={{
 								minWidth: pos.width + 'px',
-								maxWidth: pos.width + 'px',
 								justifyContent: center ? 'center' : undefined,
 							}}
 							onClick={() => click(o.value)}

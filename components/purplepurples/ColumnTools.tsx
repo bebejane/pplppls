@@ -15,7 +15,7 @@ import {
 	IconSolo,
 	IconFullscreen,
 } from '@/components/icons/Icons';
-import Slider from 'react-input-slider';
+import Slider from '@/components/util/Slider';
 import cn from 'classnames';
 import s from './ColumnTools.module.scss';
 
@@ -82,6 +82,9 @@ export default function ColumnTools({
 	const [samplingProgress, setSamplingProgress] = useState<Record<string, unknown>>({});
 	const [colHeight, setColHeight] = useState(0);
 	const toolsRef = useRef<HTMLDivElement>(null);
+	// double-click on the volume thumb resets to the value the strip first
+	// showed (same "first value the fader saw" reset semantics as the Fader)
+	const initialVolume = useRef(volume);
 
 	// Slider is 50% of the column height → measure the column (the tools strip's
 	// parent) and keep it in sync across window/column resizes. The tools strip
@@ -167,7 +170,7 @@ export default function ColumnTools({
 						ystep={1}
 						yreverse
 						onChange={({ y }) => onVolume(Math.min(1, Math.max(0, y / 100)) || 0)}
-						styles={volSliderStyle}
+						onThumbDblClick={() => onVolume(Math.min(1, Math.max(0, initialVolume.current)))}
 					/>
 				</div>
 				<IconVolume className={!muted ? s.toggle : undefined} onClick={() => onMute(!muted)} />
@@ -195,26 +198,3 @@ export default function ColumnTools({
 		</div>
 	);
 }
-
-const volSliderStyle = {
-	track: {
-		width: 6,
-		height: '100px',
-		backgroundColor: 'rgba(255, 255, 255, 0.25)',
-		borderRadius: 3,
-	},
-	active: {
-		backgroundColor: '#b354d6',
-		borderRadius: 3,
-	},
-	thumb: {
-		width: 16,
-		height: 10,
-		borderRadius: 2,
-		backgroundColor: 'purple',
-		boxShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
-	},
-	disabled: {
-		opacity: 0.5,
-	},
-};

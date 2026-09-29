@@ -65,6 +65,16 @@
 	flex: 0 0 auto;
 	width: 22px;
 	min-height: 60px;
+
+	/* the vertical volume fader's look — see Slider.module.scss */
+	--slider-track-w: 20px;
+	--slider-track-h: 100%;
+	--slider-radius: 3px;
+	--slider-active-bg: #b354d6;
+	--slider-thumb-w: 20px;
+	--slider-thumb-h: 30px;
+	--slider-thumb-radius: 2px;
+	--slider-thumb-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .btn {
@@ -131,11 +141,13 @@
    and so it stays square in the 88px strip. */
 $playSize: 56px;
 $playIcon: 30px;
+
 .play {
 	flex: 0 0 auto;
 	width: 100%;
 	height: $playSize;
 	min-height: $playSize;
+	margin-top: 10px;
 }
 
 /* override the shared `.btn > svg` 12px cap — this button is icon-only, so the

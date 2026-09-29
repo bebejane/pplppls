@@ -73,7 +73,7 @@ interface PurplePurplesState {
 
 const initialState: PurplePurplesState = {
 	init: false,
-	model: 'test',
+	model: 'sadie',
 	status: '',
 	x: 0,
 	y: 0,
@@ -99,7 +99,7 @@ const initialState: PurplePurplesState = {
 	hud: true,
 	controls: true,
 	fullscreen: false,
-	view: 'grid',
+	view: 'mixer',
 	saveDialog: false,
 	helpDialog: false,
 	newDialog: false,
@@ -905,13 +905,6 @@ export default function PurplePurples() {
 				{view === 'mixer' && (
 					<Mixer
 						init={initialized}
-						model={model}
-						version={state.modelVersion}
-						ids={channelIds}
-						cols={cols}
-						sampling={sampling}
-						masterstate={masterstate}
-						onSampleRecord={(id, on) => onSampleRecord(id, on)}
 						onRecord={(on) => onRecord(on)}
 						onClose={() => set({ view: 'grid' })}
 					/>

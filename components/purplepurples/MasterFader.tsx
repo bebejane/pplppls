@@ -39,12 +39,12 @@ export default function MasterFader({
 		<div className={s.fader}>
 			<HorizontalFader
 				key={id}
+				className={s.slider}
 				label='Output volume'
 				value={volume}
 				min={0}
 				max={1}
 				onChange={onVolume}
-				styles={sliderStyle}
 			/>
 			<div className={s.meter} data-tip data-for={'tt-output'}>
 				<VolumeVisualizer id={'master'} color={'#ffffff'} ready={init} />
@@ -68,28 +68,3 @@ export default function MasterFader({
 	);
 }
 
-const trackHeight = 20;
-const sliderStyle = {
-	track: {
-		height: '100%',
-		width: '100px',
-		maxHeight: trackHeight,
-		minHeight: trackHeight,
-		backgroundColor: '#4f0b4a !important',
-		borderRadius: 0,
-		marginRight: 10,
-	},
-	active: {
-		backgroundColor: '#7d3866',
-		borderRadius: 0,
-	},
-	thumb: {
-		width: 20,
-		height: trackHeight + 2,
-		borderRadius: 0,
-		backgroundColor: 'rgb(106, 30, 98)',
-	},
-	disabled: {
-		opacity: 0.5,
-	},
-};

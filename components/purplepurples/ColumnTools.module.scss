@@ -67,6 +67,16 @@
 	transform: translateX(-50%);
 	width: 26px;
 	padding-bottom: 8px; /* hover bridge so the mouse can move from icon to slider */
+
+	/* the column volume slider's look — see Slider.module.scss */
+	--slider-track-w: 6px;
+	--slider-track-h: 100%;
+	--slider-radius: 3px;
+	--slider-active-bg: #b354d6;
+	--slider-thumb-w: 16px;
+	--slider-thumb-h: 10px;
+	--slider-thumb-radius: 2px;
+	--slider-thumb-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 	display: flex;
 	align-items: center;
 	justify-content: center;

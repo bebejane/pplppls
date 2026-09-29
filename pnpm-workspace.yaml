@@ -5,6 +5,7 @@ allowBuilds:
   core-js: true
   core-js-pure: true
   es5-ext: true
+  esbuild: true
   fsevents: true
   unrs-resolver: true
 # pnpm ≥12 re-installs before running any script (`verify-deps-before-run`), which

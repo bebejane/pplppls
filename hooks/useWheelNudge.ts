@@ -38,7 +38,7 @@ export default function useWheelNudge(
 		min,
 		max,
 		perPixel = 100,
-		throttleMs = 50,
+		throttleMs = 10,
 	}: { axis?: 'x' | 'y'; min: number; max: number; perPixel?: number; throttleMs?: number },
 ) {
 	const elRef = useRef<HTMLDivElement>(null);

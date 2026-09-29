@@ -2,12 +2,21 @@
 
 import Visualizer from './Visualizer';
 
-export default function VolumeVisualizer(
-	props: Omit<React.ComponentProps<typeof Visualizer>, 'type' | 'paint'>,
-) {
+// Ballistics for the meter. The engine tweens the raw level with an exponential
+// moving average; larger values converge more slowly. The engine defaults
+// (1.618 / 4.854) still let frame-to-frame amplitude noise flicker the bar, so
+// the visualizer asks for a calmer attack and a longer release — the meter now
+// glides instead of jumping. Callers can still override via `options`.
+const SMOOTHING = { tweenIn: 4, tweenOut: 14 } as const;
+
+export default function VolumeVisualizer({
+	options,
+	...props
+}: Omit<React.ComponentProps<typeof Visualizer>, 'type' | 'paint'>) {
 	return (
 		<Visualizer
 			{...props}
+			options={{ ...SMOOTHING, ...options }}
 			type='volume'
 			paint={(ctx, data, _opt, { width, height, color, colorLeft, colorRight }) => {
 				const volume = data as number;

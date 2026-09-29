@@ -5,6 +5,12 @@
 	justify-content: center;
 }
 
+/* the output volume fader's look — see Slider.module.scss */
+.slider {
+	margin-right: 10px;
+	width: 100px;
+}
+
 .meter {
 	position: relative;
 	height: 20px;
