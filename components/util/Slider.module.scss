@@ -19,16 +19,6 @@
 	--slider-thumb-bg: purple;
 	--slider-thumb-shadow: none;
 
-	&.y {
-		--slider-track-h: 100%;
-		--slider-track-w: 16px;
-		--slider-thumb-w: 16px;
-		--slider-thumb-h: 32px;
-
-		.active {
-			width: 100%;
-		}
-	}
 	position: relative;
 	width: var(--slider-track-w);
 	height: var(--slider-track-h);
@@ -51,12 +41,23 @@
 	}
 
 	.active {
-		position: absolute;
-		top: 0;
-		left: 0;
-		background-color: var(--slider-active-bg);
-		border-radius: var(--slider-radius);
-		height: 100%;
+		opacity: 0;
+	}
+
+	&.y {
+		--slider-track-h: 100%;
+		--slider-track-w: 16px;
+		--slider-thumb-w: 16px;
+		--slider-thumb-h: 32px;
+
+		.active {
+			position: absolute;
+			top: 0;
+			left: 0;
+			background-color: var(--slider-active-bg);
+			border-radius: var(--slider-radius);
+			height: 100%;
+		}
 	}
 }
 

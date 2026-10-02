@@ -1,12 +1,12 @@
 'use client';
 
+import s from './EffectChain.module.scss';
+import cn from 'classnames';
 import Global from '@/lib/global';
 import { useCallback, useEffect, useState } from 'react';
-import cn from 'classnames';
 import { IconPlay, IconStop } from '@/components/icons/Icons';
 import { HorizontalFader } from '@/components/util/Fader';
-import type { EffectDef, EffectEntry, EffectParamDef } from './types';
-import s from './EffectChain.module.scss';
+import type { EffectDef, EffectEntry, EffectParamDef } from 'audio-engine';
 
 /**
  * Effect-chain editor for one sound, opened from a Mixer channel strip.

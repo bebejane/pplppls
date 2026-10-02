@@ -1,19 +1,21 @@
 'use client';
 
 import Global from '@/lib/global';
-import { useCallback, useEffect, useState } from 'react';
 import cn from 'classnames';
+import s from './EqEditor.module.scss';
+import { useCallback, useEffect, useState } from 'react';
 import type { EqBand, EqBandType, EqBandOptions } from 'audio-engine';
 import { HorizontalFader } from '@/components/util/Fader';
-import s from './EqEditor.module.scss';
 
 const TYPES: EqBandType[] = ['lowshelf', 'peaking', 'highshelf', 'lowpass', 'highpass'];
 const LABELS = ['Low', 'Low Mid', 'High Mid', 'High'];
 // 20 Hz … 20 kHz on a log slider (t in [0,1])
 const FREQ_MIN = 20;
 const FREQ_MAX = 20000;
-const freqToT = (f: number) => Math.log(Math.max(FREQ_MIN, Math.min(FREQ_MAX, f)) / FREQ_MIN) / Math.log(FREQ_MAX / FREQ_MIN);
-const tToFreq = (t: number) => Math.round(FREQ_MIN * Math.pow(FREQ_MAX / FREQ_MIN, Math.max(0, Math.min(1, t))));
+const freqToT = (f: number) =>
+	Math.log(Math.max(FREQ_MIN, Math.min(FREQ_MAX, f)) / FREQ_MIN) / Math.log(FREQ_MAX / FREQ_MIN);
+const tToFreq = (t: number) =>
+	Math.round(FREQ_MIN * Math.pow(FREQ_MAX / FREQ_MIN, Math.max(0, Math.min(1, t))));
 
 /**
  * 4-band channel-EQ editor for one sound, opened from a Mixer channel strip.
@@ -67,7 +69,13 @@ export default function EqEditor({
 							className={cn(s.flatBtn, !anyOn && s.on)}
 							onClick={() =>
 								bands.forEach((_, i) =>
-									set(i, { on: false, gain: 0, type: TYPES[i] as EqBandType, frequency: [100, 300, 2000, 6000][i], q: 0.7 }),
+									set(i, {
+										on: false,
+										gain: 0,
+										type: TYPES[i] as EqBandType,
+										frequency: [100, 300, 2000, 6000][i],
+										q: 0.7,
+									}),
 								)
 							}
 						>
@@ -85,7 +93,11 @@ export default function EqEditor({
 						return (
 							<div key={i} className={cn(s.band, b.on && s.bandOn)}>
 								<label className={s.on}>
-									<input type='checkbox' checked={!!b.on} onChange={(e) => set(i, { on: e.target.checked })} />
+									<input
+										type='checkbox'
+										checked={!!b.on}
+										onChange={(e) => set(i, { on: e.target.checked })}
+									/>
 								</label>
 								<div className={s.bandLabel}>{LABELS[i]}</div>
 								<select
@@ -125,7 +137,10 @@ export default function EqEditor({
 										disabled={!hasGain}
 										onChange={(gain) => set(i, { gain: Number(gain.toFixed(1)), on: true })}
 									/>
-									<span className={s.v}>{b.gain > 0 ? '+' : ''}{b.gain.toFixed(1)} dB</span>
+									<span className={s.v}>
+										{b.gain > 0 ? '+' : ''}
+										{b.gain.toFixed(1)} dB
+									</span>
 								</div>
 
 								<div className={s.param}>

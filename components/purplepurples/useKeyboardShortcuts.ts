@@ -51,7 +51,7 @@ export function useKeyboardShortcuts(handlersRef: React.MutableRefObject<Keyboar
 					H.toggleMixer();
 					break;
 				case 'p':
-					Global.engine.pause();
+					Global.engine.pause(undefined, true);
 					break;
 				case 's':
 					H.toggleSave();

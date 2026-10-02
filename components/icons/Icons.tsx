@@ -30,6 +30,15 @@ export function IconPlay(props: SVGProps<SVGSVGElement>) {
 	);
 }
 
+export function IconPause(props: SVGProps<SVGSVGElement>) {
+	return (
+		<Svg {...props}>
+			<rect x="6" y="5" width="4" height="14" rx="1.5" />
+			<rect x="14" y="5" width="4" height="14" rx="1.5" />
+		</Svg>
+	);
+}
+
 export function IconStop(props: SVGProps<SVGSVGElement>) {
 	return (
 		<Svg {...props}>

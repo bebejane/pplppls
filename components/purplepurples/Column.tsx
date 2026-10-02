@@ -341,7 +341,7 @@ export default function Column(props: ColumnProps) {
 			{/* <div className={s.visualizer}>
 				<VolumeVisualizer id={id} color={'#b750e7'} ready={ready} />
 			</div> */}
-			<div className={s.loading}>{!ready && <AiOutlineLoading />}</div>
+			{/* <div className={s.loading}>{!ready && !loading && <AiOutlineLoading />}</div> */}
 		</div>
 	);
 }

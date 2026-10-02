@@ -1,19 +1,15 @@
 'use client';
 
 import Global from '@/lib/global';
+import s from './Mixer.module.scss';
 import { useCallback, useEffect, useState } from 'react';
 import ReactTooltip from 'react-tooltip';
-import cn from 'classnames';
-import type { Model } from './types';
-import { VerticalFader } from '@/components/util/Fader';
-import VolumeVisualizer from '@/components/visualizers/VolumeVisualizer';
+import type { Model } from 'audio-engine';
 import Select from '@/components/util/Select';
-import { IconPlay, IconStop, IconRecord, IconVolume, IconLoop, IconReverse } from '@/components/icons/Icons';
-import MixerChannelStrip from './MixerChannelStrip';
+import ChannelStrip from './ChannelStrip';
 import EffectChain from './EffectChain';
 import EqEditor from './EqEditor';
-import s from './Mixer.module.scss';
-import cs from './MixerChannelStrip.module.scss';
+import MasterStrip from './MasterStrip';
 
 /**
  * Standalone Mixer view (no grid state via props): the Mixer itself subscribes
@@ -35,35 +31,36 @@ export default function Mixer({ init, onRecord, onClose }: MixerProps) {
 	const [fxId, setFxId] = useState<string | null>(null);
 	const [eqId, setEqId] = useState<string | null>(null);
 	const [ids, setIds] = useState<string[]>([]);
-	const [cols, setCols] = useState<Record<string, { filename?: string; params: Record<string, any> }>>({});
+	const [cols, setCols] = useState<
+		Record<string, { filename?: string; params: Record<string, any> }>
+	>({});
 	/** bumped on every 'model' event — keys strips so meters rebind to new sounds */
 	const [version, setVersion] = useState(0);
 	const [model, setModel] = useState<string>('');
 	const [models, setModels] = useState<{ name: string }[]>([]);
-	const [masterstate, setMasterstate] = useState<Record<string, any>>(Global.engine?.master?.state ?? {});
+	const [masterstate, setMasterstate] = useState<Record<string, any>>(
+		Global.engine?.master?.state ?? {},
+	);
 	const [sampling, setSampling] = useState<string | null>(() => {
 		const live = (Global.engine?.sounds || []).find((s: any) => s.sound._sampling);
 		return live ? live.id : null;
 	});
 
 	const applyModel = useCallback((m: Model) => {
-		// row-major, mirroring the grid build: only cells that actually carry a
-		// file are mixable
+		// the channel list is the engine's live truth, not `model.files`: a fresh
+		// (unsaved) model's files[] is never updated when a sound is added to a
+		// cell, so seeding from it would miss sounds added while the mixer was
+		// closed. `engine.sounds` is in add order (row-major after a populate).
 		const nextIds: string[] = [];
 		const nextCols: Record<string, { filename?: string; params: Record<string, any> }> = {};
-		let fileIdx = 0;
-		for (let row = 0; row < m.rows; row++) {
-			for (let col = 0; col < m.cols; col++) {
-				const id = row + '-' + col;
-				const file = m.files[fileIdx++];
-				if (!file) continue;
-				nextCols[id] = {
-					filename: file.filename,
-					params: file.params ? { ...file.params } : {},
-				};
-				nextIds.push(id);
-			}
-		}
+		(Global.engine?.sounds || []).forEach((item: any) => {
+			const snd = item.sound;
+			nextIds.push(item.id);
+			nextCols[item.id] = {
+				filename: snd?._filename ?? item.filename,
+				params: snd?.getSaveState ? snd.getSaveState() : {},
+			};
+		});
 		setIds(nextIds);
 		setCols(nextCols);
 		setModel(m.name);
@@ -74,7 +71,8 @@ export default function Mixer({ init, onRecord, onClose }: MixerProps) {
 	const startSample = useCallback((id: string, on: boolean) => {
 		const engine = Global.engine;
 		if (on) {
-			engine.sample(id, true)
+			engine
+				.sample(id, true)
 				.then(() => {
 					// lock the channel while its re-recorded sample settles
 					engine.lock(id, true);
@@ -89,9 +87,10 @@ export default function Mixer({ init, onRecord, onClose }: MixerProps) {
 	}, []);
 
 	useEffect(() => {
+		if (!init) return;
 		const engine = Global.engine;
 		if (!engine) return;
-
+		console.log('init mixer');
 		// seed: the mixer opens long after the first 'model' fired
 		if (engine.model) applyModel(engine.model);
 		if (Array.isArray(engine.models) && engine.models.length) setModels(engine.models as any);
@@ -101,23 +100,54 @@ export default function Mixer({ init, onRecord, onClose }: MixerProps) {
 			setFxId(null);
 			setEqId(null);
 		};
-		const onModelsEvent = (list: unknown) =>
-			setModels(Array.isArray(list) ? list : []);
+		const onModelsEvent = (list: unknown) => setModels(Array.isArray(list) ? list : []);
 		const onMasterState = (st: unknown) => setMasterstate(st as Record<string, any>);
 		const onSampling = (id: string, on: boolean) =>
 			setSampling((cur) => (on ? id : cur === id ? null : cur));
+		// sounds added/removed AFTER a model populated (uploads/sample recordings
+		// into a fresh model's empty cells) keep the mixer in sync: the strips
+		// keep their version key, only the channel list grows/shrinks
+		const onAdd = (id: string, sound: any) => {
+			if (!id) return;
+			// the payload may be a Sound or a SoundItem wrapper ({id, sound}) —
+			// normalize so both emitters work
+			const snd = sound && sound.sound && sound.id !== undefined ? sound.sound : sound;
+			setIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+			setCols((prev) => {
+				if (prev[id]) return prev;
+				const params = snd && snd.getSaveState ? snd.getSaveState() : {};
+				return { ...prev, [id]: { filename: snd && snd._filename, params: params || {} } };
+			});
+		};
+		const onRemove = (id: string) => {
+			setIds((prev) => prev.filter((p) => p !== id));
+			setCols((prev) => {
+				if (!prev[id]) return prev;
+				const next = { ...prev };
+				delete next[id];
+				return next;
+			});
+		};
 
 		engine.on('model', onModel);
 		engine.on('models', onModelsEvent);
 		engine.on('masterstate', onMasterState);
 		engine.on('sampling', onSampling);
+		engine.on('add', onAdd);
+		engine.on('replace', onAdd);
+		engine.on('create', onAdd);
+		engine.on('remove', onRemove);
 		return () => {
 			engine.off('model', onModel);
 			engine.off('models', onModelsEvent);
 			engine.off('masterstate', onMasterState);
 			engine.off('sampling', onSampling);
+			engine.off('add', onAdd);
+			engine.off('replace', onAdd);
+			engine.off('create', onAdd);
+			engine.off('remove', onRemove);
 		};
-	}, [applyModel]);
+	}, [init, applyModel]);
 
 	const channelIds = ids.filter((id) => Global.engine.exist(id));
 
@@ -147,7 +177,7 @@ export default function Mixer({ init, onRecord, onClose }: MixerProps) {
 
 			<div className={s.channels}>
 				{channelIds.map((id, idx) => (
-					<MixerChannelStrip
+					<ChannelStrip
 						key={version + ':' + id}
 						id={id}
 						label={`${idx + 1}`}
@@ -157,6 +187,7 @@ export default function Mixer({ init, onRecord, onClose }: MixerProps) {
 						sampling={sampling === id}
 						isSampling={!!sampling && sampling !== id}
 						onVolume={(vol) => Global.engine.volume(id, vol)}
+						onGain={(db) => Global.engine.gain(id, db)}
 						onMute={(on) => Global.engine.mute(id, on)}
 						onSolo={(on) => Global.engine.solo(id, on, false)}
 						onSampleRecord={(on) => startSample(id, on)}
@@ -171,12 +202,18 @@ export default function Mixer({ init, onRecord, onClose }: MixerProps) {
 						onStop={() => Global.engine.stop(id)}
 					/>
 				))}
-
 				<div className={s.spacer} aria-hidden='true' />
-
-				<MasterStrip key={'master:' + version} init={init} masterstate={masterstate} onRecord={onRecord} />
+				<MasterStrip
+					key={'master:' + version}
+					init={init}
+					masterstate={masterstate}
+					onRecord={onRecord}
+				/>
 			</div>
 
+			<ReactTooltip id='tt-mixer-gain' type='dark' place='top' effect='float' delayShow={600}>
+				Gain (dB)
+			</ReactTooltip>
 			<ReactTooltip id='tt-mixer-pan' type='dark' place='top' effect='float' delayShow={600}>
 				Pan
 			</ReactTooltip>
@@ -216,102 +253,6 @@ export default function Mixer({ init, onRecord, onClose }: MixerProps) {
 					onClose={() => setEqId(null)}
 				/>
 			)}
-		</div>
-	);
-}
-
-/**
- * The master bus channel. It carries label, level, fader, mute, master-output
- * record and play/stop + reverse/loop all — no solo or pan (the engine has
- * neither for the master bus). Values come from Mixer's own `masterstate`
- * subscription.
- */
-function MasterStrip({
-	init,
-	masterstate,
-	onRecord,
-}: {
-	init: boolean;
-	masterstate: Record<string, any>;
-	onRecord: (on: boolean) => void;
-}) {
-	const { volume = 0, muted, playing, recording, looping, reversed } = masterstate;
-	return (
-		// see MixerChannelStrip: keep mouse presses from leaving a button focused
-		<div className={cn(cs.strip, s.master, !init && cs.dim)} onMouseDown={(e) => e.preventDefault()}>
-			<div className={cs.label}>MASTER</div>
-
-			<div className={cs.faderRow}>
-				<div className={cs.meter} data-tip data-for={'tt-mixer-meter'}>
-					<VolumeVisualizer id={'master'} color={recording ? '#ff3b30' : '#ffffff'} ready={init} />
-				</div>
-				<div className={cs.fader} data-tip data-for={'tt-mixer-volume'}>
-					<VerticalFader
-						label='Master volume'
-						value={volume}
-						min={0}
-						max={1}
-						perPixel={2500}
-						onChange={(v) => {
-							Global.engine.master.volume(Math.min(1, Math.max(0, v)));
-						}}
-					/>
-				</div>
-			</div>
-
-			<button
-				type='button'
-				className={cn(cs.btn, muted && cs.on)}
-				data-tip
-				data-for={'tt-mixer-mute'}
-				onClick={() => Global.engine.master.mute(!muted)}
-			>
-				<IconVolume />
-				MUTE
-			</button>
-
-			<button
-				type='button'
-				className={cn(cs.btn, cs.rec, recording && cs.recOn)}
-				data-tip
-				data-for={'tt-mixer-mrec'}
-				onClick={() => onRecord(!recording)}
-			>
-				<IconRecord />
-				REC
-			</button>
-
-			<div className={cs.toggles}>
-				<button
-					type='button'
-					className={cn(cs.btn, reversed && cs.on)}
-					aria-label='Reverse all'
-					title='Reverse all'
-					onClick={() => Global.engine.master.reverse(!reversed)}
-				>
-					<IconReverse />
-				</button>
-				<button
-					type='button'
-					className={cn(cs.btn, looping && cs.on)}
-					aria-label='Loop all'
-					title='Loop all'
-					onClick={() => Global.engine.master.loop(!looping)}
-				>
-					<IconLoop />
-				</button>
-			</div>
-
-			<button
-				type='button'
-				className={cn(cs.btn, cs.play, playing && cs.on)}
-				data-tip
-				data-for={'tt-mixer-play'}
-				aria-label={playing ? 'Stop' : 'Play'}
-				onClick={() => (playing ? Global.engine.master.stop() : Global.engine.master.play())}
-			>
-				{playing ? <IconStop /> : <IconPlay />}
-			</button>
 		</div>
 	);
 }

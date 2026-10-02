@@ -14,7 +14,7 @@ import SaveDialog from './SaveDialog';
 import NewDialog from './NewDialog';
 import HelpDialog from './HelpDialog';
 import RecordingsDialog, { type Recording } from './RecordingsDialog';
-import Mixer from './Mixer';
+import Mixer from '../mixer/Mixer';
 import NotSupported from './NotSupported';
 import {
 	loadStoredRecordings,
@@ -141,38 +141,6 @@ export default function PurplePurples() {
 		setState((prev) => ({ ...prev, cols: updater(prev.cols) }));
 	}, []);
 
-	useEngineListeners(set, setCols, stateRef);
-
-	const init = useCallback(async () => {
-		try {
-			set({
-				inputDevices: await Global.engine.listDevices(),
-				midiDevices: await Global.engine.listMidiDevices(),
-			});
-			// resurrect recordings persisted in IndexedDB from earlier sessions
-			// (idempotent: init can run twice under StrictMode — dedupe by id)
-			loadStoredRecordings()
-				.then((rows) =>
-					setRecordings((prev) => {
-						const have = new Set(prev.map((r) => r.id));
-						const restored = rows
-							.filter((r) => !have.has(r.id))
-							.map((r) => ({ ...r, url: URL.createObjectURL(r.blob) }));
-						return restored.concat(prev);
-					}),
-				)
-				.catch((err) => console.error('restore recordings failed', err));
-			const model = await Global.engine.loadModel(stateRef.current.model);
-			if (model) buildGrid(model);
-		} catch (err) {
-			handleError(err);
-		}
-	}, []);
-
-	useEffect(() => {
-		init();
-	}, []);
-
 	// ---- model grid ------------------------------------------------------
 	// The engine owns model I/O + presets (audio-engine's model.ts); this only builds
 	// the grid state for the model the engine just populated.
@@ -253,6 +221,42 @@ export default function PurplePurples() {
 			elements.forEach((el) => (elementMapRef.current[(el as HTMLElement).id] = el as HTMLElement));
 			Global.engine.load();
 		}, 0);
+	}, []);
+
+	useEngineListeners(set, setCols, stateRef, (model: any) => {
+		// any engine-side model load (the standalone Mixer's selector included)
+		// rebuilds the grid from the same event the Mixer strips use
+		buildGrid(model);
+	});
+
+	const init = useCallback(async () => {
+		try {
+			set({
+				inputDevices: await Global.engine.listDevices(),
+				midiDevices: await Global.engine.listMidiDevices(),
+			});
+			// resurrect recordings persisted in IndexedDB from earlier sessions
+			// (idempotent: init can run twice under StrictMode — dedupe by id)
+			loadStoredRecordings()
+				.then((rows) =>
+					setRecordings((prev) => {
+						const have = new Set(prev.map((r) => r.id));
+						const restored = rows
+							.filter((r) => !have.has(r.id))
+							.map((r) => ({ ...r, url: URL.createObjectURL(r.blob) }));
+						return restored.concat(prev);
+					}),
+				)
+				.catch((err) => console.error('restore recordings failed', err));
+			const model = await Global.engine.loadModel(stateRef.current.model);
+			if (model) buildGrid(model);
+		} catch (err) {
+			handleError(err);
+		}
+	}, []);
+
+	useEffect(() => {
+		init();
 	}, []);
 
 	const onRequestInput = useCallback(() => {
@@ -463,7 +467,6 @@ export default function PurplePurples() {
 				return;
 			}
 			const objURL = URL.createObjectURL(new Blob([buffer], { type: fileToMimeType(filename) }));
-			console.log('replace', id, filename, objURL);
 			Global.engine.replace(id, objURL, filename);
 		},
 		[buildGrid],
@@ -582,7 +585,8 @@ export default function PurplePurples() {
 			Global.engine.pan(data.id, parseFloat((data.r - data.l - 10).toFixed(0)));
 			Global.engine.effectParams(data.id, 0, delayParams);
 			const rate = Number(parseFloat(((data.heat / 100) * 2).toFixed(1)));
-			Global.engine.rate(data.id, rate);
+			const pitch = Number(parseFloat(((data.heat / 100) * 12 - 12).toFixed(1)));
+			Global.engine.pitch(data.id, pitch);
 			//console.log(rate);
 			//console.log(parseFloat(((data.heat / 100) * 2).toFixed(1)));
 		}
@@ -817,7 +821,7 @@ export default function PurplePurples() {
 					onUpload={(buffer, filename) => onUpload(c.id, buffer, filename)}
 					onMultiUpload={(files) => onMultiUpload(c.id, files)}
 					onPlay={(opt) => Global.engine.play(c.id, opt)}
-					onPause={() => Global.engine.pause(c.id)}
+					onPause={() => Global.engine.pause(c.id, true)}
 					onStop={() => Global.engine.stop(c.id)}
 					onSolo={(on) => Global.engine.solo(c.id, on, false)}
 					onVolume={(vol) => onVolume(c.id, vol)}

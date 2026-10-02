@@ -76,6 +76,11 @@ body {
 	padding: 0;
 	width: 100%;
 	height: 100%;
+	/* Chrome treats a two-finger horizontal trackpad swipe as back/forward
+	   history navigation and never delivers it to the page, so horizontal
+	   faders (pan/rate/pitch/gain) only responded one way there while Safari
+	   worked. Disabling horizontal overscroll keeps those swipes for the app. */
+	overscroll-behavior-x: none;
 }
 
 /* NOTE: no global box-sizing reset — the original app used the default

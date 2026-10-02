@@ -11,6 +11,9 @@ export function useEngineListeners(
 	set: (patch: Partial<Record<string, any>>) => void,
 	setCols: (updater: (cols: Record<string, any>) => Record<string, any>) => void,
 	stateRef: React.MutableRefObject<Record<string, any>>,
+	/** Fires whenever the engine populated a (new) model — any caller included
+	 * (new/upload, and e.g. the standalone Mixer's model selector). */
+	onModel?: (model: unknown) => void,
 ) {
 	useEffect(() => {
 		const engine = Global.engine;
@@ -64,6 +67,8 @@ export function useEngineListeners(
 
 		const onState = () => {};
 
+		const onModelEvent = (model: unknown) => onModel && onModel(model);
+
 		engine.on('inputdevices', onInputDevices);
 		engine.on('mididevices', onMidiDevices);
 		engine.on('models', onModels);
@@ -77,6 +82,7 @@ export function useEngineListeners(
 		engine.on('error', onError);
 		engine.on('ready', onReady);
 		engine.on('state', onState);
+		engine.on('model', onModelEvent);
 
 		return () => {
 			engine.off('inputdevices', onInputDevices);
@@ -92,6 +98,7 @@ export function useEngineListeners(
 			engine.off('error', onError);
 			engine.off('ready', onReady);
 			engine.off('state', onState);
+			engine.off('model', onModelEvent);
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);

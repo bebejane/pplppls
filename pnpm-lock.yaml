@@ -111,7 +111,7 @@ importers:
     dependencies:
       audio-engine:
         specifier: github:bebejane/audio-engine
-        version: https://codeload.github.com/bebejane/audio-engine/tar.gz/eef6a04ecb2916df4b02f5ddf44716e07ea8ab75
+        version: https://codeload.github.com/bebejane/audio-engine/tar.gz/fbfd56bd1807eddf7b1bea9d872a4f30e81c52df
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
@@ -1088,8 +1088,8 @@ packages:
     resolution: {integrity: sha512-hsU18Ae8CDTR6Kgu9DYf0EbCr/a5iGL0rytQDobUcdpYOKokk8LEjVphnXkDkgpi0wYVsqrXuP0bZxJaTqdgoA==}
     engines: {node: '>= 0.4'}
 
-  audio-engine@https://codeload.github.com/bebejane/audio-engine/tar.gz/eef6a04ecb2916df4b02f5ddf44716e07ea8ab75:
-    resolution: {gitHosted: true, integrity: sha512-wgnJgWXi+hY7HvpCT3RNrQgHQXonPV/tOJXDOdMIQXg6w9hCCFzESSZQSCGrKDnrTSgr0/jUtixLUKv8Gv1HoQ==, tarball: https://codeload.github.com/bebejane/audio-engine/tar.gz/eef6a04ecb2916df4b02f5ddf44716e07ea8ab75}
+  audio-engine@https://codeload.github.com/bebejane/audio-engine/tar.gz/fbfd56bd1807eddf7b1bea9d872a4f30e81c52df:
+    resolution: {gitHosted: true, integrity: sha512-W7RNOwpTH0oraeBa+6sarkW1FZaHnkb5C9UB8X+qUhTodv0PNUlEGf8U1/vXId2om0Ista3Jo0Ly0rQJpc458g==, tarball: https://codeload.github.com/bebejane/audio-engine/tar.gz/fbfd56bd1807eddf7b1bea9d872a4f30e81c52df}
     version: 0.1.0
 
   available-typed-arrays@1.0.7:
@@ -3156,7 +3156,7 @@ snapshots:
 
   async-function@1.0.0: {}
 
-  audio-engine@https://codeload.github.com/bebejane/audio-engine/tar.gz/eef6a04ecb2916df4b02f5ddf44716e07ea8ab75:
+  audio-engine@https://codeload.github.com/bebejane/audio-engine/tar.gz/fbfd56bd1807eddf7b1bea9d872a4f30e81c52df:
     dependencies:
       events: 3.3.0
       jszip: 3.10.2

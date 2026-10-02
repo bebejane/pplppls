@@ -14,8 +14,10 @@ import {
 	IconReverse,
 	IconLoop,
 	IconEffects,
+	IconPause,
 } from '@/components/icons/Icons';
-import s from './MixerChannelStrip.module.scss';
+import s from './ChannelStrip.module.scss';
+import Elapsed from '@/components/mixer/Elapsed';
 
 /**
  * One channel strip of the Mixer view. Live values are engine-authoritative:
@@ -24,7 +26,7 @@ import s from './MixerChannelStrip.module.scss';
  * The strip only ever calls back into the parent, which owns the shared
  * sampling state and the engine calls.
  */
-export default function MixerChannelStrip({
+export default function ChannelStrip({
 	id,
 	label,
 	filename,
@@ -33,6 +35,7 @@ export default function MixerChannelStrip({
 	sampling,
 	isSampling,
 	onVolume,
+	onGain,
 	onMute,
 	onSolo,
 	onSampleRecord,
@@ -45,9 +48,10 @@ export default function MixerChannelStrip({
 	onEq,
 	onPlay,
 	onStop,
-}: MixerChannelStripProps) {
+}: ChannelStripProps) {
 	const [st, setSt] = useState<Record<string, any>>(() => ({
 		playing: false,
+		paused: !!params?.paused,
 		muted: !!params?.muted,
 		solo: !!params?.solo,
 		loop: !!params?.loop,
@@ -61,6 +65,7 @@ export default function MixerChannelStrip({
 			return Array.isArray(params?.effects) ? params.effects : [];
 		})(),
 		volume: typeof params?.volume === 'number' ? params.volume : 0.5,
+		gain: typeof params?.gain === 'number' ? params.gain : 0,
 		pan: typeof params?.pan === 'number' ? params.pan : 0,
 		rate: typeof params?.rate === 'number' ? params.rate : 1,
 		pitch: typeof params?.pitch === 'number' ? params.pitch : 0,
@@ -113,7 +118,22 @@ export default function MixerChannelStrip({
 	// said so — the mixer can open long after the last `state` event, so we
 	// can't wait for one to enable the strip
 	const ready = init || !!st.ready;
-	const { volume = 0, pan = 0, rate = 1, pitch = 0, muted, solo, loop, reversed, playing } = st;
+	const {
+		volume = 0,
+		gain = 0,
+		pan = 0,
+		rate = 1,
+		pitch = 0,
+		muted,
+		solo,
+		loop,
+		reversed,
+		playing,
+		paused,
+	} = st;
+	// a loop keeps `playing` true while paused, so the toggle must key off
+	// "playing and not paused" to have a reachable play() state
+	const isPlaying = playing && !paused;
 	const processing = sampling && samplingProgress.processing && !samplingProgress.recording;
 	const fxCount = Array.isArray(st.effects) ? st.effects.length : 0;
 
@@ -151,78 +171,20 @@ export default function MixerChannelStrip({
 				</div>
 			</div>
 
-			<button
-				type='button'
-				className={cn(s.btn, muted && s.on)}
-				data-tip
-				data-for={'tt-mixer-mute'}
-				onClick={() => onMute(!muted)}
-			>
-				MUTE
-			</button>
-			<button
-				type='button'
-				className={cn(s.btn, solo && s.on)}
-				data-tip
-				data-for={'tt-mixer-solo'}
-				onClick={() => onSolo(!solo)}
-			>
-				SOLO
-			</button>
-			<button
-				type='button'
-				className={cn(s.btn, sampling && (processing ? s.processing : s.recOn))}
-				// one input recorder: only the channel that is sampling can be
-				// pressed (start/stop) — the rest are disabled, not lit
-				disabled={!sampling && isSampling}
-				data-tip
-				data-for={'tt-mixer-rec'}
-				onClick={() => onSampleRecord(!sampling)}
-			>
-				REC
-			</button>
-
-			<div className={s.toggles}>
-				<button
-					type='button'
-					className={cn(s.btn, reversed && s.on)}
-					data-tip
-					data-for={'tt-mixer-reverse'}
-					onClick={() => onReverse(!reversed)}
-				>
-					<IconReverse />
-				</button>
-				<button
-					type='button'
-					className={cn(s.btn, loop && s.on)}
-					data-tip
-					data-for={'tt-mixer-loop'}
-					onClick={() => onLoop(!loop)}
-				>
-					<IconLoop />
-				</button>
-			</div>
-
-			<div className={s.toggles}>
-				<button
-					type='button'
-					className={cn(s.btn, eqOn && s.on)}
-					data-tip
-					data-for={'tt-mixer-eq'}
-					onClick={onEq}
-				>
-					EQ
-				</button>
-				<button
-					type='button'
-					className={cn(s.btn, fxCount > 0 && s.on)}
-					data-tip
-					data-for={'tt-mixer-effects'}
-					onClick={onEffects}
-				>
-					<IconEffects />
-					{fxCount > 0 && <span className={s.badge}>{fxCount}</span>}
-				</button>
+			{/* channel gain trim: engine.gain(id, dB) — a post-fade trim on the
+			    channel processor, −24 … +12 dB (0 = unity) */}
+			<div className={s.panRow} data-tip data-for={'tt-mixer-gain'}>
+				<span className={s.panMark}>dB</span>
+				<HorizontalFader
+					label={`${label} gain`}
+					className={s.panSlider}
+					value={gain}
+					min={-24}
+					max={24}
+					step={1}
+					onChange={(v) => onGain(Math.round(v))}
+				/>
+				<span className={s.panMark}>{gain > 0 ? '+' + gain : '' + gain}</span>
 			</div>
 
 			<div className={s.panRow} data-tip data-for={'tt-mixer-pan'}>
@@ -236,6 +198,80 @@ export default function MixerChannelStrip({
 					onChange={(v) => onPan(Math.round(v))}
 				/>
 				<span className={s.panMark}>R</span>
+			</div>
+
+			<button
+				type='button'
+				className={cn(s.btn, muted && s.on)}
+				data-tip
+				data-for={'tt-mixer-mute'}
+				onMouseDown={() => onMute(!muted)}
+			>
+				MUTE
+			</button>
+			<button
+				type='button'
+				className={cn(s.btn, solo && s.on)}
+				data-tip
+				data-for={'tt-mixer-solo'}
+				onMouseDown={() => onSolo(!solo)}
+			>
+				SOLO
+			</button>
+			<button
+				type='button'
+				className={cn(s.btn, sampling && (processing ? s.processing : s.recOn))}
+				// one input recorder: only the channel that is sampling can be
+				// pressed (start/stop) — the rest are disabled, not lit
+				disabled={!sampling && isSampling}
+				data-tip
+				data-for={'tt-mixer-rec'}
+				onMouseDown={() => onSampleRecord(!sampling)}
+			>
+				REC
+			</button>
+
+			<div className={s.toggles}>
+				<button
+					type='button'
+					className={cn(s.btn, reversed && s.on)}
+					data-tip
+					data-for={'tt-mixer-reverse'}
+					onMouseDown={() => onReverse(!reversed)}
+				>
+					<IconReverse />
+				</button>
+				<button
+					type='button'
+					className={cn(s.btn, loop && s.on)}
+					data-tip
+					data-for={'tt-mixer-loop'}
+					onMouseDown={() => onLoop(!loop)}
+				>
+					<IconLoop />
+				</button>
+			</div>
+
+			<div className={s.toggles}>
+				<button
+					type='button'
+					className={cn(s.btn, eqOn && s.on)}
+					data-tip
+					data-for={'tt-mixer-eq'}
+					onMouseDown={onEq}
+				>
+					EQ
+				</button>
+				<button
+					type='button'
+					className={cn(s.btn, fxCount > 0 && s.on)}
+					data-tip
+					data-for={'tt-mixer-effects'}
+					onClick={onEffects}
+				>
+					<IconEffects />
+					{fxCount > 0 && <span className={s.badge}>{fxCount}</span>}
+				</button>
 			</div>
 
 			{/* rate: 0x … 1x (default) … 2x; shares the horizontal-slider styles */}
@@ -267,22 +303,31 @@ export default function MixerChannelStrip({
 				/>
 				<span className={s.panMark}>+</span>
 			</div>
-
+			<Elapsed id={id} enableElapsed={true} color={'#fff'} bgColor={''} />
 			<button
 				type='button'
-				className={cn(s.btn, s.play, playing && s.on)}
+				className={cn(s.btn, s.stopBtn)}
+				aria-label='Stop'
+				title='Stop'
+				onMouseDown={onStop}
+			>
+				<IconStop />
+			</button>
+			<button
+				type='button'
+				className={cn(s.btn, s.play, isPlaying && s.on)}
 				data-tip
 				data-for={'tt-mixer-play'}
-				aria-label={playing ? 'Stop' : 'Play'}
-				onClick={() => (playing ? onStop() : onPlay())}
+				aria-label={isPlaying ? 'Pause' : 'Play'}
+				onMouseDown={() => (isPlaying ? Global.engine.pause(id, true) : Global.engine.play(id))}
 			>
-				{playing ? <IconStop /> : <IconPlay />}
+				{isPlaying ? <IconPause /> : <IconPlay />}
 			</button>
 		</div>
 	);
 }
 
-export interface MixerChannelStripProps {
+export interface ChannelStripProps {
 	id: string;
 	label: string;
 	/** Model file name */
@@ -296,6 +341,8 @@ export interface MixerChannelStripProps {
 	/** Some channel is sampling (this one is not). */
 	isSampling?: boolean;
 	onVolume: (vol: number) => void;
+	/** Channel gain trim, in dB (−24 … +12; 0 = unity). */
+	onGain: (db: number) => void;
 	onMute: (on: boolean) => void;
 	onSolo: (on: boolean) => void;
 	onSampleRecord: (on: boolean) => void;
@@ -313,4 +360,3 @@ export interface MixerChannelStripProps {
 	onPlay: () => void;
 	onStop: () => void;
 }
-

@@ -5,10 +5,10 @@
 	display: flex;
 	flex-direction: column;
 	flex: 0 0 auto;
-	width: 88px;
-	padding: 8px 6px;
+	width: 110px;
+	padding: 10px 8px;
 	box-sizing: border-box;
-	gap: 6px;
+	gap: 8px;
 	background-color: rgba(255, 255, 255, 0.03);
 	border: 1px solid rgba(255, 255, 255, 0.12);
 }
@@ -23,7 +23,7 @@
 	align-items: center;
 	justify-content: center;
 	flex: 0 0 auto;
-	padding: 4px;
+	padding: 6px;
 	font-size: 10px;
 	line-height: 1.15;
 	overflow: hidden;
@@ -31,7 +31,7 @@
 	color: var(--color-ink-dim);
 	background-color: rgba(0, 0, 0, 0.25);
 	text-transform: uppercase;
-	font-size: 14px;
+	font-size: 17px;
 	text-align: center;
 }
 
@@ -41,16 +41,16 @@
 	align-items: stretch;
 	justify-content: center;
 	flex: 1 1 auto;
-	gap: 10px;
+	gap: 12px;
 	min-height: 0;
-	padding-top: 20px;
-	padding-bottom: 20px;
+	padding-top: 26px;
+	padding-bottom: 26px;
 }
 
 .meter {
 	flex: 1 1 auto;
-	max-width: 22px;
-	min-width: 10px;
+	max-width: 28px;
+	min-width: 12px;
 	background-color: rgba(0, 0, 0, 0.25);
 	border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -63,16 +63,16 @@
 	align-items: stretch;
 	justify-content: center;
 	flex: 0 0 auto;
-	width: 22px;
-	min-height: 60px;
+	width: 30px;
+	min-height: 72px;
 
 	/* the vertical volume fader's look — see Slider.module.scss */
-	--slider-track-w: 20px;
+	--slider-track-w: 28px;
 	--slider-track-h: 100%;
 	--slider-radius: 3px;
 	--slider-active-bg: #b354d6;
-	--slider-thumb-w: 20px;
-	--slider-thumb-h: 30px;
+	--slider-thumb-w: 28px;
+	--slider-thumb-h: 42px;
 	--slider-thumb-radius: 2px;
 	--slider-thumb-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
@@ -83,12 +83,12 @@
 	align-items: center;
 	justify-content: center;
 	flex: 0 0 auto;
-	gap: 4px;
+	gap: 5px;
 	width: 100%;
-	height: 22px;
+	height: 30px;
 	padding: 0;
 	box-sizing: border-box;
-	font-size: 13px;
+	font-size: 15px;
 	letter-spacing: 0.5px;
 	color: var(--color-ink-dim);
 	background-color: rgba(0, 0, 0, 0.25);
@@ -97,23 +97,24 @@
 }
 
 .btn:hover {
-	color: var(--color-ink);
-	background-color: rgba(255, 255, 255, 0.12);
+	//color: var(--color-ink);
+	//background-color: rgba(255, 255, 255, 0.12);
 }
 
 .btn > svg {
 	flex: 0 0 auto;
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .on,
-.btn.on:hover {
+.btn:active {
 	color: var(--color-ink);
-	background-color: var(--color-surface-light);
-	border-color: var(--color-surface-light);
+	background-color: rgba(0, 0, 0, 0.25);
+	//border-color: var(--color-surface-light);
 }
 
-.recOn {
+.recOn,
+.recOn:hover {
 	color: #fff;
 	background-color: #d3273e;
 	border-color: #d3273e;
@@ -135,19 +136,33 @@
 	background-color: rgba(0, 0, 0, 0.25);
 }
 
-/* Play/stop: a square, taller than the 22px button bar it replaces, icon-only
-   (the label is gone; the tooltip + aria-label carry the meaning). Height is set
-   explicitly so every strip's button is the same size regardless of strip width,
-   and so it stays square in the 88px strip. */
-$playSize: 56px;
-$playIcon: 30px;
+/* Play/stop: the big square is play-only, and a smaller stop button sits right
+   above it. Height is set explicitly so every strip's buttons are the same size
+   regardless of strip width, and so the play button stays square in the strip. */
+$playSize: 72px;
+$playIcon: 38px;
 
 .play {
 	flex: 0 0 auto;
 	width: 100%;
 	height: $playSize;
 	min-height: $playSize;
-	margin-top: 10px;
+}
+
+.stopBtn {
+	flex: 0 0 auto;
+	width: 100%;
+	height: 38px;
+	min-height: 28px;
+	//margin-top: 14px;
+}
+
+.stopBtn > svg {
+	font-size: 22px;
+}
+
+.stopBtn:hover {
+	opacity: 1;
 }
 
 /* override the shared `.btn > svg` 12px cap — this button is icon-only, so the
@@ -164,8 +179,8 @@ $playIcon: 30px;
 	flex-direction: row;
 	align-items: center;
 	flex: 0 0 auto;
-	gap: 5px;
-	height: 22px;
+	gap: 6px;
+	height: 30px;
 }
 
 .toggles > .btn {
@@ -173,21 +188,21 @@ $playIcon: 30px;
 	flex: 1 1 0;
 	width: auto;
 	min-width: 0;
-	height: 22px;
+	height: 30px;
 }
 
 .badge {
 	position: absolute;
-	top: -4px;
-	right: -3px;
-	min-width: 11px;
-	padding: 0 2px;
-	font-size: 8px;
-	line-height: 11px;
+	top: -5px;
+	right: -4px;
+	min-width: 14px;
+	padding: 0 3px;
+	font-size: 9px;
+	line-height: 13px;
 	text-align: center;
 	color: #fff;
-	background-color: var(--color-surface-light);
-	border-radius: 6px;
+	background-color: var(--color-surface);
+	border-radius: 7px;
 }
 
 .panRow {
@@ -195,8 +210,8 @@ $playIcon: 30px;
 	flex-direction: row;
 	align-items: center;
 	flex: 0 0 auto;
-	gap: 5px;
-	height: 20px;
+	gap: 6px;
+	height: 26px;
 }
 
 .panSlider {
@@ -204,10 +219,17 @@ $playIcon: 30px;
 	align-items: center;
 	flex: 1 1 auto;
 	min-width: 0;
+
+	/* the horizontal pan/rate/pitch/gain tracks — bigger than the Slider
+	   defaults so they match the taller strip (see Slider.module.scss) */
+	--slider-track-h: 20px;
+	--slider-radius: 3px;
+	--slider-thumb-w: 12px;
+	--slider-thumb-h: 24px;
 }
 
 .panMark {
 	flex: 0 0 auto;
-	font-size: 8px;
+	font-size: 10px;
 	color: var(--color-ink-dim);
 }
